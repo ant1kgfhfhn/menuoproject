@@ -1,0 +1,41 @@
+name: Apply MENUO auth and icon patch
+on:
+  push:
+    paths:
+      - '.github/workflows/menuo-patch.yml'
+permissions:
+  contents: write
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Patch index
+        run: |
+          cat > /tmp/patch.js <<'JS'
+const fs=require('fs');
+const p='index.html'; let s=fs.readFileSync(p,'utf8');
+s=s.replace('</style>',`\n.icon-svg{width:26px;height:26px;display:block;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}.role .ico{display:grid;place-items:center}.role .ico svg{width:25px;height:25px;color:#1b6b4e}.role .ico{width:52px;height:52px;border-radius:16px;background:#e3f6ec}.auth-options{display:flex;gap:9px;margin:14px 0 4px}.auth-options button{flex:1;border:1px solid #dce4df;background:#fff;border-radius:13px;padding:11px 8px;font-weight:800;color:#1b6b4e}.auth-options button.active{background:#ddf4e9;border-color:#a8d5bd}.account-note{font-size:12px;color:#69756e;line-height:1.45;margin:10px 0 18px}.section-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:16px 0}.section-tile{border:1px solid #e3e9e5;background:#fff;border-radius:17px;padding:13px 8px;text-align:center;color:#17201c}.section-tile .tile-icon{width:42px;height:42px;border-radius:13px;background:#e3f6ec;color:#1b6b4e;display:grid;place-items:center;margin:0 auto 7px}.section-tile small{display:block;color:#69756e;font-size:10px;margin-top:2px}@media(max-width:370px){.section-grid{grid-template-columns:repeat(2,1fr)}}
+</style>`);
+s=s.replace('<span class="ico">♜</span><span><b>Я владелец ресторана</b>', '<span class="ico"><svg class="icon-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h16M6 20v-7h12v7M8 13V8h8v5M10 8V5h4v3M3 13h18"/></svg></span><span><b>Я владелец ресторана</b>');
+s=s.replace('<span class="ico">⌁</span><span><b>Я посетитель ресторана</b>', '<span class="ico"><svg class="icon-svg" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 7l3-3h8l3 3M4 8h16v11H4zM8 8v3h8V8M9 15h6"/></svg></span><span><b>Я посетитель ресторана</b>');
+s=s.replace('</div>\n</section>\n\n<section class="screen hidden" id="owner">', '<div class="stack" style="margin-top:22px"><button class="secondary" onclick="openProfile()"><span id="homeAccountText">Войти или создать аккаунт</span></button></div></div>\n</section>\n\n<section class="screen hidden" id="owner">');
+s=s.replace('<h1 class="section-title" id="ownerTitle">Мои рестораны</h1><p class="sub">Все рестораны, которыми вы управляете.</p>', '<h1 class="section-title" id="ownerTitle">Мои рестораны</h1><p class="sub">Управляйте ресторанами и меню. Аккаунт сам по себе не требует создания ресторана.</p>');
+s=s.replace('<div id="restaurantsList"></div><button class="add-card" onclick="openCreateRestaurant()">＋ Создать ресторан</button>', '<div id="restaurantsList"></div><button class="add-card" onclick="openCreateRestaurant()">＋ Создать ресторан</button><div class="section-grid"><button class="section-tile" onclick="currentRestaurant()?show(\'editor\'):openCreateRestaurant()"><span class="tile-icon"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M4 5h16v14H4zM8 8h8M8 12h8M8 16h5"/></svg></span>Меню<small>Управление</small></button><button class="section-tile" onclick="openSubscription()"><span class="tile-icon"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M12 3l2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-2.9-5.6 2.9 1.1-6.2L3 9.6l6.2-.9z"/></svg></span>Тарифы<small>Подписка</small></button><button class="section-tile" onclick="currentRestaurant()?show(\'restaurantProfile\'):openCreateRestaurant()"><span class="tile-icon"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M4 21V5l8-3 8 3v16M7 8h3M14 8h3M7 12h3M14 12h3M10 21v-5h4v5"/></svg></span>Ресторан<small>Профиль</small></button><button class="section-tile" onclick="openProfile()"><span class="tile-icon"><svg class="icon-svg" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c.7-4 3.2-6 8-6s7.3 2 8 6"/></svg></span>Профиль<small>Аккаунт</small></button><button class="section-tile" onclick="startScanner()"><span class="tile-icon"><svg class="icon-svg" viewBox="0 0 24 24"><path d="M4 9V5h4M20 9V5h-4M4 15v4h4M20 15v4h-4M8 8h8v8H8z"/></svg></span>Сканер<small>QR</small></button><button class="section-tile" onclick="toggleLanguages()"><span class="tile-icon"><svg class="icon-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c3 3 3 15 0 18M12 3c-3 3-3 15 0 18"/></svg></span>Языки<small>Интерфейс</small></button></div>');
+s=s.replace("let state=loadState();let editingId=null,deletingId=null,noPhoto=true,cameraStream=null,scanLoop=null,authMode='login',photoData='';", "let state=loadState();let editingId=null,deletingId=null,noPhoto=true,cameraStream=null,scanLoop=null,authMode='login',photoData='',authAfter='home';");
+s=s.replace("function openOwner(){user()?show('owner'):openAuth('register')}\nfunction openProfile(){user()?show('userProfile'):openAuth('login')}\nfunction openSubscription(){user()?show('subscription'):openAuth('login')}", "function openOwner(){if(user()){show('owner');return}authAfter='owner';openAuth('register')}\nfunction openProfile(){if(user()){show('userProfile');return}authAfter='home';openAuth('login')}\nfunction openSubscription(){if(user()){show('subscription');return}authAfter='home';openAuth('login')}");
+s=s.replace("function openAuth(mode='login'){authMode=mode;", "function openAuth(mode='login'){authMode=mode;");
+s=s.replace("state.users.push(u);state.session=u.id;save();show('createRestaurant')", "state.users.push(u);state.session=u.id;save();const next=authAfter;authAfter='home';next==='owner'?show('owner'):show('home')");
+s=s.replace("state.session=u.id;save();show('owner')", "state.session=u.id;save();const next=authAfter;authAfter='home';next==='owner'?show('owner'):show('home')");
+fs.writeFileSync(p,s);
+JS
+          node /tmp/patch.js
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git commit -m 'Fix auth flow and refresh MENUO section icons' || exit 0
+          git push
+EOF
