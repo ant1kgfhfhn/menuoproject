@@ -18,19 +18,22 @@ jobs:
         run: |
           python - <<'PY'
           from pathlib import Path
-          p=Path('index.html')
-          s=p.read_text(encoding='utf-8')
-          tags=[
-            '<script src="menuo-backend.js" defer></script>',
-            '<script src="menuo-visitor-fix.js" defer></script>'
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+          # Previous workflow versions accidentally wrote the two characters \\n          # n into HTML. Convert only those occurrences immediately after
+          # script tags so they can never become visible page text.
+          s = s.replace('</script>\\n', '</script>\n')
+          tags = [
+              '<script src="menuo-backend.js" defer></script>',
+              '<script src="menuo-visitor-fix.js" defer></script>'
           ]
-          marker='</head>'
+          marker = '</head>'
           if marker not in s:
               raise SystemExit('head marker not found')
           for tag in tags:
               if tag not in s:
-                  s=s.replace(marker,tag+'\\n'+marker,1)
-          p.write_text(s,encoding='utf-8')
+                  s = s.replace(marker, tag + '\n' + marker, 1)
+          p.write_text(s, encoding='utf-8')
           PY
       - name: Commit wiring
         shell: bash
