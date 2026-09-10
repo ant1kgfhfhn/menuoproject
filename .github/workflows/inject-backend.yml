@@ -20,10 +20,10 @@ jobs:
           from pathlib import Path
           p = Path('index.html')
           s = p.read_text(encoding='utf-8')
-          # Previous workflow versions accidentally wrote the two characters \\n          # n into HTML. Convert only those occurrences immediately after
-          # script tags so they can never become visible page text.
+          # Remove the accidental literal characters backslash+n left by an older workflow.
           s = s.replace('</script>\\n', '</script>\n')
           tags = [
+              '<script src="menuo-qr-auth-fix.js" defer></script>',
               '<script src="menuo-backend.js" defer></script>',
               '<script src="menuo-visitor-fix.js" defer></script>'
           ]
@@ -41,5 +41,5 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add index.html
-          git commit -m "Fix MENUO visitor scanner wiring" || exit 0
+          git commit -m "Fix MENUO QR account synchronization" || exit 0
           git push
