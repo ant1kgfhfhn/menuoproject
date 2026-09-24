@@ -79,10 +79,20 @@
     }else{
       const q=await sb.from('restaurants').insert(payload).select().single();
       if(q.error){
+        // A previous save may have created the restaurant before a later step failed.
+        // On FREE (1 restaurant) the local copy can have a different slug, so recover
+        // the owner's existing restaurant instead of hitting the plan-limit trigger.
         const retry=await sb.from('restaurants').select('*').eq('owner_id',user.id).eq('slug',slug).maybeSingle();
         if(retry.error)throw q.error;
-        if(!retry.data)throw q.error;
-        rest=retry.data;
+        if(retry.data){
+          rest=retry.data;
+        }else if(q.error.message==='restaurant_limit_reached'){
+          const owned=await sb.from('restaurants').select('*').eq('owner_id',user.id).order('created_at',{ascending:true}).limit(1).maybeSingle();
+          if(owned.error||!owned.data)throw q.error;
+          const recovered=await sb.from('restaurants').update(payload).eq('id',owned.data.id).select().single();
+          if(recovered.error)throw recovered.error;
+          rest=recovered.data;
+        }else throw q.error;
       }else rest=q.data;
     }
 
