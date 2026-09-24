@@ -77,6 +77,16 @@
       if(q.error)throw q.error;
       rest=q.data;
     }else{
+      // Recover a restaurant already created by an earlier partial save.
+      // This is important when the local restaurant id/slug differs from the DB row.
+      const byName=await sb.from('restaurants').select('*').eq('owner_id',user.id).eq('name',payload.name).order('created_at',{ascending:true}).limit(1).maybeSingle();
+      if(byName.error)throw byName.error;
+      if(byName.data){
+        const uq=await sb.from('restaurants').update(payload).eq('id',byName.data.id).select().single();
+        if(uq.error)throw uq.error;
+        rest=uq.data;
+      }
+      if(rest)return (r.remoteId=rest.id,r.slug=rest.slug,saveLocal(),rest);
       const q=await sb.from('restaurants').insert(payload).select().single();
       if(q.error){
         // A previous save may have created the restaurant before a later step failed.
