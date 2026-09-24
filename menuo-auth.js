@@ -1,7 +1,8 @@
 /* MENUO production authentication: Supabase Auth, email/password, recovery and OAuth. */
 (function(){
   'use strict';
-  const SITE=location.origin+location.pathname;
+  const PROD_SITE='https://ant1kgfhfhn.github.io/menuoproject/';
+  const SITE=/^(localhost|127\\.0\\.0\\.1)$/.test(location.hostname)?location.origin+location.pathname:PROD_SITE;
   function sb(){return window.MENUO_SUPABASE||null}
   function localState(){try{return typeof state!=='undefined'?state:null}catch(_){return null}}
   function saveLocal(){try{if(typeof save==='function')save()}catch(_){} }
