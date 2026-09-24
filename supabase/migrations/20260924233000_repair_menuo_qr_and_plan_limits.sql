@@ -68,7 +68,8 @@ create trigger dishes_plan_limits before insert on public.dishes for each row ex
 drop trigger if exists qr_codes_plan_limits on public.qr_codes;
 create trigger qr_codes_plan_limits before insert on public.qr_codes for each row execute function public.enforce_plan_limits();
 
-grant execute on function public.enforce_plan_limits() to authenticated,service_role;
+revoke all on function public.enforce_plan_limits() from public,anon,authenticated;
+grant execute on function public.enforce_plan_limits() to service_role;
 
 create or replace function public.get_my_plan()
 returns text language sql stable security definer set search_path='public'
