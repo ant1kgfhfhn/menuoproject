@@ -6,6 +6,8 @@
   function stop(){
     try{window.__MENUO_SCAN_CONTROLS?.stop()}catch(_){}
     window.__MENUO_SCAN_CONTROLS=null;
+    try{window.__MENUO_SCAN_STREAM?.getTracks().forEach(t=>t.stop())}catch(_){}
+    window.__MENUO_SCAN_STREAM=null;
     try{window.__MENUO_SCAN_READER?.reset()}catch(_){}
     window.__MENUO_SCAN_READER=null;
     const v=document.getElementById('scannerVideo');
@@ -53,33 +55,24 @@
 
     try{
       if(!window.isSecureContext)throw new Error('secure-context');
+      const stream=await navigator.mediaDevices.getUserMedia({
+        video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}},
+        audio:false
+      });
+      video.srcObject=stream;
+      await video.play();
+      window.__MENUO_SCAN_STREAM=stream;
+      status.textContent='Камера включена. Наведите её на QR-код…';
+
       const ZX=await loadZXing();
       const reader=new ZX.BrowserQRCodeReader();
       window.__MENUO_SCAN_READER=reader;
-
-      let controls;
-      try{
-        controls=await reader.decodeFromConstraints(
-          {video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}},audio:false},
-          video,
-          (result)=>{
-            if(!result)return;
-            const raw=result.getText();
-            stop();
-            openScanResult(raw);
-          }
-        );
-      }catch(firstError){
-        const devices=await ZX.BrowserCodeReader.listVideoInputDevices();
-        const device=(devices||[]).find(d=>/back|rear|environment/i.test(d.label))||(devices||[])[0];
-        if(!device)throw firstError;
-        controls=await reader.decodeFromVideoDevice(device.deviceId,video,(result)=>{
-          if(!result)return;
-          const raw=result.getText();
-          stop();
-          openScanResult(raw);
-        });
-      }
+      const controls=await reader.decodeFromStream(stream,video,(result)=>{
+        if(!result)return;
+        const raw=result.getText();
+        stop();
+        openScanResult(raw);
+      });
       window.__MENUO_SCAN_CONTROLS=controls;
       status.textContent='Наведите заднюю камеру на QR-код MENUO';
     }catch(e){
