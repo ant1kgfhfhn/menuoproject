@@ -86,7 +86,7 @@
         if(retry.error)throw q.error;
         if(retry.data){
           rest=retry.data;
-        }else if(q.error.message==='restaurant_limit_reached'){
+        }else if(q.error?.code==='P0001' || /restaurant_limit_reached/i.test(q.error?.message||'')){
           const owned=await sb.from('restaurants').select('*').eq('owner_id',user.id).order('created_at',{ascending:true}).limit(1).maybeSingle();
           if(owned.error||!owned.data)throw q.error;
           const recovered=await sb.from('restaurants').update(payload).eq('id',owned.data.id).select().single();
