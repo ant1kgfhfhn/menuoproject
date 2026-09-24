@@ -100,12 +100,24 @@
     if(existing.error)throw existing.error;
     const byName=new Map((existing.data||[]).map(x=>[x.name,x.id]));
 
-    const rows=unique.map((name,i)=>({
-      id:byName.get(name),
+    // Keep existing UUIDs; omit id for new rows so Postgres generates it.
+    const existingRows=unique.filter(name=>byName.has(name)).map((name,i)=>({
+      id:byName.get(name),restaurant_id:restaurantId,name,sort_order:i,is_active:true
+    }));
+    if(existingRows.length){
+      const uq=await sb.from('categories').upsert(existingRows,{onConflict:'id'}).select();
+      if(uq.error)throw uq.error;
+    }
+    const newRows=unique.filter(name=>!byName.has(name)).map((name,i)=>({
       restaurant_id:restaurantId,name,sort_order:i,is_active:true
     }));
-    const q=await sb.from('categories').upsert(rows,{onConflict:'id'}).select();
-    if(q.error)throw q.error;
+    let inserted=[];
+    if(newRows.length){
+      const iq=await sb.from('categories').insert(newRows).select();
+      if(iq.error)throw iq.error;
+      inserted=iq.data||[];
+    }
+    const qData=[...existingRows.map(x=>({id:x.id,name:x.name})),...inserted.map(x=>({id:x.id,name:x.name}))];
 
     const keep=new Set(unique);
     const stale=(existing.data||[]).filter(x=>!keep.has(x.name));
@@ -114,7 +126,7 @@
       if(del.error)throw del.error;
     }
 
-    return new Map((q.data||[]).map(x=>[x.name,x.id]));
+    return new Map(qData.map(x=>[x.name,x.id]));
   }
 
   function localDishes(r){
