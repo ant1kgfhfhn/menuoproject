@@ -27,10 +27,14 @@ jobs:
           if old in s:
               s = s.replace(old, new)
           tags = [
-              '<script src="menuo-auth.js" defer></script>',
-              '<script src="menuo-backend.js" defer></script>',
-              '<script src="menuo-visitor-fix.js" defer></script>'
+              '<script src="menuo-auth.js?v=2026092501" defer></script>',
+              '<script src="menuo-backend.js?v=2026092501" defer></script>',
+              '<script src="menuo-visitor-fix.js?v=2026092501" defer></script>'
           ]
+          import re
+          s = re.sub(r'<script src="menuo-auth\\.js(?:\\?[^"]*)?" defer></script>', '', s)
+          s = re.sub(r'<script src="menuo-backend\\.js(?:\\?[^"]*)?" defer></script>', '', s)
+          s = re.sub(r'<script src="menuo-visitor-fix\\.js(?:\\?[^"]*)?" defer></script>', '', s)
           marker = '</head>'
           if marker not in s:
               raise SystemExit('head marker not found')
