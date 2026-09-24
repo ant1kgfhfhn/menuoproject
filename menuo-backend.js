@@ -43,6 +43,7 @@
         auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}
       });
       window.MENUO_SUPABASE=sb;
+      patchPublicLinks();
       patchSaveButton();
     }catch(e){console.error('MENUO backend boot failed',e)}
   }
@@ -206,6 +207,20 @@
       const data=await window.QRCode.toDataURL(url,{width:1200,margin:3,errorCorrectionLevel:'H'});
       const a=document.createElement('a');a.href=data;a.download='menuo-qr.png';a.click();
     }catch(e){alert('Не удалось скачать QR. Откройте ссылку меню и попробуйте ещё раз.')}
+  }
+
+  function patchPublicLinks(){
+    const originalUrl=window.publicUrl;
+    window.publicUrl=function(r){
+      if(r?.qrToken)return publicUrl(r.qrToken);
+      return typeof originalUrl==='function'?originalUrl(r):location.href;
+    };
+    const originalOpen=window.openPublic;
+    window.openPublic=function(){
+      const r=current();
+      if(r?.qrToken){location.href=publicUrl(r.qrToken);return}
+      if(typeof originalOpen==='function')return originalOpen();
+    };
   }
 
   function patchSaveButton(){
