@@ -34,7 +34,7 @@
     if(window.ZXingBrowser?.BrowserQRCodeReader)return Promise.resolve(window.ZXingBrowser);
     return new Promise((resolve,reject)=>{
       const script=document.createElement('script');
-      script.src='https://cdn.jsdelivr.net/npm/@zxing/browser@0.1.5/umd/index.min.js';
+      script.src='https://unpkg.com/@zxing/browser@0.2.1';
       script.async=true;script.dataset.menuoZxing='1';
       script.onload=()=>window.ZXingBrowser?.BrowserQRCodeReader?resolve(window.ZXingBrowser):reject(new Error('zxing-global-missing'));
       script.onerror=()=>reject(new Error('zxing-load-failed'));
@@ -53,17 +53,29 @@
     const video=s.querySelector('#scannerVideo');
     status.textContent='Запрашиваем доступ к камере…';
 
+    let stream;
     try{
       if(!window.isSecureContext)throw new Error('secure-context');
-      const stream=await navigator.mediaDevices.getUserMedia({
+      if(!navigator.mediaDevices?.getUserMedia)throw new Error('camera-unsupported');
+      stream=await navigator.mediaDevices.getUserMedia({
         video:{facingMode:{ideal:'environment'},width:{ideal:1280},height:{ideal:720}},
         audio:false
       });
       video.srcObject=stream;
       await video.play();
       window.__MENUO_SCAN_STREAM=stream;
-      status.textContent='Камера включена. Наведите её на QR-код…';
+      status.textContent='Камера включена. Загружаем сканер…';
+    }catch(e){
+      console.error('MENUO camera error',e);
+      status.textContent=e.message==='secure-context'
+        ?'Сканер работает только по HTTPS. Откройте MENUO через защищённый адрес.'
+        :e.message==='camera-unsupported'
+          ?'Этот браузер не поддерживает доступ к камере.'
+          :'Камера не доступна. Проверьте разрешение камеры для menuo-qr.com в настройках Safari.';
+      return;
+    }
 
+    try{
       const ZX=await loadZXing();
       const reader=new ZX.BrowserQRCodeReader();
       window.__MENUO_SCAN_READER=reader;
@@ -76,10 +88,11 @@
       window.__MENUO_SCAN_CONTROLS=controls;
       status.textContent='Наведите заднюю камеру на QR-код MENUO';
     }catch(e){
-      console.error('MENUO scanner error',e);
-      status.textContent=e.message==='secure-context'
-        ?'Сканер работает только по HTTPS. Откройте MENUO через защищённый адрес.'
-        :'Не удалось открыть камеру. Разрешите доступ к камере и нажмите «Запустить камеру» ещё раз.';
+      console.error('MENUO decoder error',e);
+      status.textContent='Камера работает, но не удалось загрузить QR-сканер. Нажмите «Запустить камеру» ещё раз.';
+      try{stream?.getTracks().forEach(t=>t.stop())}catch(_){}
+      window.__MENUO_SCAN_STREAM=null;
+      return;
     }
   }
 
@@ -100,15 +113,20 @@
   }
 
   async function renderPublic(){
-    const token=new URLSearchParams(location.search).get('menu');
+    const token=String(new URLSearchParams(location.search).get('menu')||'').trim();
     if(!token)return;
     const started=Date.now();
     while(!window.MENUO_SUPABASE&&Date.now()-started<15000)await new Promise(r=>setTimeout(r,100));
     const sb=window.MENUO_SUPABASE;
     if(!sb)return showPublicError('Не удалось подключиться к MENUO.');
-    const {data,error}=await sb.rpc('get_public_menu',{p_token:token});
+    let data=null,error=null;
+    for(let attempt=0;attempt<2&&!data;attempt++){
+      const q=await sb.rpc('get_public_menu',{p_token:token});
+      data=q.data;error=q.error;
+      if(!data&&attempt===0)await new Promise(r=>setTimeout(r,400));
+    }
     if(error||!data){
-      console.error('MENUO public menu error',error);
+      console.error('MENUO public menu error',error,token);
       return showPublicError('Меню по этой QR-ссылке не найдено или оно отключено.');
     }
 
@@ -120,12 +138,14 @@
 
     const r=data.restaurant||{},cats=data.categories||[],dishes=data.dishes||[];
     const byCat=new Map(cats.map(c=>[String(c.id),c.name]));
+    const lang=(typeof state!=='undefined'&&state?.language)||'ru';
+    const labels={ru:['Все','Цифровое меню MENUO'],de:['Alle','Digitales MENUO-Menü'],en:['All','MENUO digital menu'],uk:['Усі','Цифрове меню MENUO'],tr:['Tümü','MENUO dijital menü'],pl:['Wszystkie','Cyfrowe menu MENUO'],es:['Todos','Menú digital de MENUO'],fr:['Tous','Menu numérique MENUO'],it:['Tutti','Menu digitale MENUO'],pt:['Todos','Menu digital MENUO'],ro:['Toate','Meniu digital MENUO'],ar:['الكل','قائمة MENUO الرقمية']}[lang]||['Все','Цифровое меню MENUO'];
     host.innerHTML='<div class="public-hero"><div class="top" style="margin-bottom:0"><div class="rest-logo">'+esc((r.name||'M').slice(0,1).toUpperCase())+'</div><button class="lang" onclick="toggleLanguages()">RU ▾</button></div><h1>'+esc(r.name||'MENUO')+'</h1><p>'+esc(r.description||'Цифровое меню MENUO')+'</p></div><div class="category-row" id="menuoPublicCategories"></div><div id="menuoPublicItems"></div>';
 
     const catHost=host.querySelector('#menuoPublicCategories');
     const items=host.querySelector('#menuoPublicItems');
     const all=document.createElement('button');
-    all.className='chip active';all.textContent='Все';catHost.appendChild(all);
+    all.className='chip active';all.textContent=labels[0];catHost.appendChild(all);
 
     function render(catId){
       const list=catId?dishes.filter(d=>String(d.category_id)===String(catId)):dishes;
@@ -139,6 +159,7 @@
     });
     all.onclick=()=>{catHost.querySelectorAll('.chip').forEach(x=>x.classList.remove('active'));all.classList.add('active');render(null)};
     render(null);
+    const langBtn=host.querySelector('.lang'); if(langBtn)langBtn.textContent=(lang||'ru').toUpperCase()+' ▾';
     try{await sb.from('analytics_events').insert({restaurant_id:r.id,event_type:'menu_view',metadata:{source:'public',token}})}catch(_){}
   }
 
