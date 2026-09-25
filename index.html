@@ -71,6 +71,18 @@ function publicUrl(r){return location.origin+location.pathname+'?menu='+encodeUR
 
 const MENUO_UI_CACHE='menuo-ui-translations-v1';
 const MENUO_NAV_HISTORY=[];
+const MENUO_LAST_SCREEN_KEY='menuo-last-screen-v1';
+function menuoSaveLastScreen(id){
+  try{localStorage.setItem(MENUO_LAST_SCREEN_KEY,id)}catch(_){}
+}
+function menuoRestoreScreen(){
+  try{
+    const id=localStorage.getItem(MENUO_LAST_SCREEN_KEY);
+    if(!id||id==='auth'||id==='menuoRecovery')return null;
+    if(id==='public'&&new URLSearchParams(location.search).get('menu'))return 'public';
+    return document.getElementById(id)?id:null;
+  }catch(_){return null}
+}
 function menuoCurrentScreen(){return [...document.querySelectorAll('.screen')].find(x=>!x.classList.contains('hidden'))?.id||null}
 function menuoBack(){
   const previous=MENUO_NAV_HISTORY.pop();
@@ -142,7 +154,7 @@ async function translateApplicationUI(lang){
   });
 }
 
-function show(id,opts={}){const current=menuoCurrentScreen();if(!opts.skipHistory&&current&&current!==id&&id!=='home')MENUO_NAV_HISTORY.push(current);stopScanner();document.querySelectorAll('.screen').forEach(x=>x.classList.add('hidden'));document.getElementById(id)?.classList.remove('hidden');if(id==='owner')renderOwner();if(id==='editor')renderEditor();if(id==='restaurantProfile')renderRestaurantProfile();if(id==='userProfile')renderProfile();if(id==='subscription')renderSubscription();if(id==='public')renderPublic(publicRestaurant||findPublic());updateNav(id);positionGlobalLanguage();window.scrollTo({top:0,behavior:'instant'});setTimeout(()=>translateApplicationUI(state.language),0)}
+function show(id,opts={}){const current=menuoCurrentScreen();if(!opts.skipHistory&&current&&current!==id&&id!=='home')MENUO_NAV_HISTORY.push(current);if(!opts.restoreOnly)menuoSaveLastScreen(id);stopScanner();document.querySelectorAll('.screen').forEach(x=>x.classList.add('hidden'));document.getElementById(id)?.classList.remove('hidden');if(id==='owner')renderOwner();if(id==='editor')renderEditor();if(id==='restaurantProfile')renderRestaurantProfile();if(id==='userProfile')renderProfile();if(id==='subscription')renderSubscription();if(id==='public')renderPublic(publicRestaurant||findPublic());updateNav(id);positionGlobalLanguage();window.scrollTo({top:0,behavior:'instant'});setTimeout(()=>translateApplicationUI(state.language),0)}
 function updateNav(){const u=user();document.getElementById('navPlan').textContent=u?.plan==='BUSINESS'?'B':u?.plan==='PRO'?'P':'F';document.getElementById('navPlanText').textContent=u?.plan||'FREE';document.getElementById('navProfile').textContent=u?.firstName||'Профиль'}
 function openOwner(){if(user()){show('owner');return}authAfter='owner';openAuth('register','owner')}
 function openProfile(){if(user()){show('userProfile');return}authAfter='home';openAuth('login','home')}
@@ -282,6 +294,6 @@ function updateGlobalLanguageButton(){
  positionGlobalLanguage();
 }
 async function setLanguage(l){state.language=l;save();updateGlobalLanguageButton();document.documentElement.lang=l;document.documentElement.dir=l==='ar'?'rtl':'ltr';document.getElementById('languageTray').classList.add('hidden');if(new URLSearchParams(location.search).get('menu')&&typeof window.__MENUO_RENDER_PUBLIC==='function'){await window.__MENUO_RENDER_PUBLIC();}else if(!document.getElementById('public').classList.contains('hidden'))renderPublic(publicRestaurant);await translateApplicationUI(l);renderLanguages()}
-(function init(){menuoSetupNavigation();updateGlobalLanguageButton();window.addEventListener('resize',positionGlobalLanguage);document.documentElement.lang=state.language;document.documentElement.dir=state.language==='ar'?'rtl':'ltr';renderLanguages();const r=findPublic();if(r){publicRestaurant=r;show('public')}else if(state.session)show('home');else show('home');setTimeout(()=>{translateApplicationUI(state.language);positionGlobalLanguage()},200)})();
+(function init(){menuoSetupNavigation();updateGlobalLanguageButton();window.addEventListener('resize',positionGlobalLanguage);document.documentElement.lang=state.language;document.documentElement.dir=state.language==='ar'?'rtl':'ltr';renderLanguages();const r=findPublic();const restored=menuoRestoreScreen();if(r){publicRestaurant=r;show('public',{restoreOnly:true})}else if(restored){show(restored,{restoreOnly:true})}else show('home');setTimeout(()=>{translateApplicationUI(state.language);positionGlobalLanguage()},200)})();
 </script>
 </body></html>
