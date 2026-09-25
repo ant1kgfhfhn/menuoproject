@@ -51,7 +51,7 @@
       ...oldUser,id:u.id,email:u.email||'',phone:u.phone||'',
       firstName:u.user_metadata?.first_name||oldUser.firstName||'',
       lastName:u.user_metadata?.last_name||oldUser.lastName||'',
-      plan:String(planRow?.code||planRow?.plan_code||oldUser.plan||'FREE').toUpperCase()
+      plan:String(planRow?.code||planRow?.plan_code||planRow?.get_my_plan||oldUser.plan||'FREE').toUpperCase()
     }];
     state.restaurants=restaurants;
     state.dishes=mappedDishes;
