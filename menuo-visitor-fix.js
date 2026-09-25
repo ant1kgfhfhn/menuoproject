@@ -112,65 +112,99 @@
     }catch(_){alert('QR-код не распознан как ссылка.')}
   }
 
+  async function getPublicMenu(token){
+    if(window.MENUO_SUPABASE){
+      const q=await window.MENUO_SUPABASE.rpc('get_public_menu',{p_token:token});
+      if(q.data)return q.data;
+      console.warn('MENUO RPC failed, trying anonymous REST fallback',q.error);
+    }
+    const res=await fetch('https://vizmqgmefbgcggyfzdkj.supabase.co/rest/v1/rpc/get_public_menu',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'Accept':'application/json',
+        'apikey':'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZpem1xZ21lZmJnY2dneWZ6ZGtqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkwNjQxNTMsImV4cCI6MjEwNDY0MDE1M30.N3FDs_qVjj-awV7pheL8I8eXTMQf0gUJV0c6de2eK-o',
+        'Authorization':'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZpem1xZ21lZmJnY2dneWZ6ZGtqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODkwNjQxNTMsImV4cCI6MjEwNDY0MDE1M30.N3FDs_qVjj-awV7pheL8I8eXTMQf0gUJV0c6de2eK-o'
+      },
+      body:JSON.stringify({p_token:token})
+    });
+    if(!res.ok)throw new Error('public-menu-http-'+res.status);
+    return await res.json();
+  }
+
+  async function translateText(text,from,to){
+    const value=String(text??'').trim();
+    if(!value||!to||from===to)return text;
+    const cacheKey='menuo:t:'+from+':'+to+':'+value;
+    try{const cached=localStorage.getItem(cacheKey);if(cached)return cached}catch(_){}
+    try{
+      const url='https://api.mymemory.translated.net/get?q='+encodeURIComponent(value.slice(0,450))+'&langpair='+encodeURIComponent(from+'|'+to);
+      const res=await fetch(url,{headers:{Accept:'application/json'}});
+      if(!res.ok)throw new Error('translation-http-'+res.status);
+      const data=await res.json();
+      const translated=String(data?.responseData?.translatedText||'').trim();
+      if(!translated)return text;
+      try{localStorage.setItem(cacheKey,translated)}catch(_){}
+      return translated;
+    }catch(e){console.warn('MENUO translation failed',from,to,value,e);return text}
+  }
+
+  async function translateMenu(data,lang){
+    if(!data)return data;
+    const result=JSON.parse(JSON.stringify(data));
+    const from=String(result.restaurant?.default_locale||'ru').toLowerCase().split('-')[0];
+    const to=String(lang||'ru').toLowerCase().split('-')[0];
+    if(from===to)return result;
+    const jobs=[];
+    const tr=(obj,key)=>{if(obj?.[key])jobs.push(translateText(obj[key],from,to).then(v=>obj[key]=v))};
+    tr(result.restaurant,'name');tr(result.restaurant,'description');tr(result.restaurant,'address');
+    (result.categories||[]).forEach(c=>tr(c,'name'));
+    (result.dishes||[]).forEach(d=>{tr(d,'name');tr(d,'description')});
+    await Promise.all(jobs);
+    return result;
+  }
+
   async function renderPublic(){
     const token=String(new URLSearchParams(location.search).get('menu')||'').trim();
     if(!token)return;
-    const started=Date.now();
-    while(!window.MENUO_SUPABASE&&Date.now()-started<15000)await new Promise(r=>setTimeout(r,100));
-    const sb=window.MENUO_SUPABASE;
-    if(!sb)return showPublicError('Не удалось подключиться к MENUO.');
-    let data=null,error=null;
-    for(let attempt=0;attempt<2&&!data;attempt++){
-      const q=await sb.rpc('get_public_menu',{p_token:token});
-      data=q.data;error=q.error;
-      if(!data&&attempt===0)await new Promise(r=>setTimeout(r,400));
-    }
-    // Direct REST fallback for Safari/WebKit when the client RPC layer is interrupted.
-    if(!data){
-      try{
-        const res=await fetch('https://vizmqgmefbgcggyfzdkj.supabase.co/rest/v1/rpc/get_public_menu',{
-          method:'POST',headers:{'Content-Type':'application/json','apikey':'sb_publishable_G_9VANFg4Dh7vuw8qpwwGw_Ck0h0H_3','Authorization':'Bearer sb_publishable_G_9VANFg4Dh7vuw8qpwwGw_Ck0h0H_3'},
-          body:JSON.stringify({p_token:token})
-        });
-        if(res.ok)data=await res.json(); else error=await res.text();
-      }catch(e){error=e}
-    }
-    if(error||!data){
-      console.error('MENUO public menu error',error,token);
-      return showPublicError('Меню по этой QR-ссылке не найдено или оно отключено.');
-    }
-
     const host=document.getElementById('public');
     if(!host)return;
     document.querySelectorAll('.screen').forEach(el=>el.classList.add('hidden'));
     host.classList.remove('hidden');
-    window.scrollTo({top:0,behavior:'instant'});
+    host.innerHTML='<div class="hero"><div class="eyebrow">MENUO</div><h1 class="section-title">Загружаем меню…</h1><p class="lead">Получаем актуальные данные ресторана.</p></div>';
 
-    const r=data.restaurant||{},cats=data.categories||[],dishes=data.dishes||[];
-    const byCat=new Map(cats.map(c=>[String(c.id),c.name]));
-    const lang=(typeof state!=='undefined'&&state?.language)||'ru';
-    const labels={ru:['Все','Цифровое меню MENUO'],de:['Alle','Digitales MENUO-Menü'],en:['All','MENUO digital menu'],uk:['Усі','Цифрове меню MENUO'],tr:['Tümü','MENUO dijital menü'],pl:['Wszystkie','Cyfrowe menu MENUO'],es:['Todos','Menú digital de MENUO'],fr:['Tous','Menu numérique MENUO'],it:['Tutti','Menu digitale MENUO'],pt:['Todos','Menu digital MENUO'],ro:['Toate','Meniu digital MENUO'],ar:['الكل','قائمة MENUO الرقمية']}[lang]||['Все','Цифровое меню MENUO'];
-    host.innerHTML='<div class="public-hero"><div class="top" style="margin-bottom:0"><div class="rest-logo">'+esc((r.name||'M').slice(0,1).toUpperCase())+'</div><button class="lang" onclick="toggleLanguages()">RU ▾</button></div><h1>'+esc(r.name||'MENUO')+'</h1><p>'+esc(r.description||'Цифровое меню MENUO')+'</p></div><div class="category-row" id="menuoPublicCategories"></div><div id="menuoPublicItems"></div>';
+    try{
+      let data=null,lastError=null;
+      for(let attempt=0;attempt<2&&!data;attempt++){
+        try{data=await getPublicMenu(token)}catch(e){lastError=e}
+        if(!data&&attempt===0)await new Promise(r=>setTimeout(r,500));
+      }
+      if(!data)throw lastError||new Error('empty-public-menu');
 
-    const catHost=host.querySelector('#menuoPublicCategories');
-    const items=host.querySelector('#menuoPublicItems');
-    const all=document.createElement('button');
-    all.className='chip active';all.textContent=labels[0];catHost.appendChild(all);
+      const lang=(typeof state!=='undefined'&&state?.language)||'ru';
+      data=await translateMenu(data,lang);
+      const r=data.restaurant||{},cats=data.categories||[],dishes=data.dishes||[];
+      const byCat=new Map(cats.map(c=>[String(c.id),c.name]));
+      const labels={ru:['Все','Цифровое меню MENUO'],de:['Alle','Digitales MENUO-Menü'],en:['All','MENUO digital menu'],uk:['Усі','Цифрове меню MENUO'],tr:['Tümü','MENUO dijital menü'],pl:['Wszystkie','Cyfrowe menu MENUO'],es:['Todos','Menú digital de MENUO'],fr:['Tous','Menu numérique MENUO'],it:['Tutti','Menu digitale MENUO'],pt:['Todos','Menu digital MENUO'],ro:['Toate','Meniu digital MENUO'],ar:['الكل','قائمة MENUO الرقمية']}[lang]||['Все','Цифровое меню MENUO'];
 
-    function render(catId){
-      const list=catId?dishes.filter(d=>String(d.category_id)===String(catId)):dishes;
-      items.innerHTML=list.length?list.map(d=>'<article class="dish '+(d.is_available?'':'unavailable')+'"><div class="food">'+(d.image_url?'<img src="'+esc(d.image_url)+'" alt="">':'🍽️')+'</div><div class="dish-info"><h3>'+esc(d.name)+'</h3><p>'+esc(d.description||'')+'</p><small style="color:#69756e">'+esc(byCat.get(String(d.category_id))||'')+'</small></div><div class="price">'+(Number(d.price_cents||0)/100).toFixed(2).replace('.',',')+' '+esc(d.currency||'EUR')+'</div></article>').join(''):'<div class="empty">Меню пока пустое.</div>';
+      host.innerHTML='<div class="public-hero"><div class="top" style="margin-bottom:0"><div class="rest-logo">'+esc((r.name||'M').slice(0,1).toUpperCase())+'</div><button class="lang" onclick="toggleLanguages()">'+esc((lang||'ru').toUpperCase())+' ▾</button></div><h1>'+esc(r.name||'MENUO')+'</h1><p>'+esc([r.address,r.phone].filter(Boolean).join(' · ')||labels[1])+'</p></div><div class="category-row" id="menuoPublicCategories"></div><h2 class="section-title">'+esc(labels[1].split('MENUO')[0].trim()||'Наше меню')+'</h2><p class="sub">'+esc(r.description||'')+'</p><div id="menuoPublicItems"></div>';
+
+      const catHost=host.querySelector('#menuoPublicCategories');
+      const items=host.querySelector('#menuoPublicItems');
+      const all=document.createElement('button');all.className='chip active';all.textContent=labels[0];catHost.appendChild(all);
+
+      function render(catId){
+        const list=catId?dishes.filter(d=>String(d.category_id)===String(catId)):dishes;
+        items.innerHTML=list.length?list.map(d=>'<article class="dish '+(d.is_available?'':'unavailable')+'"><div class="food">'+(d.image_url?'<img src="'+esc(d.image_url)+'" alt="">':'🍽️')+'</div><div class="dish-info"><h3>'+esc(d.name)+'</h3><p>'+esc(d.description||'')+'</p><small style="color:#69756e">'+esc(byCat.get(String(d.category_id))||'')+'</small></div><div class="price">'+(Number(d.price_cents||0)/100).toFixed(2).replace('.',',')+' '+esc(d.currency||'EUR')+'</div></article>').join(''):'<div class="empty">Меню пока пустое.</div>';
+      }
+      cats.forEach(c=>{const b=document.createElement('button');b.className='chip';b.textContent=c.name;b.onclick=()=>{catHost.querySelectorAll('.chip').forEach(x=>x.classList.remove('active'));b.classList.add('active');render(c.id)};catHost.appendChild(b)});
+      all.onclick=()=>{catHost.querySelectorAll('.chip').forEach(x=>x.classList.remove('active'));all.classList.add('active');render(null)};
+      render(null);
+      try{await window.MENUO_SUPABASE?.from('analytics_events').insert({restaurant_id:r.id,event_type:'menu_view',metadata:{source:'public',token}})}catch(_){}
+    }catch(error){
+      console.error('MENUO public menu error',error,token);
+      showPublicError('Не удалось загрузить меню. Проверьте QR-ссылку и попробуйте ещё раз.');
     }
-
-    cats.forEach(c=>{
-      const b=document.createElement('button');b.className='chip';b.textContent=c.name;
-      b.onclick=()=>{catHost.querySelectorAll('.chip').forEach(x=>x.classList.remove('active'));b.classList.add('active');render(c.id)};
-      catHost.appendChild(b);
-    });
-    all.onclick=()=>{catHost.querySelectorAll('.chip').forEach(x=>x.classList.remove('active'));all.classList.add('active');render(null)};
-    render(null);
-    const langBtn=host.querySelector('.lang'); if(langBtn)langBtn.textContent=(lang||'ru').toUpperCase()+' ▾';
-    try{await sb.from('analytics_events').insert({restaurant_id:r.id,event_type:'menu_view',metadata:{source:'public',token}})}catch(_){}
   }
 
   function showPublicError(message){
