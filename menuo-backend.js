@@ -237,15 +237,22 @@
     try{
       const box=document.getElementById('menuoQrCanvas');
       const img=box?.querySelector('img');
-      if(img?.src){
-        const a=document.createElement('a');a.href=img.src;a.download='menuo-qr.png';a.click();return;
-      }
       const canvas=box?.querySelector('canvas');
-      if(canvas){
-        const a=document.createElement('a');a.href=canvas.toDataURL('image/png');a.download='menuo-qr.png';a.click();return;
+      const dataUrl=img?.src || (canvas?canvas.toDataURL('image/png'):'');
+      if(!dataUrl)throw new Error('qr-not-ready');
+      if(navigator.share){
+        try{
+          const res=await fetch(dataUrl);const blob=await res.blob();
+          const file=new File([blob],'menuo-qr.png',{type:'image/png'});
+          if(!navigator.canShare || navigator.canShare({files:[file]})){
+            await navigator.share({files:[file],title:'MENUO QR-код',text:'QR-код меню MENUO'});return;
+          }
+        }catch(shareError){
+          if(shareError?.name==='AbortError')return;
+        }
       }
-      throw new Error('qr-not-ready');
-    }catch(e){alert('QR ещё не готов. Подождите секунду и нажмите «Скачать QR» ещё раз.')}
+      const a=document.createElement('a');a.href=dataUrl;a.download='menuo-qr.png';a.target='_blank';a.rel='noopener';document.body.appendChild(a);a.click();a.remove();
+    }catch(e){alert('Не удалось сохранить QR. На iPhone используйте «Поделиться» и сохраните изображение в Фото.')}
   }
 
   function patchPublicLinks(){
