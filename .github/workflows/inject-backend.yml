@@ -27,9 +27,9 @@ jobs:
           if old in s:
               s = s.replace(old, new)
           tags = [
-              '<script src="menuo-auth.js?v=2026092503" defer></script>',
-              '<script src="menuo-backend.js?v=2026092503" defer></script>',
-              '<script src="menuo-visitor-fix.js?v=2026092503" defer></script>'
+              '<script src="menuo-auth.js?v=2026092504" defer></script>',
+              '<script src="menuo-backend.js?v=2026092504" defer></script>',
+              '<script src="menuo-visitor-fix.js?v=2026092504" defer></script>'
           ]
           s = '\n'.join(line for line in s.splitlines() if 'script src="menuo-' not in line)
           marker = '</head>'
