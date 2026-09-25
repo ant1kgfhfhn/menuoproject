@@ -256,7 +256,7 @@ async function checkPromo(){
     out.textContent=p?('Промокод действителен: '+(p.discount_percent?p.discount_percent+'% скидки':((p.discount_cents||0)/100).toFixed(2)+' € скидки')):'Промокод недействителен или уже использован.';
   }catch(e){out.textContent='Не удалось проверить промокод.'}
 }
-async async function startCheckout(planId){
+async function startCheckout(planId){
   const sb=window.MENUO_SUPABASE;
   if(!sb)return alert('Система оплаты ещё загружается. Попробуйте через секунду.');
   const {data:{user},error:authError}=await sb.auth.getUser();
