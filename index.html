@@ -257,18 +257,38 @@ async function checkPromo(){
   }catch(e){out.textContent='Не удалось проверить промокод.'}
 }
 async function startCheckout(planId){
-  const sb=window.MENUO_SUPABASE;
-  if(!sb)return alert('Система оплаты ещё загружается. Попробуйте через секунду.');
-  const {data:{user},error:authError}=await sb.auth.getUser();
-  if(authError||!user)return openProfile();
-  const promo=document.getElementById('promoCode')?.value.trim().toUpperCase()||'';
+  const out=document.getElementById('promoStatus');
+  const buttons=[...document.querySelectorAll('#subscription button.primary')];
+  const button=buttons.find(b=>String(b.textContent||'').toLowerCase().includes(planId==='pro'?'pro':'business'));
+  const setStatus=(msg)=>{if(out)out.textContent=msg;};
+  if(button)button.disabled=true;
+  setStatus('Подготавливаем оплату…');
   try{
-    const q=await sb.functions.invoke('create-checkout',{body:{planId,promoCode:promo}});
-    if(q.error)throw q.error;
-    if(q.data?.error)throw new Error(q.data.error);
-    if(!q.data?.url)throw new Error('Stripe не вернул ссылку на оплату.');
+    const sb=window.MENUO_SUPABASE;
+    if(!sb)throw new Error('Система оплаты ещё загружается. Обновите страницу и попробуйте ещё раз.');
+    setStatus('Проверяем аккаунт…');
+    const authResult=await Promise.race([
+      sb.auth.getUser(),
+      new Promise((_,reject)=>setTimeout(()=>reject(new Error('Проверка аккаунта заняла слишком много времени. Обновите страницу.')),10000))
+    ]);
+    const user=authResult?.data?.user;
+    if(authResult?.error||!user){openProfile();return;}
+    const promo=document.getElementById('promoCode')?.value.trim().toUpperCase()||'';
+    setStatus('Открываем оплату Stripe…');
+    const q=await Promise.race([
+      sb.functions.invoke('create-checkout',{body:{planId,promoCode:promo}}),
+      new Promise((_,reject)=>setTimeout(()=>reject(new Error('Сервер оплаты не ответил за 15 секунд.')),15000))
+    ]);
+    if(q?.error)throw q.error;
+    if(q?.data?.error)throw new Error(q.data.error);
+    if(!q?.data?.url)throw new Error('Stripe не вернул ссылку на оплату.');
     location.href=q.data.url;
-  }catch(e){alert(e?.message||'Не удалось открыть оплату.')}
+  }catch(e){
+    setStatus('Ошибка оплаты: '+(e?.message||'неизвестная ошибка'));
+    alert(e?.message||'Не удалось открыть оплату.');
+  }finally{
+    if(button)button.disabled=false;
+  }
 }
 function renderSubscription(){document.getElementById('planSummary').textContent=`Текущий тариф: ${user()?.plan||'FREE'}. Реальная оплата будет подключена через backend.`}
 function findPublic(){const slug=new URLSearchParams(location.search).get('menu');return slug?state.restaurants.find(r=>r.slug===slug):null}
