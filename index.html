@@ -52,7 +52,7 @@
 </div>
 </section>
 
-<section class="screen hidden" id="subscription"><div class="top"><button class="back" onclick="show('owner')">‹</button><div class="brand">Тарифы</div><span></span></div><h1 class="section-title">Тарифы MENUO</h1><p class="sub" id="planSummary"></p><div class="menu-card plan"><div class="plan-badge">F</div><div style="flex:1"><b>FREE</b><div class="price-large">€0</div><div class="mutedline">10 блюд · 1 ресторан · 1 QR · базовый дизайн</div></div></div><div class="menu-card plan"><div class="plan-badge">P</div><div style="flex:1"><b>PRO</b><div class="price-large">€9,99/мес.</div><div class="mutedline">Без лимита блюд · до 2 ресторанов · 2 QR · аллергены · языки · статистика</div></div></div><div class="menu-card plan"><div class="plan-badge">B</div><div style="flex:1"><b>BUSINESS</b><div class="price-large">€19,99/мес.</div><div class="mutedline">Без лимитов · филиалы · несколько QR · акции · специальные меню</div></div></div><div class="notice">Оплата пока не имитируется. Реальная активация PRO/BUSINESS должна происходить только после backend-платежа.</div></section>
+<section class="screen hidden" id="subscription"><div class="top"><button class="back" onclick="show('owner')">‹</button><div class="brand">Тарифы</div><span></span></div><h1 class="section-title">Тарифы MENUO</h1><p class="sub" id="planSummary"></p><div class="menu-card plan"><div class="plan-badge">F</div><div style="flex:1"><b>FREE</b><div class="price-large">€0</div><div class="mutedline">10 блюд · 1 ресторан · 1 QR · базовый дизайн</div></div></div><div class="menu-card plan"><div class="plan-badge">P</div><div style="flex:1"><b>PRO</b><div class="price-large">€9,99/мес.</div><div class="mutedline">Без лимита блюд · до 2 ресторанов · 2 QR · аллергены · языки · статистика</div><button class="primary" style="margin-top:12px" onclick="startCheckout('pro')">Купить PRO</button></div></div><div class="menu-card plan"><div class="plan-badge">B</div><div style="flex:1"><b>BUSINESS</b><div class="price-large">€19,99/мес.</div><div class="mutedline">Без лимитов · филиалы · несколько QR · акции · специальные меню</div><button class="primary" style="margin-top:12px" onclick="startCheckout('business')">Купить BUSINESS</button></div></div><div class="menu-card"><div style="flex:1"><b>Промокод</b><div class="mutedline">Если у вас есть персональный код на скидку, введите его перед оплатой.</div><div style="display:flex;gap:8px;margin-top:10px"><input id="promoCode" placeholder="Например MENUO20" autocomplete="off" style="flex:1;border:1px solid #dce4df;border-radius:13px;padding:13px;text-transform:uppercase"><button class="mini" onclick="checkPromo()">Проверить</button></div><div id="promoStatus" class="mutedline" style="margin-top:8px"></div></div></div><div class="notice">Оплата проходит через Stripe. Тариф активируется только после подтверждённого платежа.</div></section>
 
 <div class="language-tray hidden" id="languageTray"><input id="languageSearch" type="search" placeholder="Найти язык" oninput="renderLanguages()"><div class="language-list" id="languageList"></div></div>
 <nav class="global-nav"><button onclick="show('home')"><svg class="icon-svg nav-icon" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h14V10M9 20v-6h6v6"/></svg>Главная</button><button onclick="openSubscription()"><span class="plan-icon" id="navPlan">F</span><span id="navPlanText">FREE</span></button><button onclick="openProfile()"><svg class="icon-svg nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c.7-4 3.2-6 8-6s7.3 2 8 6"/></svg><span id="navProfile">Профиль</span></button></nav>
@@ -241,6 +241,35 @@ async function changePassword(){
  }catch(e){alert(e?.message||'Не удалось изменить пароль.')}
 }
 async function logout(){const c=window.MENUO_SUPABASE;try{await c?.auth.signOut()}catch(_){}state.session=null;state.activeRestaurantId=null;save();MENUO_NAV_HISTORY.length=0;show('home',{skipHistory:true})}
+async function checkPromo(){
+  const code=document.getElementById('promoCode')?.value.trim();
+  const out=document.getElementById('promoStatus');
+  if(!code||!out)return;
+  const sb=window.MENUO_SUPABASE;
+  const u=await sb?.auth.getUser();
+  if(!u?.data?.user){out.textContent='Сначала войдите в аккаунт.';return}
+  out.textContent='Проверяем…';
+  try{
+    const q=await sb.rpc('validate_promo',{p_code:code,p_user:u.data.user.id});
+    if(q.error)throw q.error;
+    const p=Array.isArray(q.data)?q.data[0]:q.data;
+    out.textContent=p?('Промокод действителен: '+(p.discount_percent?p.discount_percent+'% скидки':((p.discount_cents||0)/100).toFixed(2)+' € скидки')):'Промокод недействителен или уже использован.';
+  }catch(e){out.textContent='Не удалось проверить промокод.'}
+}
+async function startCheckout(planId){
+  const sb=window.MENUO_SUPABASE;
+  if(!sb)return alert('Система оплаты ещё загружается. Попробуйте через секунду.');
+  const {data:{user},error:authError}=await sb.auth.getUser();
+  if(authError||!user)return openProfile();
+  const promo=document.getElementById('promoCode')?.value.trim().toUpperCase()||'';
+  try{
+    const q=await sb.functions.invoke('create-checkout',{body:{planId,promoCode:promo}});
+    if(q.error)throw q.error;
+    if(q.data?.error)throw new Error(q.data.error);
+    if(!q.data?.url)throw new Error('Stripe не вернул ссылку на оплату.');
+    location.href=q.data.url;
+  }catch(e){alert(e?.message||'Не удалось открыть оплату.')}
+}
 function renderSubscription(){document.getElementById('planSummary').textContent=`Текущий тариф: ${user()?.plan||'FREE'}. Реальная оплата будет подключена через backend.`}
 function findPublic(){const slug=new URLSearchParams(location.search).get('menu');return slug?state.restaurants.find(r=>r.slug===slug):null}
 function renderPublic(r){if(!r)return openDemo();publicRestaurant=r;const t=TEXT[state.language]||TEXT.en;document.getElementById('publicName').textContent=r.name;document.getElementById('publicMeta').textContent=[r.address,r.hours].filter(Boolean).join(' · ');document.getElementById('publicTitle').textContent=t[0];document.getElementById('publicIntro').textContent=r.description||t[1];document.getElementById('publicCategories').innerHTML=r.categories.map((c,i)=>`<button class="chip ${i===0?'active':''}" onclick="filterPublic(this,'${esc(c)}')">${esc(c)}</button>`).join('');renderPublicDishes('Все')}
