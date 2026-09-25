@@ -77,3 +77,6 @@ as $$
   select coalesce((select plan_id from public.subscriptions where user_id=auth.uid() and status in ('trialing','active','past_due') limit 1),'free');
 $$;
 grant execute on function public.get_my_plan() to authenticated;
+
+-- Public menu RPC must be callable by both anonymous QR visitors and logged-in users.
+grant execute on function public.get_public_menu(text) to anon, authenticated;
