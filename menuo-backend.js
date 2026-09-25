@@ -235,10 +235,17 @@
 
   async function downloadQr(url){
     try{
-      await loadScript('https://cdn.jsdelivr.net/npm/qrcode@1.5.4/build/qrcode.min.js');
-      const data=await window.QRCode.toDataURL(url,{width:1200,margin:3,errorCorrectionLevel:'H'});
-      const a=document.createElement('a');a.href=data;a.download='menuo-qr.png';a.click();
-    }catch(e){alert('Не удалось скачать QR. Откройте ссылку меню и попробуйте ещё раз.')}
+      const box=document.getElementById('menuoQrCanvas');
+      const img=box?.querySelector('img');
+      if(img?.src){
+        const a=document.createElement('a');a.href=img.src;a.download='menuo-qr.png';a.click();return;
+      }
+      const canvas=box?.querySelector('canvas');
+      if(canvas){
+        const a=document.createElement('a');a.href=canvas.toDataURL('image/png');a.download='menuo-qr.png';a.click();return;
+      }
+      throw new Error('qr-not-ready');
+    }catch(e){alert('QR ещё не готов. Подождите секунду и нажмите «Скачать QR» ещё раз.')}
   }
 
   function patchPublicLinks(){
