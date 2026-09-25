@@ -54,7 +54,66 @@ function save(){localStorage.setItem(KEY,JSON.stringify(state))}function uid(){r
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function slugify(s){return (s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,45)||'restaurant')+'-'+uid().slice(0,6)}
 function publicUrl(r){return location.origin+location.pathname+'?menu='+encodeURIComponent(r.slug)}
-function show(id){stopScanner();document.querySelectorAll('.screen').forEach(x=>x.classList.add('hidden'));document.getElementById(id)?.classList.remove('hidden');if(id==='owner')renderOwner();if(id==='editor')renderEditor();if(id==='restaurantProfile')renderRestaurantProfile();if(id==='userProfile')renderProfile();if(id==='subscription')renderSubscription();if(id==='public')renderPublic(publicRestaurant||findPublic());updateNav(id);window.scrollTo({top:0,behavior:'instant'})}
+
+const MENUO_UI_CACHE='menuo-ui-translations-v1';
+function menuoUiCache(){try{return JSON.parse(localStorage.getItem(MENUO_UI_CACHE)||'{}')}catch(_){return{}}}
+function menuoUiSaveCache(x){try{localStorage.setItem(MENUO_UI_CACHE,JSON.stringify(x))}catch(_){}}
+function menuoUiEligible(n){
+  const e=n.parentElement;
+  if(!e)return false;
+  if(e.closest('#public,[data-no-translate],script,style,svg,input,textarea,select,option'))return false;
+  if(e.closest('.avatar,.rest-logo,.editor-head b,.dish-info h3,.dish-info p,.price,.plan-badge,.brand'))return false;
+  const t=n.nodeValue.replace(/\s+/g,' ').trim();
+  return /[А-Яа-яЁёЇїІіЄєҐґ]/.test(t)&&t.length>0;
+}
+async function menuoTranslateText(source,to){
+  if(!source||to==='ru')return source;
+  const cache=menuoUiCache(),key='ru:'+to+':'+source;
+  if(cache[key])return cache[key];
+  try{
+    const url='https://api.mymemory.translated.net/get?q='+encodeURIComponent(source.slice(0,450))+'&langpair='+encodeURIComponent('ru|'+to);
+    const res=await fetch(url,{headers:{Accept:'application/json'}});
+    if(!res.ok)throw new Error('ui-translation-http-'+res.status);
+    const data=await res.json();
+    const translated=String(data?.responseData?.translatedText||'').trim();
+    if(translated){cache[key]=translated;menuoUiSaveCache(cache);return translated}
+  }catch(e){console.warn('MENUO UI translation failed',source,to,e)}
+  return source;
+}
+async function translateApplicationUI(lang){
+  const root=document.querySelector('.screen:not(.hidden)')||document.getElementById('home');
+  if(!root)return;
+  const nodes=[];
+  root.querySelectorAll('*').forEach(el=>{
+    if(el.closest('#public'))return;
+    if(el.matches('input,textarea,select,option,script,style,svg'))return;
+    if(el.matches('.avatar,.rest-logo,.editor-head b,.dish-info h3,.dish-info p,.price,.plan-badge,.brand'))return;
+    [...el.childNodes].forEach(n=>{if(n.nodeType===3&&menuoUiEligible(n))nodes.push(n)});
+  });
+  document.querySelectorAll('.global-nav,.language-tray').forEach(root2=>{
+    root2.querySelectorAll('*').forEach(el=>{
+      if(el.matches('input,textarea,select,option,script,style,svg'))return;
+      [...el.childNodes].forEach(n=>{if(n.nodeType===3&&menuoUiEligible(n))nodes.push(n)});
+    });
+  });
+  const unique=[...new Set(nodes)];
+  const jobs=unique.map(async n=>{
+    if(!n.isConnected)return;
+    if(!n.__menuoSource)n.__menuoSource=n.nodeValue;
+    const source=n.__menuoSource;
+    const leading=source.match(/^\s*/)?.[0]||'',trailing=source.match(/\s*$/)?.[0]||'';
+    n.nodeValue=leading+(await menuoTranslateText(source.trim(),lang))+trailing;
+  });
+  await Promise.all(jobs);
+  document.querySelectorAll('input[placeholder],textarea[placeholder]').forEach(el=>{
+    if(el.closest('#public'))return;
+    if(!el.dataset.menuoSourcePlaceholder)el.dataset.menuoSourcePlaceholder=el.getAttribute('placeholder')||'';
+    const source=el.dataset.menuoSourcePlaceholder;
+    if(source)menuoTranslateText(source,lang).then(v=>{if(el.isConnected)el.setAttribute('placeholder',v)});
+  });
+}
+
+function show(id){stopScanner();document.querySelectorAll('.screen').forEach(x=>x.classList.add('hidden'));document.getElementById(id)?.classList.remove('hidden');if(id==='owner')renderOwner();if(id==='editor')renderEditor();if(id==='restaurantProfile')renderRestaurantProfile();if(id==='userProfile')renderProfile();if(id==='subscription')renderSubscription();if(id==='public')renderPublic(publicRestaurant||findPublic());updateNav(id);window.scrollTo({top:0,behavior:'instant'});setTimeout(()=>translateApplicationUI(state.language),0)}
 function updateNav(){const u=user();document.getElementById('navPlan').textContent=u?.plan==='BUSINESS'?'B':u?.plan==='PRO'?'P':'F';document.getElementById('navPlanText').textContent=u?.plan||'FREE';document.getElementById('navProfile').textContent=u?.firstName||'Профиль'}
 function openOwner(){if(user()){show('owner');return}authAfter='owner';openAuth('register','owner')}
 function openProfile(){if(user()){show('userProfile');return}authAfter='home';openAuth('login','home')}
@@ -102,7 +161,7 @@ function filterDemo(b,c){document.querySelectorAll('#publicCategories .chip').fo
 function startScanner(){show('visitor');const s=document.getElementById('scanStatus');if(!navigator.mediaDevices?.getUserMedia){s.textContent='Камера не поддерживается. Используйте демо-меню.';return}navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false}).then(stream=>{camera=stream;document.getElementById('cameraVideo').srcObject=stream;s.textContent='Камера включена. Наведите на QR-код MENUO.';if('BarcodeDetector' in window){const d=new BarcodeDetector({formats:['qr_code']});scanTimer=setInterval(async()=>{try{const c=await d.detect(document.getElementById('cameraVideo'));if(c[0]?.rawValue)scanUrl(c[0].rawValue)}catch(e){}},500)}}).catch(()=>s.textContent='Нет доступа к камере. Разрешите камеру или откройте демо-меню.')}
 function scanUrl(raw){try{const u=new URL(raw),slug=u.searchParams.get('menu'),r=slug&&state.restaurants.find(x=>x.slug===slug);if(r){stopScanner();publicRestaurant=r;show('public')}}catch(e){}}
 function stopScanner(){if(scanTimer){clearInterval(scanTimer);scanTimer=null}if(camera){camera.getTracks().forEach(t=>t.stop());camera=null}const v=document.getElementById('cameraVideo');if(v)v.srcObject=null}
-function toggleLanguages(){document.getElementById('languageTray').classList.toggle('hidden');renderLanguages()}function renderLanguages(){const q=document.getElementById('languageSearch').value.toLowerCase();document.getElementById('languageList').innerHTML=LANGS.filter(x=>x[1].toLowerCase().includes(q)).map(x=>`<button onclick="setLanguage('${x[0]}')" class="${state.language===x[0]?'active':''}">${x[1]}</button>`).join('')}function setLanguage(l){state.language=l;save();document.documentElement.lang=l;document.documentElement.dir=l==='ar'?'rtl':'ltr';document.getElementById('languageTray').classList.add('hidden');if(new URLSearchParams(location.search).get('menu')&&typeof window.__MENUO_RENDER_PUBLIC==='function'){window.__MENUO_RENDER_PUBLIC();}else if(!document.getElementById('public').classList.contains('hidden'))renderPublic(publicRestaurant)}
-(function init(){document.documentElement.lang=state.language;document.documentElement.dir=state.language==='ar'?'rtl':'ltr';renderLanguages();const r=findPublic();if(r){publicRestaurant=r;show('public')}else if(state.session)show('home');else show('home')})();
+function toggleLanguages(){document.getElementById('languageTray').classList.toggle('hidden');renderLanguages()}function renderLanguages(){const q=document.getElementById('languageSearch').value.toLowerCase();document.getElementById('languageList').innerHTML=LANGS.filter(x=>x[1].toLowerCase().includes(q)).map(x=>`<button onclick="setLanguage('${x[0]}')" class="${state.language===x[0]?'active':''}">${x[1]}</button>`).join('')}async function setLanguage(l){state.language=l;save();document.documentElement.lang=l;document.documentElement.dir=l==='ar'?'rtl':'ltr';document.getElementById('languageTray').classList.add('hidden');if(new URLSearchParams(location.search).get('menu')&&typeof window.__MENUO_RENDER_PUBLIC==='function'){await window.__MENUO_RENDER_PUBLIC();}else if(!document.getElementById('public').classList.contains('hidden'))renderPublic(publicRestaurant);await translateApplicationUI(l);renderLanguages()}
+(function init(){document.documentElement.lang=state.language;document.documentElement.dir=state.language==='ar'?'rtl':'ltr';renderLanguages();const r=findPublic();if(r){publicRestaurant=r;show('public')}else if(state.session)show('home');else show('home');setTimeout(()=>translateApplicationUI(state.language),200)})();
 </script>
 </body></html>
