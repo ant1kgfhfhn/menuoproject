@@ -125,6 +125,16 @@
       data=q.data;error=q.error;
       if(!data&&attempt===0)await new Promise(r=>setTimeout(r,400));
     }
+    // Direct REST fallback for Safari/WebKit when the client RPC layer is interrupted.
+    if(!data){
+      try{
+        const res=await fetch('https://vizmqgmefbgcggyfzdkj.supabase.co/rest/v1/rpc/get_public_menu',{
+          method:'POST',headers:{'Content-Type':'application/json','apikey':'sb_publishable_G_9VANFg4Dh7vuw8qpwwGw_Ck0h0H_3','Authorization':'Bearer sb_publishable_G_9VANFg4Dh7vuw8qpwwGw_Ck0h0H_3'},
+          body:JSON.stringify({p_token:token})
+        });
+        if(res.ok)data=await res.json(); else error=await res.text();
+      }catch(e){error=e}
+    }
     if(error||!data){
       console.error('MENUO public menu error',error,token);
       return showPublicError('Меню по этой QR-ссылке не найдено или оно отключено.');
