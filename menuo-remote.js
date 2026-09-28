@@ -11,19 +11,22 @@
     const u=auth?.data?.user;
     if(!u)return false;
 
-    const [rq,cq,dq,qq,pq]=await Promise.all([
+    const [rq,cq,dq,qq,pq,sq]=await Promise.all([
       sb.from('restaurants').select('*').eq('owner_id',u.id).order('created_at',{ascending:true}),
       sb.from('categories').select('*').order('sort_order',{ascending:true}),
       sb.from('dishes').select('*').order('sort_order',{ascending:true}),
       sb.from('qr_codes').select('id,restaurant_id,token,is_active').eq('is_active',true),
-      sb.rpc('get_my_plan')
+      sb.rpc('get_my_plan'),
+      sb.from('subscriptions').select('plan_id,status,current_period_end').eq('user_id',u.id).maybeSingle()
     ]);
-    const qs=[rq,cq,dq,qq,pq];
+    const qs=[rq,cq,dq,qq,pq,sq];
     const bad=qs.find(q=>q.error);
     if(bad)throw bad.error;
 
     const cats=cq.data||[], dishes=dq.data||[], qrs=qq.data||[];
     const planRow=Array.isArray(pq.data)?pq.data[0]:pq.data;
+    const subscriptionRow=sq.data||null;
+    const resolvedPlan=String(subscriptionRow?.status==='active'&&subscriptionRow?.plan_id?subscriptionRow.plan_id:(planRow?.code||planRow?.plan_code||planRow?.get_my_plan||'FREE')).toUpperCase();
     const restaurants=(rq.data||[]).map(r=>{
       const rcats=cats.filter(c=>c.restaurant_id===r.id).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
       const qr=qrs.find(x=>x.restaurant_id===r.id);
@@ -51,7 +54,7 @@
       ...oldUser,id:u.id,email:u.email||'',phone:u.phone||'',
       firstName:u.user_metadata?.first_name||oldUser.firstName||'',
       lastName:u.user_metadata?.last_name||oldUser.lastName||'',
-      plan:String(planRow?.code||planRow?.plan_code||planRow?.get_my_plan||oldUser.plan||'FREE').toUpperCase()
+      plan:resolvedPlan
     }];
     state.restaurants=restaurants;
     state.dishes=mappedDishes;
