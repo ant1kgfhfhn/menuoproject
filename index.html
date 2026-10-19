@@ -52,7 +52,7 @@
 </div>
 </section>
 
-<section class="screen hidden" id="subscription"><div class="top"><button class="back" onclick="show('owner')">‹</button><div class="brand">Тарифы</div><span></span></div><h1 class="section-title">Тарифы MENUO</h1><p class="sub" id="planSummary">Проверяем вашу подписку…</p><div id="subscriptionNotice" class="notice hidden" role="status"></div><div class="menu-card plan"><div class="plan-badge">F</div><div style="flex:1"><b>FREE</b><div class="price-large">€0</div><div class="mutedline">10 блюд · 1 ресторан · 1 QR · базовый дизайн</div><button class="secondary" id="chooseFreePlan" style="margin-top:12px" onclick="chooseFreePlan()">Перейти на FREE</button></div></div><div class="menu-card plan"><div class="plan-badge">P</div><div style="flex:1"><b>PRO</b><div class="price-large">$4.99/мес.</div><div class="mutedline">Без лимита блюд · до 2 ресторанов · 2 QR · аллергены · языки · статистика</div><button class="primary" style="margin-top:12px" onclick="startCheckout('pro')">Купить PRO</button></div></div><div class="menu-card plan"><div class="plan-badge">B</div><div style="flex:1"><b>BUSINESS</b><div class="price-large">$9.99/мес.</div><div class="mutedline">Без лимитов · филиалы · несколько QR · акции · специальные меню</div><button class="primary" style="margin-top:12px" onclick="startCheckout('business')">Купить BUSINESS</button></div></div><div class="menu-card"><div style="flex:1"><b>Промокод</b><div class="mutedline">Если у вас есть персональный код на скидку, введите его перед оплатой.</div><div style="display:flex;gap:8px;margin-top:10px"><input id="promoCode" placeholder="Например MENUO20" autocomplete="off" style="flex:1;border:1px solid #dce4df;border-radius:13px;padding:13px;text-transform:uppercase"><button class="mini" onclick="checkPromo()">Проверить</button></div><div id="promoStatus" class="mutedline" style="margin-top:8px"></div></div></div><div class="notice">Оплата проходит через Stripe. Тариф активируется только после подтверждённого платежа.</div></section>
+<section class="screen hidden" id="subscription"><div class="top"><button class="back" onclick="show('owner')">‹</button><div class="brand">Тарифы</div><span></span></div><h1 class="section-title">Тарифы MENUO</h1><p class="sub" id="planSummary">Проверяем вашу подписку…</p><div id="subscriptionNotice" class="notice hidden" role="status"></div><div class="menu-card plan"><div class="plan-badge">F</div><div style="flex:1"><b>FREE</b><div class="price-large">€0</div><div class="mutedline">10 блюд · 1 ресторан · 1 QR · базовый дизайн</div><button class="primary hidden" id="chooseFreePlan" style="margin-top:12px" onclick="chooseFreePlan()">Перейти на FREE</button></div></div><div class="menu-card plan"><div class="plan-badge">P</div><div style="flex:1"><b>PRO</b><div class="price-large">$4.99/мес.</div><div class="mutedline">Без лимита блюд · до 2 ресторанов · 2 QR · аллергены · языки · статистика</div><button class="primary" style="margin-top:12px" onclick="startCheckout('pro')">Купить PRO</button></div></div><div class="menu-card plan"><div class="plan-badge">B</div><div style="flex:1"><b>BUSINESS</b><div class="price-large">$9.99/мес.</div><div class="mutedline">Без лимитов · филиалы · несколько QR · акции · специальные меню</div><button class="primary" style="margin-top:12px" onclick="startCheckout('business')">Купить BUSINESS</button></div></div><div class="menu-card"><div style="flex:1"><b>Промокод</b><div class="mutedline">Если у вас есть персональный код на скидку, введите его перед оплатой.</div><div style="display:flex;gap:8px;margin-top:10px"><input id="promoCode" placeholder="Например MENUO20" autocomplete="off" style="flex:1;border:1px solid #dce4df;border-radius:13px;padding:13px;text-transform:uppercase"><button class="mini" onclick="checkPromo()">Проверить</button></div><div id="promoStatus" class="mutedline" style="margin-top:8px"></div></div></div><div class="notice">Оплата проходит через Stripe. Тариф активируется только после подтверждённого платежа.</div></section>
 
 <div class="language-tray hidden" id="languageTray"><input id="languageSearch" type="search" placeholder="Найти язык" oninput="renderLanguages()"><div class="language-list" id="languageList"></div></div>
 <nav class="global-nav"><button onclick="show('home')"><svg class="icon-svg nav-icon" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h14V10M9 20v-6h6v6"/></svg>Главная</button><button onclick="openSubscription()"><span class="plan-icon" id="navPlan">F</span><span id="navPlanText">FREE</span></button><button onclick="openProfile()"><svg class="icon-svg nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c.7-4 3.2-6 8-6s7.3 2 8 6"/></svg><span id="navProfile">Профиль</span></button></nav>
@@ -299,19 +299,33 @@ async function renderSubscription(){
     const active=['active','trialing'].includes(String(s.status||'').toLowerCase());
     const current=active?p:'free';
     if(summary)summary.textContent='Ваш текущий тариф: '+current.toUpperCase()+ (active&&s.currentPeriodEnd?' · оплачено до '+dateLabel(s.currentPeriodEnd):'');
+    const proButton=document.querySelector('#subscription button[onclick="startCheckout(\'pro\')"]');
+    const businessButton=document.querySelector('#subscription button[onclick="startCheckout(\'business\')"]');
+    if(proButton){
+      proButton.textContent=active&&current==='pro'?'Текущий тариф PRO':'Выбрать PRO';
+      proButton.disabled=active&&current==='pro';
+      proButton.setAttribute('aria-current',active&&current==='pro'?'true':'false');
+    }
+    if(businessButton){
+      businessButton.textContent=active&&current==='business'?'Текущий тариф BUSINESS':'Выбрать BUSINESS';
+      businessButton.disabled=active&&current==='business';
+      businessButton.setAttribute('aria-current',active&&current==='business'?'true':'false');
+    }
+    if(freeButton){
+      const showFreeAction=active&&current!=='free';
+      freeButton.classList.toggle('hidden',!showFreeAction);
+      freeButton.textContent=s.cancelAtPeriodEnd?'Возобновить подписку':'Перейти на FREE';
+      freeButton.onclick=s.cancelAtPeriodEnd?resumePaidPlan:chooseFreePlan;
+      freeButton.disabled=false;
+    }
     if(active&&s.cancelAtPeriodEnd){
-      showSubscriptionNotice('Отмена '+current.toUpperCase()+' уже запланирована. Тариф останется доступен до '+(dateLabel(s.currentPeriodEnd)||'конца оплаченного периода')+'. Можно отменить запланированную отмену кнопкой ниже.');
-      if(freeButton){freeButton.textContent='Отмена уже запланирована';freeButton.onclick=resumePaidPlan;freeButton.disabled=false;}
-    }else if(active&&current!=='free'){
-      if(freeButton){freeButton.textContent='Перейти на FREE';freeButton.onclick=chooseFreePlan;freeButton.disabled=false;}
-    }else if(freeButton){
-      freeButton.textContent='Текущий тариф FREE';freeButton.disabled=true;
+      showSubscriptionNotice('Отмена '+current.toUpperCase()+' уже запланирована. Тариф останется доступен до '+(dateLabel(s.currentPeriodEnd)||'конца оплаченного периода')+'. Можно восстановить автопродление кнопкой ниже.');
     }
   }catch(e){
     if(summary)summary.textContent='Не удалось проверить подписку. Попробуйте обновить страницу.';
     showSubscriptionNotice(e?.message||'Не удалось получить статус подписки.',true);
   }finally{
-    if(freeButton&&!freeButton.dataset.pending&&freeButton.textContent!=='Текущий тариф FREE')freeButton.disabled=false;
+    if(freeButton&&!freeButton.dataset.pending)freeButton.disabled=false;
   }
 }
 async function chooseFreePlan(){
