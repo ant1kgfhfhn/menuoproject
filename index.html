@@ -373,7 +373,7 @@ async function resumePaidPlan(){
 async function startCheckout(planId){
   const out=document.getElementById('promoStatus');
   const buttons=[...document.querySelectorAll('#subscription button.primary')];
-  const button=buttons.find(b=>String(b.textContent||'').toLowerCase().includes(planId==='pro'?'pro':'business'));
+  const button=document.getElementById(planId==='pro'?'chooseProPlan':'chooseBusinessPlan');
   const setStatus=(msg)=>{if(out)out.textContent=msg;};
   if(button)button.disabled=true;
   hideSubscriptionNotice();
