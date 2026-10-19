@@ -311,7 +311,7 @@ async function renderSubscription(){
     if(summary)summary.textContent='Не удалось проверить подписку. Попробуйте обновить страницу.';
     showSubscriptionNotice(e?.message||'Не удалось получить статус подписки.',true);
   }finally{
-    if(freeButton&&!freeButton.dataset.pending)freeButton.disabled=false;
+    if(freeButton&&!freeButton.dataset.pending&&freeButton.textContent!=='Текущий тариф FREE')freeButton.disabled=false;
   }
 }
 async function chooseFreePlan(){
@@ -323,6 +323,7 @@ async function chooseFreePlan(){
     if(!s.authenticated){window.openAuth('login','subscription');return;}
     if(!['active','trialing'].includes(String(s.status||'').toLowerCase())||String(s.planId||'free').toLowerCase()==='free'){
       showSubscriptionNotice('У вас уже активен тариф FREE.');
+      if(button){button.textContent='Текущий тариф FREE';button.disabled=true;}
       return;
     }
     const sb=window.MENUO_SUPABASE;
