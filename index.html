@@ -299,8 +299,8 @@ async function renderSubscription(){
     const active=['active','trialing'].includes(String(s.status||'').toLowerCase());
     const current=active?p:'free';
     if(summary)summary.textContent='Ваш текущий тариф: '+current.toUpperCase()+ (active&&s.currentPeriodEnd?' · оплачено до '+dateLabel(s.currentPeriodEnd):'');
-    const proButton=document.querySelector('#subscription button[onclick="startCheckout(\'pro\')"]');
-    const businessButton=document.querySelector('#subscription button[onclick="startCheckout(\'business\')"]');
+    const proButton=document.getElementById('chooseProPlan');
+    const businessButton=document.getElementById('chooseBusinessPlan');
     if(proButton){
       proButton.textContent=active&&current==='pro'?'Текущий тариф PRO':'Выбрать PRO';
       proButton.disabled=active&&current==='pro';
