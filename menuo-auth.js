@@ -2,7 +2,7 @@
 (function(){
   'use strict';
   const PROD_SITE='https://menuo-qr.com/';
-  const SITE=/^(localhost|127\\.0\\.0\\.1)$/.test(location.hostname)?location.origin+location.pathname:PROD_SITE;
+  const SITE=/^(localhost|127\.0\.0\.1)$/.test(location.hostname)?location.origin+location.pathname:PROD_SITE;
   function sb(){return window.MENUO_SUPABASE||null}
   function localState(){try{return typeof state!=='undefined'?state:null}catch(_){return null}}
   function saveLocal(){try{if(typeof save==='function')save()}catch(_){} }
