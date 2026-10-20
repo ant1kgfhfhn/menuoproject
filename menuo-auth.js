@@ -19,8 +19,9 @@
  const redirectTo=SITE+'?oauth=1&after='+encodeURIComponent(after);
  const options={redirectTo};
  if(provider==='google')options.scopes='https://www.googleapis.com/auth/userinfo.email https://www.googleapis.com/auth/userinfo.profile';
+ const buttons=[document.getElementById('menuoGoogle'),document.getElementById('menuoApple')].filter(Boolean);buttons.forEach(b=>{b.disabled=true;b.dataset.oldText=b.textContent;b.textContent='Открываем…'});
  const {error}=await c.auth.signInWithOAuth({provider,options});
- if(error){
+ if(error){buttons.forEach(b=>{b.disabled=false;b.textContent=b.dataset.oldText||b.textContent});
    if(error.code==='provider_disabled'||/provider is not enabled/i.test(error.message||''))return notice(`Вход через ${provider==='google'?'Google':'Apple'} пока не включён в Supabase. Нужно включить провайдер и добавить его Client ID/Secret.`);
    notice(error.message||'Не удалось открыть вход.')
  }
@@ -34,8 +35,10 @@
  const params=new URLSearchParams(location.search);
  if(params.get('oauth')==='1'){
    const after=params.get('after');
-   if(after==='owner'||after==='home')window.__MENUO_AUTH_AFTER=after;
+   if(after==='owner'||after==='home'||after==='subscription')window.__MENUO_AUTH_AFTER=after;
    history.replaceState({},'',SITE);
+   // Restore the intended destination only after Supabase has hydrated the OAuth session.
+   setTimeout(async()=>{const session=await ensureSession();if(session?.user)finishAuth()},700);
  }
  const oldOpenAuth=window.openAuth;window.openAuth=function(mode='login',after='home'){window.__MENUO_AUTH_MODE=mode;window.__MENUO_AUTH_AFTER=after;if(typeof oldOpenAuth==='function')oldOpenAuth(mode,after);else show('auth');addSocialButtons()};window.submitAuth=submit;window.resetPassword=reset;window.openOwner=async function(){const s=await ensureSession();if(s?.user){show('owner');return}window.openAuth('login','owner')};window.openProfile=async function(){const s=await ensureSession();if(s?.user){show('userProfile');return}window.openAuth('login','home')};window.openSubscription=async function(){const s=await ensureSession();if(s?.user){show('subscription');return}window.openAuth('login','home')};window.logout=async function(){const c=sb();if(c)await c.auth.signOut();const s=localState();if(s){s.session=null;s.activeRestaurantId=null;(s.users||[]).forEach(u=>{if(u&&u.passwordHash)delete u.passwordHash});saveLocal()}show('home',{skipHistory:true})};const c=sb();if(c){c.auth.onAuthStateChange(async(event,session)=>{if(session?.user){syncLocalUser(session.user);if(event!=='INITIAL_SESSION')await hydrateProfile(session.user)}if(event==='PASSWORD_RECOVERY')recoveryScreen()});ensureSession()}if(new URLSearchParams(location.search).get('auth')==='recovery')setTimeout(()=>{if(sb())recoveryScreen()},500)}
   const timer=setInterval(()=>{if(sb()){clearInterval(timer);patch()}},50);setTimeout(()=>{if(!sb())clearInterval(timer)},15000)
