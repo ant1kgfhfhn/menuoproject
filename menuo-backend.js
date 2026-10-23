@@ -157,25 +157,30 @@
   async function syncDishes(r,restaurantId,catMap,userId){
     const old=await sb.from('dishes').select('id').eq('restaurant_id',restaurantId);
     if(old.error)throw old.error;
-    if(old.data?.length){
-      const del=await sb.from('dishes').delete().eq('restaurant_id',restaurantId);
-      if(del.error)throw del.error;
-    }
 
+    // Build and upload all rows before touching existing records. A failed image upload
+    // must never delete a restaurant's previously saved menu.
     const ds=[];
     const local=localDishes(r);
+    const uuidPattern=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
     for(let i=0;i<local.length;i++){
       const d=local[i];
+      const stableId=uuidPattern.test(String(d.remoteId||''))?d.remoteId:
+        (uuidPattern.test(String(d.id||''))?d.id:(crypto.randomUUID?crypto.randomUUID():null));
+      if(stableId){d.id=stableId;d.remoteId=stableId;}
       let image=String(d.photo||d.imageUrl||d.image_url||'');
       if(image.startsWith('data:image/')){
-        const blob=await (await fetch(image)).blob();
+        const response=await fetch(image);
+        if(!response.ok)throw new Error('Не удалось подготовить фотографию блюда.');
+        const blob=await response.blob();
         const ext=blob.type==='image/png'?'png':blob.type==='image/webp'?'webp':'jpg';
-        const path=`${userId}/${restaurantId}/dishes/${String(d.id||i).replace(/[^a-zA-Z0-9_-]/g,'-')}.${ext}`;
+        const path=`${userId}/${restaurantId}/dishes/${String(stableId||i).replace(/[^a-zA-Z0-9_-]/g,'-')}.${ext}`;
         const up=await sb.storage.from('restaurant-photos').upload(path,blob,{contentType:blob.type||'image/jpeg',upsert:true});
         if(up.error)throw up.error;
         image=sb.storage.from('restaurant-photos').getPublicUrl(path).data.publicUrl;
+        d.imageUrl=image;
       }
-      ds.push({
+      const row={
         restaurant_id:restaurantId,
         category_id:catMap.get(String(d.category||d.categoryName||'').trim())||null,
         name:String(d.name||'Блюдо').trim()||'Блюдо',
@@ -186,13 +191,22 @@
         is_available:d.available!==false&&d.isAvailable!==false,
         sort_order:i,
         allergens:Array.isArray(d.allergens)?d.allergens:[]
-      });
+      };
+      if(stableId)row.id=stableId;
+      ds.push(row);
     }
 
     if(ds.length){
-      const q=await sb.from('dishes').insert(ds);
+      const q=await sb.from('dishes').upsert(ds,{onConflict:'id'}).select('id');
       if(q.error)throw q.error;
     }
+    const keep=new Set(ds.map(d=>d.id).filter(Boolean));
+    const stale=(old.data||[]).map(d=>d.id).filter(id=>!keep.has(id));
+    if(stale.length){
+      const del=await sb.from('dishes').delete().in('id',stale);
+      if(del.error)throw del.error;
+    }
+    saveLocal();
   }
 
   async function syncQr(r,restaurantId){
