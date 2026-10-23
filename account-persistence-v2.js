@@ -499,7 +499,8 @@
     st.restaurants = restaurants;
     st.dishes = dishes;
     st.session = user.id;
-    const max = Number((typeof plan === 'function' ? plan()?.restaurants : 1) ?? 1);
+    const limits = { FREE: 1, PRO: 2, BUSINESS: Infinity };
+    const max = limits[resolvedPlan] ?? 1;
     const allowed = Number.isFinite(max) ? restaurants.slice(0, max) : restaurants;
     st.activeRestaurantId = allowed.some((row) => row.id === oldActive)
       ? oldActive
