@@ -242,6 +242,14 @@
     wrapped.__menuoRemoteDelete = true;
     window.deleteDish = wrapped;
   }
+  function accountCanManageRestaurant(id) {
+    try {
+      const list = typeof restaurants === 'function' ? restaurants() : [];
+      const idx = list.findIndex((r) => r.id === id);
+      const limit = typeof plan === 'function' ? Number(plan()?.restaurants ?? 1) : 1;
+      return idx >= 0 && (limit === Infinity || idx < limit);
+    } catch (_) { return false; }
+  }
   function installApi() {
     window.MENUO_CREATE_RESTAURANT = createRestaurant;
     window.MENUO_SAVE_RESTAURANT = saveRestaurant;
@@ -257,6 +265,81 @@
     };
     installPublicUrl();
     wrapDeleteDish();
+
+    // Change the visible label before the legacy runtime checks for its old save-button text.
+    const qrButton = document.querySelector('button[onclick="saveMenuAndQr()"]');
+    if (qrButton) qrButton.textContent = 'Опубликовать меню и QR-код';
+
+    let autoSaveTimer = null;
+    window.queueMenuAutosave = function (immediate = false) {
+      const targetId = localRestaurant()?.id || null;
+      if (autoSaveTimer) clearTimeout(autoSaveTimer);
+      return new Promise((resolve) => {
+        autoSaveTimer = setTimeout(async () => {
+          try {
+            await window.MENUO_SAVE_MENU_DATA(targetId);
+            const status = document.getElementById('saveStatus');
+            if (status) status.textContent = 'Все изменения сохранены';
+            resolve(true);
+          } catch (error) {
+            console.warn('MENUO autosave failed', error);
+            const status = document.getElementById('saveStatus');
+            if (status) status.textContent = 'Не удалось синхронизировать изменения';
+            resolve(false);
+          }
+        }, immediate ? 0 : 900);
+      });
+    };
+
+    const oldSelect = window.selectRestaurant;
+    if (typeof oldSelect === 'function' && !oldSelect.__menuoPlanGate) {
+      const nextSelect = function (id) {
+        if (!accountCanManageRestaurant(id)) {
+          alert('Ресторан и его данные сохранены, но для работы с ним нужен более высокий тариф.');
+          if (typeof show === 'function') show('subscription');
+          return;
+        }
+        return oldSelect(id);
+      };
+      nextSelect.__menuoPlanGate = true;
+      window.selectRestaurant = nextSelect;
+    }
+
+    const oldRenderOwner = window.renderOwner;
+    if (typeof oldRenderOwner === 'function' && !oldRenderOwner.__menuoPlanGate) {
+      const nextRender = function () {
+        const result = oldRenderOwner();
+        const box = document.getElementById('restaurantsList');
+        const list = typeof restaurants === 'function' ? restaurants() : [];
+        const limit = typeof plan === 'function' ? Number(plan()?.restaurants ?? 1) : 1;
+        if (box) [...box.children].forEach((card, index) => {
+          if (index < limit) return;
+          const small = card.querySelector('small');
+          if (small && !small.dataset.menuoLocked) {
+            small.textContent += ' · сохранено, доступ ограничен тарифом';
+            small.dataset.menuoLocked = '1';
+          }
+          const button = card.querySelector('button.mini');
+          if (button) { button.textContent = 'Выбрать тариф'; button.onclick = () => show('subscription'); }
+        });
+        return result;
+      };
+      nextRender.__menuoPlanGate = true;
+      window.renderOwner = nextRender;
+    }
+
+    const oldShow = window.show;
+    if (typeof oldShow === 'function' && !oldShow.__menuoPlanGate) {
+      const nextShow = function (id, opts) {
+        if (['editor', 'restaurantProfile', 'qr'].includes(id)) {
+          const r = localRestaurant();
+          if (r && !accountCanManageRestaurant(r.id)) return oldShow('subscription', opts);
+        }
+        return oldShow(id, opts);
+      };
+      nextShow.__menuoPlanGate = true;
+      window.show = nextShow;
+    }
   }
   async function installWhenReady() {
     if (initPromise) return initPromise;
