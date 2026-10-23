@@ -8,11 +8,14 @@
 <title>MENUO — цифровое меню</title>
 <style>
 :root{--ink:#17201c;--muted:#69756e;--line:#e3e9e5;--paper:#fffdfa;--cream:#f4f5ef;--green:#1b6b4e;--mint:#ddf4e9;--red:#c84c4c;--amber:#9a5c12;--shadow:0 12px 35px rgba(23,32,28,.08)}*{box-sizing:border-box}html{background:var(--cream)}body{margin:0;background:var(--cream);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}button,input,textarea,select{font:inherit}button{cursor:pointer}.app{width:min(100%,520px);min-height:100vh;margin:auto;background:var(--paper);position:relative;overflow:hidden}.screen{min-height:100vh;padding:22px 20px 112px}.hidden{display:none!important}.top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:24px}.brand{font-size:23px;font-weight:850;letter-spacing:-.8px}.brand i{font-style:normal;color:var(--green)}.back,.iconbtn{width:40px;height:40px;border-radius:13px;background:#f0f3f0;color:var(--ink);font-size:22px;border:1px solid var(--line)}.lang{border:0;background:#34473d;color:#fff;border-radius:10px;padding:9px 11px;font-weight:750;font-size:12px}.hero{padding-top:8vh}.eyebrow{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--green);font-weight:850}.hero h1{font-size:clamp(34px,9vw,46px);line-height:1.02;letter-spacing:-2.4px;margin:12px 0 16px}.lead{font-size:16px;line-height:1.5;color:var(--muted);margin:0 0 28px}.role{width:100%;display:flex;align-items:center;gap:14px;padding:18px;margin:11px 0;border:1px solid var(--line);border-radius:19px;background:#fff;box-shadow:var(--shadow);text-align:left;color:var(--ink)}.role .ico{width:52px;height:52px;display:grid;place-items:center;background:var(--mint);border-radius:16px;color:var(--green);flex:none}.role b{display:block;font-size:15px}.role small{display:block;color:var(--muted);margin-top:3px}.arrow{margin-left:auto;color:var(--green);font-size:25px}.primary,.secondary,.danger{width:100%;border:0;border-radius:14px;padding:15px 18px;font-weight:850;font-size:15px}.primary{background:var(--green);color:#fff}.primary:disabled{background:#c7cec9;cursor:not-allowed}.secondary{background:var(--mint);color:var(--green)}.danger{background:#fbe9e9;color:var(--red)}.stack>*+*{margin-top:10px}.section-title{font-size:27px;line-height:1.08;letter-spacing:-1.2px;margin:0 0 7px}.sub{color:var(--muted);line-height:1.45;margin:0 0 20px}.menu-card{display:flex;align-items:center;gap:12px;background:#fff;border:1px solid var(--line);border-radius:18px;padding:15px;margin:11px 0;box-shadow:0 5px 20px rgba(23,32,28,.04)}.avatar{width:50px;height:50px;border-radius:15px;background:var(--green);color:#fff;display:grid;place-items:center;font-weight:850;flex:none}.menu-card b{display:block}.menu-card small{display:block;color:var(--muted);margin-top:3px;line-height:1.35}.card-actions{margin-left:auto;display:flex;gap:7px}.mini{border:0;border-radius:10px;background:var(--cream);color:var(--green);padding:9px 11px;font-weight:800;white-space:nowrap}.add-card{width:100%;border:1.5px dashed #b6c8bd;background:#f8fcf9;color:var(--green);border-radius:16px;padding:16px;font-weight:850;margin:16px 0}.notice{background:#fff2e3;color:var(--amber);border-radius:13px;padding:13px 15px;margin:14px 0;font-size:13px;line-height:1.4}.notice.error{background:#fdecec;color:var(--red)}.editor-head{background:var(--ink);color:#fff;border-radius:20px;padding:20px;margin-bottom:18px}.editor-head b{font-size:20px}.editor-head p{margin:4px 0 0;color:#c8d4cd;font-size:13px}.category-row{display:flex;gap:8px;overflow-x:auto;padding:3px 0 9px;margin:0 -20px 12px;padding-left:20px;padding-right:20px;scrollbar-width:none}.category-row::-webkit-scrollbar{display:none}.chip{border:0;white-space:nowrap;border-radius:999px;background:#eef2ef;color:var(--muted);padding:9px 13px;font-weight:750;font-size:13px}.chip.active{background:var(--mint);color:var(--green)}.dish{display:flex;gap:11px;padding:13px 0;border-bottom:1px solid var(--line);align-items:flex-start}.food{width:78px;height:78px;border-radius:14px;background:#edf2ee;display:grid;place-items:center;overflow:hidden;flex:none;font-size:30px}.food img{width:100%;height:100%;object-fit:cover}.dish-info{min-width:0;flex:1}.dish h3{font-size:15px;margin:2px 0 5px;line-height:1.2}.dish p{font-size:13px;line-height:1.4;color:var(--muted);margin:0}.price{font-weight:850;white-space:nowrap}.dish.unavailable{opacity:.55}.dish-actions{display:flex;gap:10px;margin-top:8px}.textbtn{border:0;background:none;padding:0;color:var(--green);font-size:12px;font-weight:800}.textbtn.red{color:var(--red)}.field{margin:15px 0}.field label{display:block;font-size:13px;font-weight:800;margin-bottom:7px}.field input,.field textarea,.field select{width:100%;border:1px solid #dce4df;border-radius:13px;background:#fff;color:var(--ink);padding:13px;outline-color:var(--green)}.field textarea{min-height:95px;resize:vertical}.photo-box{position:relative;height:150px;border:1.5px dashed #b9cbc0;border-radius:18px;background:#f7fbf8;display:grid;place-items:center;color:var(--green);font-weight:800;text-align:center;overflow:hidden}.photo-box img{width:100%;height:100%;object-fit:cover}.photo-box input{display:none}.switchline{display:flex;align-items:center;justify-content:space-between;margin:13px 0;color:var(--muted);font-size:13px}.switch{width:47px;height:28px;padding:3px;border:0;border-radius:20px;background:#cbd4ce}.switch span{display:block;width:22px;height:22px;border-radius:50%;background:#fff;transition:.2s}.switch.on{background:var(--green)}.switch.on span{transform:translateX(19px)}.checkline{display:flex;gap:9px;align-items:center;font-size:13px;color:var(--muted);margin:14px 0}.checkline input{accent-color:var(--green)}.public-hero{background:var(--ink);color:#fff;margin:-22px -20px 20px;padding:22px 20px 23px;border-radius:0 0 28px 28px}.rest-logo{width:55px;height:55px;border-radius:17px;background:#e7f5ee;color:var(--green);display:grid;place-items:center;font-size:24px;font-weight:900}.public-hero h1{font-size:29px;letter-spacing:-1.2px;margin:14px 0 4px}.public-hero p{color:#cdd8d2;font-size:13px;margin:0;line-height:1.4}.scan{background:#17271f;border-radius:23px;padding:17px;color:#fff}.camera{height:290px;border-radius:16px;background:#263b32;overflow:hidden;position:relative;display:grid;place-items:center}.camera video{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}.frame{position:relative;z-index:1;width:190px;height:190px;border:3px solid #fff;border-radius:22px;box-shadow:0 0 0 200px rgba(0,0,0,.35)}.scan-status{text-align:center;color:#d5eee1;font-size:12px;min-height:20px;margin:10px 0}.qr-wrap{background:#fff;border-radius:20px;padding:18px;box-shadow:var(--shadow);text-align:center}.qr-wrap img{display:block;width:min(100%,270px);aspect-ratio:1;margin:auto}.linkbox{background:var(--cream);padding:11px;border-radius:11px;word-break:break-all;font-size:12px;color:var(--muted);margin:13px 0}.global-nav{position:absolute;z-index:40;left:0;right:0;bottom:0;background:rgba(255,255,255,.97);backdrop-filter:blur(10px);border-top:1px solid var(--line);display:flex;justify-content:space-around;padding:10px 7px calc(14px + env(safe-area-inset-bottom))}.global-nav button{min-width:75px;border:0;background:none;color:var(--muted);font-size:10px;display:flex;flex-direction:column;align-items:center;gap:4px;font-weight:700}.global-nav button.active{color:var(--green);font-weight:850}.icon-svg{width:26px;height:26px;display:block;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}.nav-icon{width:22px;height:22px;color:currentColor}.plan-icon{width:22px;height:22px;border-radius:7px;background:var(--mint);display:grid;place-items:center;color:var(--green);font-size:11px;font-weight:900}.global-language{position:fixed;z-index:70;top:calc(env(safe-area-inset-top) + 12px);left:0;right:auto;transition:top .16s ease,left .16s ease}.global-language button{border:0;background:#34473d;color:#fff;border-radius:12px;padding:10px 13px;font-weight:800;font-size:12px;box-shadow:0 8px 22px rgba(23,32,28,.12)}.language-tray{position:fixed;z-index:80;top:0;left:0;width:min(300px,calc(100vw - 32px));max-height:390px;background:#fff;border:1px solid var(--line);border-radius:17px;padding:10px;box-shadow:0 20px 45px rgba(0,0,0,.16)}.language-tray input{width:100%;border:1px solid var(--line);border-radius:10px;padding:10px;margin-bottom:8px}.language-list{max-height:310px;overflow:auto;display:flex;flex-direction:column;gap:5px}.language-list button{border:0;text-align:left;background:#f1f4f1;padding:10px;border-radius:10px;font-weight:750}.language-list button.active{background:var(--mint);color:var(--green)}.plan{align-items:flex-start}.plan-badge{width:46px;height:46px;border-radius:14px;background:var(--mint);color:var(--green);display:grid;place-items:center;font-weight:900;flex:none}.price-large{font-size:20px;font-weight:900}.mutedline{color:var(--muted);font-size:12px;line-height:1.45}.empty{padding:25px 10px;text-align:center;color:var(--muted)}.section-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:18px 0}.section-tile{border:1px solid var(--line);background:#fff;border-radius:17px;padding:13px 8px;text-align:center;color:var(--ink)}.tile-icon{width:43px;height:43px;border-radius:13px;background:var(--mint);color:var(--green);display:grid;place-items:center;margin:0 auto 7px}.section-tile small{display:block;color:var(--muted);font-size:10px;margin-top:3px}.account-note{font-size:12px;color:var(--muted);line-height:1.45;margin:8px 0 18px}@media(max-width:370px){.section-grid{grid-template-columns:repeat(2,1fr)}}@media(min-width:600px){body{padding:20px}.app{min-height:calc(100vh - 40px);border-radius:30px;box-shadow:0 20px 60px rgba(23,32,28,.12)}}
+
+/* Account center */
+.profile-identity{display:flex;align-items:center;gap:15px;margin:8px 0 22px}.profile-identity-copy{min-width:0;flex:1}.profile-identity-copy .section-title{overflow-wrap:anywhere}.profile-email{margin:4px 0 9px;font-size:13px;color:var(--muted);overflow-wrap:anywhere}.profile-avatar-large{width:78px;height:78px;position:relative;display:grid;place-items:center;flex:none;overflow:hidden;border-radius:50%;background:var(--green);color:white;font-weight:850;font-size:23px;border:3px solid var(--mint)}.profile-avatar-large img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%}.profile-menu{margin:20px 0;border:1px solid var(--line);border-radius:18px;overflow:hidden;background:#fff}.profile-link{display:flex;align-items:center;gap:12px;width:100%;padding:14px 13px;background:transparent;border:0;border-bottom:1px solid var(--line);text-align:left;color:var(--ink)}.profile-link:last-child{border-bottom:0}.profile-link-icon{width:42px;height:42px;border-radius:13px;background:var(--mint);color:var(--green);display:grid;place-items:center;font-weight:850;font-size:21px;flex:none}.profile-link-copy{min-width:0;flex:1}.profile-link-copy b{display:block;font-size:14px}.profile-link-copy small{display:block;color:var(--muted);font-size:11px;line-height:1.35;margin-top:3px}.profile-link-arrow{color:var(--muted);font-size:22px}.inbox-badge{background:var(--green);color:#fff;border-radius:999px;min-width:22px;text-align:center;padding:3px 7px;font-size:11px;font-weight:850}.legal-links{display:grid;gap:10px;margin:26px 0 12px;padding-top:16px;border-top:1px solid var(--line)}.legal-links .eyebrow{margin-bottom:2px}.legal-links a{color:var(--green);font-size:13px;font-weight:750;text-decoration:none}.profile-avatar-picker{display:flex;align-items:center;gap:14px;padding:16px;border:1px solid var(--line);border-radius:18px;margin-bottom:18px;background:var(--cream)}.avatar-pick-target{display:flex;align-items:center;gap:12px;font-size:13px;font-weight:800;color:var(--green);cursor:pointer}.avatar-pick-target .profile-avatar-large{width:70px;height:70px}.setting-card{border:1px solid var(--line);border-radius:16px;padding:15px;margin:12px 0;background:#fff}.setting-toggle{display:flex;align-items:center;justify-content:space-between;gap:14px;cursor:pointer}.setting-toggle span{flex:1}.setting-toggle b{display:block;font-size:14px}.setting-toggle small{display:block;color:var(--muted);font-size:12px;line-height:1.4;margin-top:4px}.setting-toggle input{width:20px;height:20px;accent-color:var(--green);flex:none}.message-card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:15px;margin:10px 0}.message-card.unread{border-color:#9acdb0;background:#f8fcf9}.message-card h3{font-size:15px;margin:0 0 7px}.message-card p{font-size:13px;line-height:1.5;margin:0 0 10px;white-space:pre-wrap;color:var(--muted)}.message-meta{font-size:11px;color:var(--muted);margin-bottom:8px}.account-danger-card{border-color:#f0c8c8;background:#fff9f9}.account-danger-card .profile-link-icon{background:#fde9e9;color:var(--red)}.screen select{width:100%;padding:14px;border-radius:13px;border:1px solid var(--line);background:#fff;color:var(--ink)}html[data-theme="dark"]{--ink:#eef5f0;--muted:#b0bdb4;--line:#35463b;--paper:#18211b;--cream:#111812;--green:#4ca77a;--mint:#223d2e;--shadow:0 12px 35px rgba(0,0,0,.2)}html[data-theme="dark"] .menu-card,html[data-theme="dark"] .profile-menu,html[data-theme="dark"] .setting-card,html[data-theme="dark"] .message-card,html[data-theme="dark"] .profile-link,html[data-theme="dark"] .screen select,html[data-theme="dark"] .field input,html[data-theme="dark"] .field textarea{background:#1f2b23;color:var(--ink)}html[data-theme="dark"] .message-card.unread{background:#20382a}html[data-theme="dark"] .account-danger-card{background:#352323}@media(max-width:370px){.profile-identity{align-items:flex-start}.profile-avatar-large{width:64px;height:64px}}
 </style>
-<script src="menuo-auth.js?v=2026102001" defer></script>
-<script src="menuo-backend.js?v=2026092506" defer></script>
+<script src="menuo-auth.js?v=20261023-profile" defer></script>
+<script src="menuo-backend.js?v=20261023-persist" defer></script>
 <script src="menuo-visitor-fix.js?v=2026092506" defer></script>
-<script src="menuo-remote.js?v=2026092507" defer></script>
+<script src="menuo-remote.js?v=20261023-profile" defer></script>
 </head>
 <body>
 <main class="app" id="app"><div class="global-language"><button id="globalLanguageButton" onclick="toggleLanguages()">RU ▾</button></div>
@@ -38,20 +41,67 @@
 
 <section class="screen hidden" id="reset"><div class="top"><button class="back" onclick="openAuth('login','home')">‹</button><div class="brand">Сброс пароля</div><span></span></div><div class="hero" style="padding-top:3vh"><div class="field"><label>Email</label><input id="resetEmail" type="email"></div><div id="resetNotice" class="notice hidden"></div><button class="primary" onclick="resetPassword()">Получить код</button></div></section>
 
+
 <section class="screen hidden" id="userProfile">
-<div class="top"><button class="back">‹</button><div class="brand">Мой аккаунт</div><span></span></div>
-<div style="display:flex;align-items:center;gap:14px;margin:8px 0 22px"><div class="avatar" id="pfAvatar" style="width:68px;height:68px;border-radius:20px;font-size:22px">U</div><div><h1 class="section-title" style="margin:0" id="pfDisplayName">Профиль</h1><p class="sub" style="margin:3px 0 0" id="pfPlan">FREE</p></div></div>
-<div class="field"><label>Имя</label><input id="pfFirst"></div>
-<div class="field"><label>Фамилия</label><input id="pfLast"></div>
-<div class="field"><label>Email</label><input id="pfEmail" type="email" autocomplete="email"></div>
-<div class="field"><label>Номер телефона</label><input id="pfPhone" type="tel" autocomplete="tel" placeholder="+49 170 1234567"></div>
-<div class="notice" id="pfEmailNotice">При изменении email Supabase может попросить подтвердить новый адрес.</div>
-<div class="stack">
-<button class="primary" onclick="saveProfile()">Сохранить изменения</button>
-<button class="secondary" onclick="changePassword()">Изменить пароль</button>
-<button class="secondary" onclick="openOwner()">Перейти в раздел владельца</button>
-<button class="danger" onclick="logout()">Выйти</button>
-</div>
+  <div class="top"><button class="back">‹</button><div class="brand">Мой профиль</div><span></span></div>
+  <div class="profile-identity">
+    <div class="profile-avatar-large"><span id="pfAvatarInitials">U</span><img id="pfAvatarImage" class="hidden" alt="Аватар профиля"></div>
+    <div class="profile-identity-copy"><h1 class="section-title profile-name" id="pfDisplayName">Профиль</h1><p class="profile-email" id="pfEmailSummary"></p><span class="pill" id="pfPlan">FREE</span></div>
+  </div>
+  <button class="primary" onclick="show('editUserProfile')">Редактировать профиль</button>
+  <div class="profile-menu">
+    <button class="profile-link" onclick="show('userSettings')"><span class="profile-link-icon">⚙</span><span class="profile-link-copy"><b>Настройки</b><small>Язык, оформление и уведомления</small></span><span class="profile-link-arrow">›</span></button>
+    <button class="profile-link" onclick="openInbox()"><span class="profile-link-icon">✉</span><span class="profile-link-copy"><b>Входящие</b><small>Сообщения и уведомления MENUO</small></span><span id="inboxUnreadBadge" class="inbox-badge hidden">0</span><span class="profile-link-arrow">›</span></button>
+    <button class="profile-link" onclick="openOwner()"><span class="profile-link-icon">▤</span><span class="profile-link-copy"><b>Мои рестораны</b><small>Меню, QR-коды и рестораны</small></span><span class="profile-link-arrow">›</span></button>
+    <button class="profile-link" onclick="show('accountActions')"><span class="profile-link-icon">♙</span><span class="profile-link-copy"><b>Управление аккаунтом</b><small>Выйти или удалить аккаунт</small></span><span class="profile-link-arrow">›</span></button>
+  </div>
+  <div class="legal-links"><div class="eyebrow">Документы MENUO</div><a href="/privacy.html" target="_blank" rel="noopener">Политика конфиденциальности ↗</a><a href="/impressum.html" target="_blank" rel="noopener">Юридическая информация / Impressum ↗</a><a href="/terms.html" target="_blank" rel="noopener">Условия использования ↗</a></div>
+</section>
+
+<section class="screen hidden" id="editUserProfile">
+  <div class="top"><button class="back">‹</button><div class="brand">Редактировать профиль</div><span></span></div>
+  <div class="profile-avatar-picker">
+    <label for="userAvatarInput" class="avatar-pick-target" title="Изменить фотографию">
+      <div class="profile-avatar-large"><span id="pfEditAvatarInitials">U</span><img id="pfEditAvatarImage" class="hidden" alt="Аватар профиля"></div>
+      <span>Изменить фотографию</span>
+      <input id="userAvatarInput" class="hidden" type="file" accept="image/jpeg,image/png,image/webp" onchange="uploadProfileAvatar(event)">
+    </label>
+    <button class="textbtn" onclick="removeProfileAvatar()">Удалить фото</button>
+  </div>
+  <div class="field"><label for="pfFirst">Имя</label><input id="pfFirst" autocomplete="given-name" maxlength="80"></div>
+  <div class="field"><label for="pfLast">Фамилия</label><input id="pfLast" autocomplete="family-name" maxlength="80"></div>
+  <div class="field"><label for="pfEmail">Email</label><input id="pfEmail" type="email" autocomplete="email" maxlength="254"></div>
+  <div class="field"><label for="pfPhone">Номер телефона (необязательно)</label><input id="pfPhone" type="tel" autocomplete="tel" placeholder="+49 170 1234567" maxlength="40"></div>
+  <div class="notice" id="pfEmailNotice">Для изменения email может потребоваться подтверждение нового адреса.</div>
+  <div class="stack"><button class="primary" onclick="saveProfile()">Сохранить изменения</button><button class="secondary" onclick="sendProfilePasswordReset()">Отправить ссылку для смены пароля</button></div>
+</section>
+
+<section class="screen hidden" id="userSettings">
+  <div class="top"><button class="back">‹</button><div class="brand">Настройки</div><span></span></div>
+  <h1 class="section-title">Настройки приложения</h1><p class="sub">Сохраняются в вашем аккаунте и синхронизируются между устройствами.</p>
+  <div class="field"><label for="userSettingsLanguage">Язык интерфейса</label><select id="userSettingsLanguage" onchange="setLanguage(this.value)"><option value="ru">Русский</option><option value="de">Deutsch</option><option value="en">English</option><option value="uk">Українська</option><option value="tr">Türkçe</option><option value="pl">Polski</option><option value="es">Español</option><option value="fr">Français</option><option value="it">Italiano</option><option value="pt">Português</option><option value="ro">Română</option><option value="ar">العربية</option></select></div>
+  <div class="field"><label for="userSettingsTheme">Оформление</label><select id="userSettingsTheme" onchange="applyUserTheme(this.value)"><option value="light">Светлое</option><option value="dark">Тёмное</option><option value="system">Как в системе</option></select></div>
+  <div class="setting-card"><label class="setting-toggle"><span><b>Подсказки MENUO</b><small>Показывать полезные подсказки при работе с меню.</small></span><input type="checkbox" id="settingShowTips"></label></div>
+  <div class="setting-card"><label class="setting-toggle"><span><b>Новости и новые функции по email</b><small>Необязательные информационные письма. Можно выключить в любое время.</small></span><input type="checkbox" id="settingProductEmails"></label></div>
+  <div class="notice">Обязательные сообщения о безопасности, доступе к аккаунту и оплате могут приходить независимо от этой настройки.</div>
+  <button class="primary" onclick="saveUserSettings()">Сохранить настройки</button>
+  <div class="legal-links"><a href="/privacy.html" target="_blank" rel="noopener">Политика конфиденциальности ↗</a><a href="/impressum.html" target="_blank" rel="noopener">Юридическая информация / Impressum ↗</a></div>
+</section>
+
+<section class="screen hidden" id="userInbox">
+  <div class="top"><button class="back">‹</button><div class="brand">Входящие</div><button class="iconbtn" aria-label="Обновить" onclick="renderInbox()">↻</button></div>
+  <h1 class="section-title">Сообщения MENUO</h1><p class="sub">Здесь будут уведомления об аккаунте, сервисе и подписке.</p>
+  <div id="inboxStatus" class="notice hidden"></div><div id="inboxList"><div class="empty">Загружаем сообщения…</div></div>
+</section>
+
+<section class="screen hidden" id="accountActions">
+  <div class="top"><button class="back">‹</button><div class="brand">Управление аккаунтом</div><span></span></div>
+  <h1 class="section-title">Безопасность и аккаунт</h1><p class="sub">Выберите действие. Удаление аккаунта необратимо.</p>
+  <div class="menu-card"><div class="profile-link-icon">↪</div><div style="flex:1"><b>Выйти из аккаунта</b><small>Завершить сеанс на этом устройстве.</small></div><button class="mini" onclick="logout()">Выйти</button></div>
+  <div class="menu-card account-danger-card"><div class="profile-link-icon">!</div><div style="flex:1"><b>Удалить аккаунт MENUO</b><small>Удалит профиль, рестораны, меню, фотографии и входящие сообщения. Активная платная подписка будет отменена до удаления.</small></div></div>
+  <button class="danger" onclick="deleteAccount()">Удалить аккаунт навсегда</button>
+  <div class="notice">Перед удалением сохрани нужные данные. Данные, которые нужно хранить по закону (например, отдельные платёжные документы), могут быть сохранены в объёме, требуемом законом.</div>
+  <div class="legal-links"><a href="/privacy.html" target="_blank" rel="noopener">Как обрабатываются и удаляются данные ↗</a></div>
 </section>
 
 <section class="screen hidden" id="subscription"><div class="top"><button class="back" onclick="show('owner')">‹</button><div class="brand">Тарифы</div><span></span></div><h1 class="section-title">Тарифы MENUO</h1><p class="sub" id="planSummary">Проверяем вашу подписку…</p><div id="subscriptionNotice" class="notice hidden" role="status"></div><div class="menu-card plan"><div class="plan-badge">F</div><div style="flex:1"><b>FREE</b><div class="price-large">€0</div><div class="mutedline">10 блюд · 1 ресторан · 1 QR · базовый дизайн</div><button class="primary hidden" id="chooseFreePlan" style="margin-top:12px" onclick="chooseFreePlan()">Перейти на FREE</button></div></div><div class="menu-card plan"><div class="plan-badge">P</div><div style="flex:1"><b>PRO</b><div class="price-large">$4.99/мес.</div><div class="mutedline">Без лимита блюд · до 2 ресторанов · 2 QR · аллергены · языки · статистика</div><button class="primary" id="chooseProPlan" style="margin-top:12px" onclick="startCheckout('pro')">Купить PRO</button></div></div><div class="menu-card plan"><div class="plan-badge">B</div><div style="flex:1"><b>BUSINESS</b><div class="price-large">$9.99/мес.</div><div class="mutedline">Без лимитов · филиалы · несколько QR · акции · специальные меню</div><button class="primary" id="chooseBusinessPlan" style="margin-top:12px" onclick="startCheckout('business')">Купить BUSINESS</button></div></div><div class="menu-card"><div style="flex:1"><b>Промокод</b><div class="mutedline">Если у вас есть персональный код на скидку, введите его перед оплатой.</div><div style="display:flex;gap:8px;margin-top:10px"><input id="promoCode" placeholder="Например MENUO20" autocomplete="off" style="flex:1;border:1px solid #dce4df;border-radius:13px;padding:13px;text-transform:uppercase"><button class="mini" onclick="checkPromo()">Проверить</button></div><div id="promoStatus" class="mutedline" style="margin-top:8px"></div></div></div><div class="notice">Оплата проходит через Stripe. Тариф активируется только после подтверждённого платежа.</div></section>
@@ -66,8 +116,20 @@ const LANGS=[['ru','🇷🇺 Русский'],['de','🇩🇪 Deutsch'],['en','�
 const PLAN={FREE:{restaurants:1,dishes:10,qrs:1,label:'FREE'},PRO:{restaurants:2,dishes:Infinity,qrs:2,label:'PRO'},BUSINESS:{restaurants:Infinity,dishes:Infinity,qrs:Infinity,label:'BUSINESS'}};
 const TEXT={ru:['Наше меню','Актуальные блюда ресторана.'],de:['Unsere Speisekarte','Aktuelle Gerichte des Restaurants.'],en:['Our menu','Current restaurant dishes.'],uk:['Наше меню','Актуальні страви ресторану.'],tr:['Menümüz','Restoranın güncel yemekleri.'],pl:['Nasze menu','Aktualne dania restauracji.'],es:['Nuestro menú','Platos actuales del restaurante.'],fr:['Notre menu','Plats actuels du restaurant.'],it:['Il nostro menu','Piatti attuali del ristorante.'],pt:['Nosso menu','Pratos atuais do restaurante.'],ro:['Meniul nostru','Preparatele actuale ale restaurantului.'],ar:['قائمتنا','أطباق المطعم الحالية.']};
 let state=load(),authMode='login',authAfter='home',activeDish=null,noPhoto=true,photo='',camera=null,scanTimer=null,publicRestaurant=null;
-function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.users&&s.restaurants&&s.dishes)return s}catch(e){}return{users:[],restaurants:[],dishes:[],session:null,activeRestaurantId:null,language:'ru'}}
+function load(){try{const s=JSON.parse(localStorage.getItem(KEY));if(s&&s.users&&s.restaurants&&s.dishes)return s}catch(e){}return{users:[],restaurants:[],dishes:[],session:null,activeRestaurantId:null,language:'ru',userSettings:{theme:'light',showTips:true,productEmails:false}}}
 function save(){localStorage.setItem(KEY,JSON.stringify(state))}function uid(){return crypto.randomUUID?crypto.randomUUID():Date.now()+'-'+Math.random().toString(36).slice(2)}function user(){return state.users.find(u=>u.id===state.session)||null}function currentRestaurant(){return state.restaurants.find(r=>r.id===state.activeRestaurantId&&r.ownerId===state.session)||null}function restaurants(){return state.restaurants.filter(r=>r.ownerId===state.session)}function plan(){return PLAN[user()?.plan||'FREE']}
+let MENUO_AUTOSAVE_TIMER=null;
+async function queueMenuAutosave(immediate=false){
+ if(MENUO_AUTOSAVE_TIMER)clearTimeout(MENUO_AUTOSAVE_TIMER);
+ return new Promise(resolve=>{
+  MENUO_AUTOSAVE_TIMER=setTimeout(async()=>{
+   try{
+    if(!window.MENUO_SAVE_MENU_DATA){resolve(false);return}
+    await window.MENUO_SAVE_MENU_DATA();resolve(true);
+   }catch(e){console.warn('MENUO auto-save failed',e);resolve(false)}
+  },immediate?0:900);
+ });
+}
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function slugify(s){return (s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,45)||'restaurant')+'-'+uid().slice(0,6)}
 function publicUrl(r){return location.origin+location.pathname+'?menu='+encodeURIComponent(r.slug)}
@@ -157,7 +219,7 @@ async function translateApplicationUI(lang){
   });
 }
 
-function show(id,opts={}){const current=menuoCurrentScreen();if(!opts.skipHistory&&current&&current!==id&&id!=='home')MENUO_NAV_HISTORY.push(current);if(!opts.restoreOnly)menuoSaveLastScreen(id);stopScanner();document.querySelectorAll('.screen').forEach(x=>x.classList.add('hidden'));document.getElementById(id)?.classList.remove('hidden');if(id==='owner')renderOwner();if(id==='editor')renderEditor();if(id==='restaurantProfile')renderRestaurantProfile();if(id==='userProfile')renderProfile();if(id==='subscription')renderSubscription();if(id==='public')renderPublic(publicRestaurant||findPublic());updateNav(id);positionGlobalLanguage();window.scrollTo({top:0,behavior:'instant'});setTimeout(()=>translateApplicationUI(state.language),0)}
+function show(id,opts={}){const current=menuoCurrentScreen();if(!opts.skipHistory&&current&&current!==id&&id!=='home')MENUO_NAV_HISTORY.push(current);if(!opts.restoreOnly)menuoSaveLastScreen(id);stopScanner();document.querySelectorAll('.screen').forEach(x=>x.classList.add('hidden'));document.getElementById(id)?.classList.remove('hidden');if(id==='owner')renderOwner();if(id==='editor')renderEditor();if(id==='restaurantProfile')renderRestaurantProfile();if(id==='userProfile')renderProfile();if(id==='editUserProfile')renderProfileEditor();if(id==='userSettings')renderUserSettings();if(id==='userInbox')renderInbox();if(id==='subscription')renderSubscription();if(id==='public')renderPublic(publicRestaurant||findPublic());updateNav(id);positionGlobalLanguage();window.scrollTo({top:0,behavior:'instant'});setTimeout(()=>translateApplicationUI(state.language),0)}
 function updateNav(){const u=user();document.getElementById('navPlan').textContent=u?.plan==='BUSINESS'?'B':u?.plan==='PRO'?'P':'F';document.getElementById('navPlanText').textContent=u?.plan||'FREE';document.getElementById('navProfile').textContent=u?.firstName||'Профиль'}
 function openOwner(){if(user()){show('owner');return}authAfter='owner';openAuth('register','owner')}
 function openProfile(){if(user()){show('userProfile');return}authAfter='home';openAuth('login','home')}
@@ -170,13 +232,29 @@ async function submitAuth(){return authErr('Авторизация MENUO раб�
 function resetPassword(){const n=document.getElementById('resetNotice');n.textContent='Восстановление пароля выполняется через Supabase Auth.';n.classList.remove('hidden')}
 function openCreateRestaurant(){if(restaurants().length>=plan().restaurants)return show('subscription');show('createRestaurant')}
 function validateRestaurant(){document.getElementById('createRestaurantButton').disabled=!document.getElementById('restaurantName').value.trim()}
-function createRestaurant(){const name=document.getElementById('restaurantName').value.trim();if(!name||!user())return;if(restaurants().length>=plan().restaurants)return show('subscription');const r={id:uid(),ownerId:state.session,name,address:document.getElementById('restaurantAddress').value.trim(),phone:document.getElementById('restaurantPhone').value.trim(),description:document.getElementById('restaurantDescription').value.trim(),hours:'Пн–Вс 10:00–23:00',slug:slugify(name),categories:['Все','Основные'],qrCreated:false};state.restaurants.push(r);state.activeRestaurantId=r.id;save();['restaurantName','restaurantAddress','restaurantPhone','restaurantDescription'].forEach(id=>document.getElementById(id).value='');show('editor')}
+async function createRestaurant(){
+ const name=document.getElementById('restaurantName').value.trim();if(!name||!user())return;
+ if(restaurants().length>=plan().restaurants)return show('subscription');
+ const r={id:uid(),ownerId:state.session,name,address:document.getElementById('restaurantAddress').value.trim(),phone:document.getElementById('restaurantPhone').value.trim(),description:document.getElementById('restaurantDescription').value.trim(),hours:'Пн–Вс 10:00–23:00',slug:slugify(name),categories:['Все','Основные'],qrCreated:false};
+ state.restaurants.push(r);state.activeRestaurantId=r.id;save();
+ ['restaurantName','restaurantAddress','restaurantPhone','restaurantDescription'].forEach(id=>document.getElementById(id).value='');
+ show('editor');
+ try{
+   for(let i=0;i<40&&!window.MENUO_CREATE_RESTAURANT;i++)await new Promise(resolve=>setTimeout(resolve,250));
+   if(typeof window.MENUO_CREATE_RESTAURANT!=='function')throw new Error('Сервис сохранения не загрузился. Обновите страницу и повторите попытку.');
+   await window.MENUO_CREATE_RESTAURANT();
+   await queueMenuAutosave(true);
+ }catch(e){
+   console.error('MENUO restaurant create persistence failed',e);
+   alert('Ресторан пока не сохранён на сервере. Не выходите из аккаунта; проверьте соединение и повторите попытку. Причина: '+(e?.message||'ошибка сохранения'));
+ }
+}
 function renderOwner(){const u=user();if(!u)return openProfile();document.getElementById('ownerTitle').textContent=`Добрый день, ${u.firstName}!`;const rs=restaurants();document.getElementById('restaurantsList').innerHTML=rs.length?rs.map(r=>`<div class="menu-card"><div class="avatar">${esc(r.name.slice(0,2).toUpperCase())}</div><div style="min-width:0;flex:1"><b>${esc(r.name)}</b><small>${state.dishes.filter(d=>d.restaurantId===r.id).length} блюд</small></div><button class="mini" onclick="selectRestaurant('${r.id}')">Открыть</button></div>`).join(''):'<div class="empty">У вас пока нет ресторанов. Это нормально: аккаунт можно использовать без ресторана.</div>'}
 function selectRestaurant(id){const r=restaurants().find(x=>x.id===id);if(!r)return;state.activeRestaurantId=id;save();show('editor')}
 function renderEditor(){const r=currentRestaurant();if(!r)return show('owner');document.getElementById('editorName').textContent=r.name;document.getElementById('editorMeta').textContent=`Публичное меню · ${user().plan}`;document.getElementById('editorCategories').innerHTML=r.categories.map((c,i)=>`<button class="chip ${i===0?'active':''}" onclick="filterEditor(this,'${esc(c)}')">${esc(c)}</button>`).join('')+`<button class="chip" onclick="addCategory()">＋ Категория</button>`;renderDishes('Все');const count=state.dishes.filter(d=>d.restaurantId===r.id).length,limited=count>=plan().dishes;document.getElementById('addDish').disabled=limited;document.getElementById('addDish').textContent=limited?'Лимит достигнут — выбрать тариф':'＋ Добавить позицию';document.getElementById('limitNotice').innerHTML=limited&&plan().dishes!==Infinity?`<div class="notice">FREE ограничивает меню 10 блюдами. <button class="textbtn" onclick="show('subscription')">Выбрать тариф →</button></div>`:''}
 function renderDishes(cat){const r=currentRestaurant();let ds=state.dishes.filter(d=>d.restaurantId===r.id);if(cat!=='Все')ds=ds.filter(d=>d.category===cat);document.getElementById('dishList').innerHTML=ds.length?ds.map(d=>dishHtml(d,true)).join(''):'<div class="empty">В этой категории пока нет блюд.</div>'}
 function filterEditor(b,c){document.querySelectorAll('#editorCategories .chip').forEach(x=>x.classList.remove('active'));b.classList.add('active');renderDishes(c)}
-function addCategory(){const r=currentRestaurant(),c=prompt('Название категории');if(!r||!c?.trim())return;const x=c.trim().slice(0,50);if(x!=='Все'&&!r.categories.includes(x))r.categories.push(x);save();renderEditor()}
+function addCategory(){const r=currentRestaurant(),c=prompt('Название категории');if(!r||!c?.trim())return;const x=c.trim().slice(0,50);if(x!=='Все'&&!r.categories.includes(x))r.categories.push(x);save();renderEditor();queueMenuAutosave()}
 function dishHtml(d,edit){return `<article class="dish ${d.available===false?'unavailable':''}"><div class="food">${d.photo?`<img src="${esc(d.photo)}" alt="${esc(d.name)}">`:'🍽️'}</div><div class="dish-info"><h3>${esc(d.name)}</h3><p>${esc(d.description||'Без описания')}</p>${d.available===false?'<span class="pill">Нет в наличии</span>':''}${edit?`<div class="dish-actions"><button class="textbtn" onclick="editDish('${d.id}')">Редактировать</button><button class="textbtn red" onclick="deleteDish('${d.id}')">Удалить</button></div>`:''}</div><div class="price">${esc(d.price)}</div></article>`}
 function openDishForm(id=null){const r=currentRestaurant();if(!r)return;if(!id&&state.dishes.filter(d=>d.restaurantId===r.id).length>=plan().dishes)return show('subscription');activeDish=id;const d=id?state.dishes.find(x=>x.id===id):null;noPhoto=!d?.photo;photo=d?.photo||'';document.getElementById('dishFormTitle').textContent=id?'Редактировать блюдо':'Новое блюдо';document.getElementById('dishName').value=d?.name||'';document.getElementById('dishDesc').value=d?.description||'';document.getElementById('dishPrice').value=d?.price?.replace(' €','')||'';document.getElementById('dishAvailable').checked=d?.available!==false;document.getElementById('dishCategory').innerHTML=r.categories.filter(c=>c!=='Все').map(c=>`<option>${esc(c)}</option>`).join('');document.getElementById('dishCategory').value=d?.category||r.categories[1]||'Основные';syncPhoto();validateDish();show('dishForm')}
 function editDish(id){openDishForm(id)}
@@ -185,8 +263,8 @@ function validateDish(){document.getElementById('saveDish').disabled=!(document.
 function toggleNoPhoto(){noPhoto=!noPhoto;if(noPhoto)photo='';syncPhoto();validateDish()}
 function syncPhoto(){document.getElementById('noPhotoSwitch').classList.toggle('on',noPhoto);document.getElementById('photoBox').innerHTML=photo?`<img src="${esc(photo)}" alt="Предпросмотр"><input id="photoInput" type="file" accept="image/jpeg,image/png,image/webp" onchange="handlePhoto(event)">`:'📷<br>Добавить фотографию<input id="photoInput" type="file" accept="image/jpeg,image/png,image/webp" onchange="handlePhoto(event)">'}
 function handlePhoto(e){const f=e.target.files?.[0];if(!f)return;if(!['image/jpeg','image/png','image/webp'].includes(f.type)||f.size>5*1024*1024)return alert('Разрешены JPG, PNG, WebP до 5 МБ.');const rd=new FileReader();rd.onload=()=>{const im=new Image();im.onload=()=>{const max=1000,scale=Math.min(1,max/im.width,max/im.height),c=document.createElement('canvas');c.width=Math.round(im.width*scale);c.height=Math.round(im.height*scale);c.getContext('2d').drawImage(im,0,0,c.width,c.height);photo=c.toDataURL('image/jpeg',.82);noPhoto=false;syncPhoto();validateDish()};im.src=rd.result};rd.readAsDataURL(f)}
-function saveDish(){const r=currentRestaurant(),price=normalizePrice(document.getElementById('dishPrice').value);if(!r||!price)return;const d={id:activeDish||uid(),restaurantId:r.id,name:document.getElementById('dishName').value.trim(),description:document.getElementById('dishDesc').value.trim(),price,category:document.getElementById('dishCategory').value,available:document.getElementById('dishAvailable').checked,photo:noPhoto?'':photo};if(activeDish)state.dishes=state.dishes.map(x=>x.id===activeDish?{...x,...d}:x);else state.dishes.push(d);save();show('editor')}
-function deleteDish(id){if(confirm('Удалить это блюдо?')){state.dishes=state.dishes.filter(d=>d.id!==id);save();renderEditor()}}
+function saveDish(){const r=currentRestaurant(),price=normalizePrice(document.getElementById('dishPrice').value);if(!r||!price)return;const d={id:activeDish||uid(),restaurantId:r.id,name:document.getElementById('dishName').value.trim(),description:document.getElementById('dishDesc').value.trim(),price,category:document.getElementById('dishCategory').value,available:document.getElementById('dishAvailable').checked,photo:noPhoto?'':photo};if(activeDish)state.dishes=state.dishes.map(x=>x.id===activeDish?{...x,...d}:x);else state.dishes.push(d);save();show('editor');queueMenuAutosave()}
+function deleteDish(id){if(confirm('Удалить это блюдо?')){state.dishes=state.dishes.filter(d=>d.id!==id);save();renderEditor();queueMenuAutosave()}}
 function saveMenuAndQr(){const r=currentRestaurant();if(!r)return;if(!r.qrCreated){const total=restaurants().filter(x=>x.qrCreated).length;if(total>=plan().qrs)return show('subscription');r.qrCreated=true;save()}renderQr()}
 function renderQr(){const r=currentRestaurant();const url=publicUrl(r);document.getElementById('publicUrlBox').textContent=url;document.getElementById('qrImage').src='https://api.qrserver.com/v1/create-qr-code/?size=600x600&margin=10&data='+encodeURIComponent(url);show('qr')}
 function openPublic(){location.href=publicUrl(currentRestaurant())}async function shareMenu(){const url=publicUrl(currentRestaurant());if(navigator.share){try{await navigator.share({title:currentRestaurant().name,url})}catch(e){}}else{await navigator.clipboard?.writeText(url);alert('Ссылка скопирована')}}function downloadQr(){const a=document.createElement('a');a.href=document.getElementById('qrImage').src;a.download='menuo-qr.png';a.click()}
@@ -226,57 +304,163 @@ async function handleRestaurantPhoto(event){
  }finally{URL.revokeObjectURL(tempUrl);event.target.value=''}
 }
 async function saveRestaurantProfile(){const r=currentRestaurant();if(!r)return;r.name=document.getElementById('rpName').value.trim()||r.name;r.address=document.getElementById('rpAddress').value.trim();r.phone=document.getElementById('rpPhone').value.trim();r.description=document.getElementById('rpDescription').value.trim();r.hours=document.getElementById('rpHours').value.trim();save();try{if(window.MENUO_SAVE_RESTAURANT)await window.MENUO_SAVE_RESTAURANT()}catch(e){alert('Изменения сохранены локально, но не синхронизированы с сервером: '+(e?.message||'ошибка'));return}show('editor')}
+
+const DEFAULT_USER_SETTINGS={theme:'light',showTips:true,productEmails:false};
+function currentAccountSettings(){const u=user();return {...DEFAULT_USER_SETTINGS,...(state.userSettings||{}),...(u?.settings||{})}}
+function applyUserTheme(theme){
+ const value=theme==='system'?(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):theme;
+ document.documentElement.dataset.theme=value||'light';
+}
+function initialsFor(u){return ([u?.firstName,u?.lastName].filter(Boolean).join(' ')||u?.email||'U').trim().slice(0,2).toUpperCase()}
+function setAvatarUi(url,initials){
+ ['pfAvatarImage','pfEditAvatarImage'].forEach(id=>{const im=document.getElementById(id);if(im){if(url){im.src=url;im.classList.remove('hidden')}else{im.removeAttribute('src');im.classList.add('hidden')}}});
+ ['pfAvatarInitials','pfEditAvatarInitials'].forEach(id=>{const el=document.getElementById(id);if(el){el.textContent=initials||'U';el.classList.toggle('hidden',!!url)}});
+}
+async function readRemoteAccountProfile(){
+ const u=user(),c=window.MENUO_SUPABASE;if(!u||!c)return null;
+ const auth=await c.auth.getUser();const remote=auth?.data?.user;
+ if(!remote)return null;
+ const q=await c.from('profiles').select('full_name,first_name,last_name,phone,avatar_url,settings,locale').eq('id',remote.id).maybeSingle();
+ if(q.error)throw q.error;
+ return {remote,profile:q.data||{}};
+}
 async function renderProfile(){
  const u=user();if(!u)return openProfile();
- const c=window.MENUO_SUPABASE;
- let remote=null;
- try{remote=(await c?.auth.getUser())?.data?.user||null}catch(_){}
- const email=remote?.email||u.email||'';
- const phone=remote?.phone||u.phone||'';
- const meta=remote?.user_metadata||{};
- document.getElementById('pfFirst').value=u.firstName||meta.first_name||'';
- document.getElementById('pfLast').value=u.lastName||meta.last_name||'';
- document.getElementById('pfEmail').value=email;
- document.getElementById('pfPhone').value=phone;
- document.getElementById('pfDisplayName').textContent=[u.firstName,u.lastName].filter(Boolean).join(' ')||'Профиль';
+ let email=u.email||'',profile=u.settings||{},url=u.avatarUrl||'',remote=null;
+ try{const x=await readRemoteAccountProfile();if(x){remote=x.remote;profile=x.profile||{};email=remote.email||email;u.firstName=profile.first_name||remote.user_metadata?.first_name||u.firstName||'';u.lastName=profile.last_name||remote.user_metadata?.last_name||u.lastName||'';u.phone=profile.phone||u.phone||'';u.avatarUrl=profile.avatar_url||'';u.settings={...DEFAULT_USER_SETTINGS,...(profile.settings||{})};url=u.avatarUrl;state.userSettings=u.settings;save()}}catch(e){console.warn('MENUO profile read failed',e)}
+ const name=[u.firstName,u.lastName].filter(Boolean).join(' ')||'Мой профиль';
+ document.getElementById('pfDisplayName').textContent=name;
+ document.getElementById('pfEmailSummary').textContent=email;
  document.getElementById('pfPlan').textContent=u.plan||'FREE';
- document.getElementById('pfAvatar').textContent=((u.firstName||u.email||'U').slice(0,2)).toUpperCase();
+ setAvatarUi(url,initialsFor(u));
+ applyUserTheme(currentAccountSettings().theme);
+ loadInboxCount();
+}
+async function renderProfileEditor(){
+ await renderProfile();
+ const u=user();if(!u)return;
+ document.getElementById('pfFirst').value=u.firstName||'';
+ document.getElementById('pfLast').value=u.lastName||'';
+ document.getElementById('pfEmail').value=u.email||'';
+ document.getElementById('pfPhone').value=u.phone||'';
 }
 async function saveProfile(){
  const u=user();if(!u)return;
- const first=document.getElementById('pfFirst').value.trim()||u.firstName;
- const last=document.getElementById('pfLast').value.trim()||u.lastName;
+ const first=document.getElementById('pfFirst').value.trim();
+ const last=document.getElementById('pfLast').value.trim();
  const email=document.getElementById('pfEmail').value.trim().toLowerCase();
  const phone=document.getElementById('pfPhone').value.trim();
- try{
-   const c=window.MENUO_SUPABASE;
-   if(c){
-     const attrs={data:{first_name:first,last_name:last}};
-     if(email&&email!==String(u.email||'').toLowerCase())attrs.email=email;
-     if(phone!==String(u.phone||''))attrs.phone=phone||undefined;
-     const q=await c.auth.updateUser(attrs);
-     if(q.error)throw q.error;
-     if(q.data?.user?.email)u.email=q.data.user.email;
-     u.phone=q.data?.user?.phone||phone;
-     const p=await c.from('profiles').update({first_name:first,last_name:last}).eq('id',u.id);
-     if(p.error)console.warn('MENUO profile update',p.error);
-   }
-   u.firstName=first;u.lastName=last;u.email=email||u.email;u.phone=phone;save();updateNav();await renderProfile();
-   alert('Данные аккаунта сохранены.');
- }catch(e){alert(e?.message||'Не удалось сохранить данные аккаунта.')}
-}
-async function changePassword(){
+ if(!first)return alert('Укажи имя.');
+ if(!/^\\S+@\\S+\\.\\S+$/.test(email))return alert('Проверь email.');
  const c=window.MENUO_SUPABASE;if(!c)return alert('Система авторизации ещё загружается.');
- const current=prompt('Введите текущий пароль');if(current===null)return;
- const next=prompt('Введите новый пароль (минимум 8 символов)');if(next===null)return;
- if(next.length<8)return alert('Новый пароль должен содержать минимум 8 символов.');
  try{
-   const q=await c.auth.updateUser({password:next,current_password:current});
-   if(q.error)throw q.error;
-   alert('Пароль успешно изменён.');
- }catch(e){alert(e?.message||'Не удалось изменить пароль.')}
+   const {data:{user:au},error:authError}=await c.auth.getUser();if(authError)throw authError;if(!au)throw new Error('Войдите в аккаунт снова.');
+   const emailChanged=email!==String(au.email||'').toLowerCase();
+   const attrs={data:{...au.user_metadata,first_name:first,last_name:last}};
+   if(emailChanged)attrs.email=email;
+   const update=await c.auth.updateUser(attrs);if(update.error)throw update.error;
+   const profileSave=await c.from('profiles').upsert({id:au.id,full_name:[first,last].filter(Boolean).join(' '),first_name:first,last_name:last,phone:phone||null,locale:state.language||'ru',settings:currentAccountSettings()},{onConflict:'id'});
+   if(profileSave.error)throw profileSave.error;
+   u.firstName=first;u.lastName=last;u.phone=phone;u.settings=currentAccountSettings();
+   if(!emailChanged)u.email=au.email;
+   save();updateNav();await renderProfile();
+   alert(emailChanged?'Профиль сохранён. Для смены email проверь новое письмо и подтверди адрес; до подтверждения может показываться старый email.':'Изменения профиля сохранены.');
+   show('userProfile');
+ }catch(e){alert(e?.message||'Не удалось сохранить профиль.')}
 }
-async function logout(){const c=window.MENUO_SUPABASE;try{await c?.auth.signOut()}catch(_){}state.session=null;state.activeRestaurantId=null;save();MENUO_NAV_HISTORY.length=0;show('home',{skipHistory:true})}
+async function uploadProfileAvatar(event){
+ const file=event.target.files?.[0];if(!file)return;
+ const allowed=['image/jpeg','image/png','image/webp'];
+ if(!allowed.includes(file.type)){alert('Выбери JPG, PNG или WebP.');event.target.value='';return}
+ if(file.size>5*1024*1024){alert('Файл должен быть не больше 5 МБ.');event.target.value='';return}
+ const sb=window.MENUO_SUPABASE,u=user();if(!sb||!u){alert('Войди в аккаунт.');event.target.value='';return}
+ try{
+   const {data:{user:au},error:authError}=await sb.auth.getUser();if(authError)throw authError;if(!au)throw new Error('Войди в аккаунт снова.');
+   const ext=file.type==='image/png'?'png':file.type==='image/webp'?'webp':'jpg';
+   const path=`${au.id}/avatar-${Date.now()}.${ext}`;
+   const upload=await sb.storage.from('profile-avatars').upload(path,file,{contentType:file.type,upsert:false,cacheControl:'3600'});
+   if(upload.error)throw upload.error;
+   const url=sb.storage.from('profile-avatars').getPublicUrl(path).data.publicUrl;
+   const p=await sb.from('profiles').upsert({id:au.id,avatar_url:url},{onConflict:'id'});if(p.error)throw p.error;
+   u.avatarUrl=url;save();setAvatarUi(url,initialsFor(u));alert('Аватар профиля обновлён.');
+ }catch(e){alert(e?.message||'Не удалось загрузить аватар.')}
+ finally{event.target.value=''}
+}
+async function removeProfileAvatar(){
+ const u=user(),sb=window.MENUO_SUPABASE;if(!u||!sb)return;
+ if(!confirm('Удалить фотографию профиля?'))return;
+ try{
+   const {data:{user:au},error}=await sb.auth.getUser();if(error)throw error;if(!au)throw new Error('Войдите в аккаунт снова.');
+   const p=await sb.from('profiles').update({avatar_url:null}).eq('id',au.id);if(p.error)throw p.error;
+   u.avatarUrl='';save();setAvatarUi('',initialsFor(u));alert('Фотография удалена.');
+ }catch(e){alert(e?.message||'Не удалось удалить фотографию.')}
+}
+async function sendProfilePasswordReset(){
+ const u=user(),sb=window.MENUO_SUPABASE;if(!u||!sb)return alert('Войдите в аккаунт.');
+ const email=String(u.email||'').trim();if(!email)return alert('Сначала укажи email в профиле.');
+ try{const {error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:'https://menuo-qr.com/?auth=recovery'});if(error)throw error;alert('Ссылка для смены пароля отправлена на '+email+'. Проверь папку «Спам», если письма нет.')}
+ catch(e){alert(e?.message||'Не удалось отправить ссылку для сброса пароля.')}
+}
+async function renderUserSettings(){
+ const u=user();if(!u)return openProfile();
+ try{const x=await readRemoteAccountProfile();if(x){u.settings={...DEFAULT_USER_SETTINGS,...(x.profile?.settings||u.settings||{})};if(x.profile?.locale)state.language=x.profile.locale;state.userSettings=u.settings;save()}}catch(e){console.warn('MENUO settings read failed',e)}
+ const s=currentAccountSettings();
+ document.getElementById('userSettingsLanguage').value=state.language||'ru';
+ document.getElementById('userSettingsTheme').value=s.theme||'light';
+ document.getElementById('settingShowTips').checked=s.showTips!==false;
+ document.getElementById('settingProductEmails').checked=s.productEmails===true;
+ applyUserTheme(s.theme||'light');
+}
+async function saveUserSettings(){
+ const u=user(),sb=window.MENUO_SUPABASE;if(!u||!sb)return alert('Войдите в аккаунт.');
+ const settings={...currentAccountSettings(),theme:document.getElementById('userSettingsTheme').value,showTips:document.getElementById('settingShowTips').checked,productEmails:document.getElementById('settingProductEmails').checked};
+ try{
+   const {data:{user:au},error:authError}=await sb.auth.getUser();if(authError)throw authError;if(!au)throw new Error('Войдите в аккаунт снова.');
+   const q=await sb.from('profiles').upsert({id:au.id,settings,locale:state.language||'ru'},{onConflict:'id'});if(q.error)throw q.error;
+   state.userSettings=settings;u.settings=settings;save();applyUserTheme(settings.theme);alert('Настройки сохранены.');
+ }catch(e){alert(e?.message||'Не удалось сохранить настройки.')}
+}
+async function loadInboxCount(){
+ const sb=window.MENUO_SUPABASE,u=user(),badge=document.getElementById('inboxUnreadBadge');if(!badge)return;
+ if(!sb||!u){badge.classList.add('hidden');return}
+ try{const q=await sb.from('user_messages').select('id',{count:'exact',head:true}).eq('user_id',u.id).is('read_at',null);if(q.error)throw q.error;const count=q.count||0;badge.textContent=String(count);badge.classList.toggle('hidden',count===0)}catch(e){console.warn('MENUO inbox count failed',e)}
+}
+async function openInbox(){show('userInbox');await renderInbox()}
+function safeMessageUrl(value){try{const u=new URL(String(value||''),location.origin);return ['https:','http:'].includes(u.protocol)?u.href:null}catch(_){return null}}
+async function renderInbox(){
+ const box=document.getElementById('inboxList'),status=document.getElementById('inboxStatus'),sb=window.MENUO_SUPABASE,u=user();if(!box)return;
+ box.innerHTML='<div class="empty">Загружаем сообщения…</div>';status?.classList.add('hidden');
+ if(!sb||!u){box.innerHTML='<div class="empty">Войди в аккаунт, чтобы видеть сообщения.</div>';return}
+ try{
+   const q=await sb.from('user_messages').select('id,title,body,message_type,created_at,read_at,action_url').eq('user_id',u.id).order('created_at',{ascending:false}).limit(100);
+   if(q.error)throw q.error;
+   const rows=q.data||[];
+   if(!rows.length){box.innerHTML='<div class="empty">Пока нет сообщений. Здесь появятся важные новости, сведения о безопасности и уведомления MENUO.</div>';await loadInboxCount();return}
+   box.innerHTML=rows.map(m=>{
+     const date=new Date(m.created_at).toLocaleString(state.language||'ru');
+     const url=safeMessageUrl(m.action_url);
+     return `<article class="message-card ${m.read_at?'':'unread'}"><div class="message-meta">${esc(date)} · ${m.read_at?'Прочитано':'Новое'}</div><h3>${esc(m.title)}</h3><p>${esc(m.body)}</p><div style="display:flex;gap:10px;flex-wrap:wrap">${!m.read_at?`<button class="textbtn" onclick="markMessageRead('${esc(m.id)}')">Отметить прочитанным</button>`:''}${url?`<a class="textbtn" href="${esc(url)}" target="_blank" rel="noopener">Открыть ↗</a>`:''}</div></article>`
+   }).join('');
+   await loadInboxCount();
+ }catch(e){box.innerHTML='<div class="empty">Не удалось загрузить сообщения.</div>';if(status){status.textContent=e?.message||'Проверь подключение и попробуй ещё раз.';status.classList.remove('hidden')}}
+}
+async function markMessageRead(id){
+ const sb=window.MENUO_SUPABASE,u=user();if(!sb||!u)return;
+ const q=await sb.from('user_messages').update({read_at:new Date().toISOString()}).eq('id',id).eq('user_id',u.id);if(q.error)return alert(q.error.message);
+ await renderInbox();
+}
+async function deleteAccount(){
+ const sb=window.MENUO_SUPABASE;if(!sb)return alert('Система аккаунтов ещё загружается.');
+ if(!confirm('Точно удалить аккаунт MENUO? Будут удалены профиль, рестораны, блюда, аватар и сообщения. Это действие нельзя отменить.'))return;
+ const phrase=prompt('Для окончательного подтверждения введи слово УДАЛИТЬ:');if(phrase!=='УДАЛИТЬ')return alert('Удаление отменено.');
+ try{
+   const {data,error}=await sb.functions.invoke('delete-account',{body:{confirmation:'DELETE'}});
+   if(error)throw error;if(data?.error)throw new Error(data.error);
+   try{await sb.auth.signOut()}catch(_){}
+   state.users=[];state.restaurants=[];state.dishes=[];state.session=null;state.activeRestaurantId=null;state.userSettings={};save();MENUO_NAV_HISTORY.length=0;
+   alert('Аккаунт и связанные данные удалены.');show('home',{skipHistory:true});
+ }catch(e){alert(e?.message||'Не удалось удалить аккаунт. Если активна подписка, сначала проверь раздел «Тарифы».')}
+}
 async function checkPromo(){
   const code=document.getElementById('promoCode')?.value.trim();
   const out=document.getElementById('promoStatus');
@@ -511,6 +695,6 @@ function updateGlobalLanguageButton(){
  positionGlobalLanguage();
 }
 async function setLanguage(l){state.language=l;save();updateGlobalLanguageButton();document.documentElement.lang=l;document.documentElement.dir=l==='ar'?'rtl':'ltr';document.getElementById('languageTray').classList.add('hidden');if(new URLSearchParams(location.search).get('menu')&&typeof window.__MENUO_RENDER_PUBLIC==='function'){await window.__MENUO_RENDER_PUBLIC();}else if(!document.getElementById('public').classList.contains('hidden'))renderPublic(publicRestaurant);await translateApplicationUI(l);renderLanguages()}
-(function init(){menuoSetupNavigation();updateGlobalLanguageButton();window.addEventListener('resize',positionGlobalLanguage);document.documentElement.lang=state.language;document.documentElement.dir=state.language==='ar'?'rtl':'ltr';renderLanguages();const r=findPublic();const restored=menuoRestoreScreen();if(r){publicRestaurant=r;show('public',{restoreOnly:true})}else if(restored){show(restored,{restoreOnly:true})}else show('home');setTimeout(()=>{translateApplicationUI(state.language);positionGlobalLanguage()},200)})();
+(function init(){menuoSetupNavigation();applyUserTheme(state.userSettings?.theme||'light');updateGlobalLanguageButton();window.addEventListener('resize',positionGlobalLanguage);document.documentElement.lang=state.language;document.documentElement.dir=state.language==='ar'?'rtl':'ltr';renderLanguages();const r=findPublic();const restored=menuoRestoreScreen();if(r){publicRestaurant=r;show('public',{restoreOnly:true})}else if(restored){show(restored,{restoreOnly:true})}else show('home');setTimeout(()=>{translateApplicationUI(state.language);positionGlobalLanguage()},200)})();
 </script>
 </body></html>
