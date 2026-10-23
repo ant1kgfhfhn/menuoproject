@@ -512,7 +512,18 @@ async function getSubscriptionStatus(){
   if(data?.error)throw new Error(data.error);
   return {...data,authenticated:true};
 }
-function showSubscriptionNotice(message,isError=false){
+function showSubscriptionNotice(message,isError=false){async function subscriptionErrorMessage(error){
+  try{
+    const response=error?.context;
+    if(response&&typeof response.clone==="function"){
+      const body=await response.clone().json();
+      if(body?.error)return String(body.error);
+      if(body?.message)return String(body.message);
+    }
+  }catch(_){}
+  return error?.message||'Не удалось выполнить действие с подпиской.';
+}
+
   const n=document.getElementById('subscriptionNotice');
   if(!n)return;
   n.textContent=message;
@@ -664,7 +675,9 @@ async function switchToFreePlan(){
       '. До этой даты сохранится текущий тариф; после неё цена будет 0 USD в месяц.'
     );
   }catch(e){
-    showSubscriptionNotice(e?.message||'Не удалось запланировать переход на FREE.',true);
+    const message=await subscriptionErrorMessage(e);
+    try{await renderSubscription()}catch(_){}
+    showSubscriptionNotice(message||'Не удалось запланировать переход на FREE.',true);
   }finally{
     if(button){
       delete button.dataset.pending;
@@ -703,7 +716,9 @@ async function cancelSubscription(){
       '. После этой даты не будет нового продления и списания за следующий период. Уже выставленные счета или задолженность сохраняются.'
     );
   }catch(e){
-    showSubscriptionNotice(e?.message||'Не удалось отменить автопродление.',true);
+    const message=await subscriptionErrorMessage(e);
+    try{await renderSubscription()}catch(_){}
+    showSubscriptionNotice(message||'Не удалось отменить автопродление.',true);
   }finally{
     if(button){delete button.dataset.pending;button.disabled=false;}
   }
@@ -722,7 +737,9 @@ async function resumePaidPlan(){
     await renderSubscription();
     showSubscriptionNotice('Автопродление восстановлено. Следующая дата продления: '+(dateLabel(data.currentPeriodEnd)||'указана в статусе подписки')+'.');
   }catch(e){
-    showSubscriptionNotice(e?.message||'Не удалось восстановить автопродление.',true);
+    const message=await subscriptionErrorMessage(e);
+    try{await renderSubscription()}catch(_){}
+    showSubscriptionNotice(message||'Не удалось восстановить автопродление.',true);
   }finally{
     if(button){delete button.dataset.pending;button.disabled=false;}
   }
@@ -765,12 +782,20 @@ async function startCheckout(planId){
     ]);
     if(q?.error)throw q.error;
     if(q?.data?.error)throw new Error(q.data.error);
+    if(q?.data?.paymentRequired&&q?.data?.paymentUrl){
+      showSubscriptionNotice('Чтобы завершить переход на '+String(q.data.requestedPlanId||planId).toUpperCase()+', подтверди оплату на странице Stripe. Текущий тариф останется активным до успешного платежа.');
+      setStatus('Требуется подтверждение оплаты Stripe…');
+      location.href=q.data.paymentUrl;
+      return;
+    }
     if(q?.data?.changed||q?.data?.unchanged){
       const end=dateLabel(q.data.currentPeriodEnd);
       await renderSubscription();
       if(q.data.changed){
         showSubscriptionNotice('Тариф изменён на '+String(q.data.planId||planId).toUpperCase()+
-          '. Дополнительное списание за остаток текущего периода не создано.'+
+          (q.data.chargedProration
+            ? '. Stripe выставил доплату за оставшуюся часть текущего периода; новая цена будет действовать при следующем продлении.'
+            : '. Изменение тарифа подтверждено.')+
           (end?' Следующая дата продления: '+end+'.':''));
         setStatus('Тариф обновлён.');
       }else if(q.data.restoredAutoRenewal||q.data.restoredScheduledPlan){
