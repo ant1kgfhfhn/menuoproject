@@ -534,24 +534,28 @@ function hideSubscriptionNotice(){
   const n=document.getElementById('subscriptionNotice');
   if(n){n.textContent='';n.classList.add('hidden');n.classList.remove('error');}
 }
+async function performPaidProRecovery(){
+  const sb=await waitForMenuoSupabase();
+  const status=await getSubscriptionStatus();
+  if(!status.authenticated||!status.recoveryAvailable){
+    throw new Error('Оплаченную подписку PRO уже восстановили либо эта подписка не подходит для автоматического восстановления. Данные не изменены.');
+  }
+  const {data,error}=await sb.functions.invoke('manage-subscription',{body:{action:'restore_pro_no_charge'}});
+  if(error){
+    const message=await subscriptionErrorMessage(error);
+    throw new Error(message||'Сервис подписок не смог восстановить PRO.');
+  }
+  if(data?.error)throw new Error(data.error);
+  if(!data?.restored||data.planId!=='pro'||data.chargedNow!==false){
+    throw new Error('Сервер не подтвердил восстановление без нового списания. Других изменений не выполняли.');
+  }
+  return data;
+}
 async function restorePaidProNoCharge(){
   const button=document.getElementById('proRecoveryButton');
   if(button){button.disabled=true;button.textContent='Проверяем оплату и восстанавливаем PRO…';}
   try{
-    const sb=await waitForMenuoSupabase();
-    const status=await getSubscriptionStatus();
-    if(!status.authenticated||!status.recoveryAvailable){
-      throw new Error('Эта подписка больше не подходит для восстановления. Ничего не изменено.');
-    }
-    const {data,error}=await sb.functions.invoke('manage-subscription',{body:{action:'restore_pro_no_charge'}});
-    if(error){
-      const message=await subscriptionErrorMessage(error);
-      throw new Error(message||'Сервис подписок не смог восстановить PRO.');
-    }
-    if(data?.error)throw new Error(data.error);
-    if(!data?.restored||data.planId!=='pro'||data.chargedNow!==false){
-      throw new Error('Сервер не подтвердил безопасное восстановление. Проверь страницу тарифов перед повторной попыткой.');
-    }
+    const data=await performPaidProRecovery();
     await renderSubscription();
     showSubscriptionNotice(
       'Оплаченный PRO восстановлен. Новое списание не создавалось. Текущий период и дата продления сохранены.'+
@@ -607,6 +611,17 @@ async function renderSubscription(){
       const isCurrent=active&&current===planId;
       const hasPendingFree=String(s.pendingPlanId||'').toLowerCase()==='free';
       const scheduledCancel=active&&s.cancelAtPeriodEnd;
+      // The previous billing bug left the current paid subscription labelled BUSINESS
+      // although the verified Checkout payment was for PRO. Route all plan clicks through repair.
+      if(s.recoveryAvailable){
+        button.textContent='Восстановить PRO и продолжить';
+        button.disabled=false;
+        button.title='Восстановит оплаченный PRO без нового списания, затем продолжит выбранное действие';
+        button.onclick=()=>startCheckout(planId);
+        button.setAttribute('aria-current','false');
+        return;
+      }
+      button.onclick=()=>startCheckout(planId);
       if(isCurrent&&(hasPendingFree||scheduledCancel)){
         button.textContent='Оставить '+planId.toUpperCase();
         button.disabled=false;
@@ -792,7 +807,18 @@ async function startCheckout(planId){
     ]);
     const authUser=authResult?.data?.user;
     if(authResult?.error||!authUser){window.openAuth('login','subscription');return;}
-    const s=await getSubscriptionStatus();
+    let s=await getSubscriptionStatus();
+    if(s.recoveryAvailable){
+      setStatus('Восстанавливаем ранее оплаченный PRO без нового списания…');
+      await performPaidProRecovery();
+      await renderSubscription();
+      s=await getSubscriptionStatus();
+      if(!s.authenticated||String(s.planId||'').toLowerCase()!=='pro'||s.recoveryAvailable){
+        throw new Error('PRO не подтверждён после восстановления. Переход на другой тариф остановлен; повторное списание не запускалось.');
+      }
+      showSubscriptionNotice('Оплаченный PRO восстановлен без нового списания. Теперь открываем оплату выбранного тарифа.');
+      setStatus('PRO восстановлен. Готовим оплату '+planId.toUpperCase()+'…');
+    }
     const active=['active','trialing','past_due','unpaid'].includes(String(s.status||'').toLowerCase());
     const current=active?String(s.planId||'free').toLowerCase():'free';
     const pendingFree=String(s.pendingPlanId||'').toLowerCase()==='free';
