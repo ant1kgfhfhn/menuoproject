@@ -185,7 +185,7 @@
         category_id:catMap.get(String(d.category||d.categoryName||'').trim())||null,
         name:String(d.name||'Блюдо').trim()||'Блюдо',
         description:String(d.description||''),
-        price_cents:Math.max(0,Math.round((Number(String(d.priceCents??'').replace(',','.').replace(/[^0-9.-]/g,''))||Number(String(d.price??0).replace(',','.').replace(/[^0-9.-]/g,''))||0)*100)),
+        price_cents:(d.priceCents!==undefined&&d.priceCents!==null&&Number.isFinite(Number(d.priceCents)))?Math.max(0,Math.round(Number(d.priceCents))):Math.max(0,Math.round((Number(String(d.price??0).replace(',','.').replace(/[^0-9.-]/g,''))||0)*100)),
         currency:d.currency||'EUR',
         image_url:image.startsWith('http')?image:null,
         is_available:d.available!==false&&d.isAvailable!==false,
