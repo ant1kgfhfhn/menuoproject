@@ -657,7 +657,10 @@ async function switchToFreePlan(){
   }catch(e){
     showSubscriptionNotice(e?.message||'Не удалось запланировать переход на FREE.',true);
   }finally{
-    if(button){delete button.dataset.pending;button.disabled=false;}
+    if(button){
+      delete button.dataset.pending;
+      button.disabled=button.textContent==='Переход на FREE запланирован';
+    }
   }
 }
 
