@@ -287,6 +287,15 @@
     },true);
   }
 
+  window.MENUO_SAVE_RESTAURANT=async()=>{
+    if(!sb)throw new Error('MENUO ещё загружает базу данных. Подождите секунду.');
+    const {data:{user},error}=await sb.auth.getUser();
+    if(error)throw error;
+    if(!user)throw new Error('Войдите в аккаунт MENUO.');
+    const r=current();
+    if(!r)throw new Error('Сначала создайте ресторан.');
+    return await saveRestaurant(r,user);
+  };
   window.MENUO_SYNC_MENU=syncLocalMenu;
   window.MENUO_OPEN_QR=async()=>{
     try{const x=await syncLocalMenu();showQr(x.url)}
