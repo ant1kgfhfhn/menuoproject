@@ -168,7 +168,7 @@ function menuoUiEligible(n){
   const e=n.parentElement;
   if(!e)return false;
   if(e.closest('#public,[data-no-translate],script,style,svg,input,textarea,select,option'))return false;
-  if(e.closest('.avatar,.rest-logo,.editor-head b,.dish-info h3,.dish-info p,.price,.plan-badge,.brand'))return false;
+  if(e.closest('.avatar,.rest-logo,.editor-head b,.dish-info h3,.dish-info p,.price,.plan-badge,.brand,.profile-name,.profile-email,#inboxList,#pfDisplayName,#pfEmailSummary'))return false;
   const t=n.nodeValue.replace(/\s+/g,' ').trim();
   return /[А-Яа-яЁёЇїІіЄєҐґ]/.test(t)&&t.length>0;
 }
@@ -193,7 +193,7 @@ async function translateApplicationUI(lang){
   root.querySelectorAll('*').forEach(el=>{
     if(el.closest('#public'))return;
     if(el.matches('input,textarea,select,option,script,style,svg'))return;
-    if(el.matches('.avatar,.rest-logo,.editor-head b,.dish-info h3,.dish-info p,.price,.plan-badge,.brand'))return;
+    if(el.matches('.avatar,.rest-logo,.editor-head b,.dish-info h3,.dish-info p,.price,.plan-badge,.brand,.profile-name,.profile-email,#inboxList,#pfDisplayName,#pfEmailSummary'))return;
     [...el.childNodes].forEach(n=>{if(n.nodeType===3&&menuoUiEligible(n))nodes.push(n)});
   });
   document.querySelectorAll('.global-nav,.language-tray').forEach(root2=>{
