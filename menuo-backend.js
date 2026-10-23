@@ -54,7 +54,7 @@
       owner_id:user.id,name:r.name||'Мой ресторан',slug,
       logo_url:r.logoUrl||r.logo_url||null,address:r.address||null,phone:r.phone||null,
       description:r.description||null,website:r.website||null,instagram:r.instagram||null,
-      facebook:r.facebook||null,hours:typeof r.hours==='object'?r.hours:{},
+      facebook:r.facebook||null,hours:typeof r.hours==='object'&&r.hours!==null?r.hours:{display:String(r.hours||'')},
       default_locale:r.defaultLocale||r.default_locale||'ru',published:true
     };
 
@@ -154,7 +154,7 @@
     return Array.isArray(s?.dishes)?s.dishes.filter(d=>d.restaurantId===r.id):[];
   }
 
-  async function syncDishes(r,restaurantId,catMap){
+  async function syncDishes(r,restaurantId,catMap,userId){
     const old=await sb.from('dishes').select('id').eq('restaurant_id',restaurantId);
     if(old.error)throw old.error;
     if(old.data?.length){
@@ -162,18 +162,32 @@
       if(del.error)throw del.error;
     }
 
-    const ds=localDishes(r).map((d,i)=>({
-      restaurant_id:restaurantId,
-      category_id:catMap.get(String(d.category||d.categoryName||'').trim())||null,
-      name:String(d.name||'Блюдо').trim()||'Блюдо',
-      description:String(d.description||''),
-      price_cents:Math.max(0,Math.round((Number(String(d.priceCents??'').replace(',','.').replace(/[^0-9.-]/g,''))||Number(String(d.price??0).replace(',','.').replace(/[^0-9.-]/g,''))||0)*100)),
-      currency:d.currency||'EUR',
-      image_url:(d.photo||d.imageUrl||d.image_url||'').startsWith('http')?(d.photo||d.imageUrl||d.image_url):null,
-      is_available:d.available!==false&&d.isAvailable!==false,
-      sort_order:i,
-      allergens:Array.isArray(d.allergens)?d.allergens:[]
-    }));
+    const ds=[];
+    const local=localDishes(r);
+    for(let i=0;i<local.length;i++){
+      const d=local[i];
+      let image=String(d.photo||d.imageUrl||d.image_url||'');
+      if(image.startsWith('data:image/')){
+        const blob=await (await fetch(image)).blob();
+        const ext=blob.type==='image/png'?'png':blob.type==='image/webp'?'webp':'jpg';
+        const path=`${userId}/${restaurantId}/dishes/${String(d.id||i).replace(/[^a-zA-Z0-9_-]/g,'-')}.${ext}`;
+        const up=await sb.storage.from('restaurant-photos').upload(path,blob,{contentType:blob.type||'image/jpeg',upsert:true});
+        if(up.error)throw up.error;
+        image=sb.storage.from('restaurant-photos').getPublicUrl(path).data.publicUrl;
+      }
+      ds.push({
+        restaurant_id:restaurantId,
+        category_id:catMap.get(String(d.category||d.categoryName||'').trim())||null,
+        name:String(d.name||'Блюдо').trim()||'Блюдо',
+        description:String(d.description||''),
+        price_cents:Math.max(0,Math.round((Number(String(d.priceCents??'').replace(',','.').replace(/[^0-9.-]/g,''))||Number(String(d.price??0).replace(',','.').replace(/[^0-9.-]/g,''))||0)*100)),
+        currency:d.currency||'EUR',
+        image_url:image.startsWith('http')?image:null,
+        is_available:d.available!==false&&d.isAvailable!==false,
+        sort_order:i,
+        allergens:Array.isArray(d.allergens)?d.allergens:[]
+      });
+    }
 
     if(ds.length){
       const q=await sb.from('dishes').insert(ds);
@@ -206,7 +220,7 @@
     if(!r)throw new Error('Сначала создайте ресторан.');
     const rest=await saveRestaurant(r,user);
     const catMap=await syncCategories(r,rest.id);
-    await syncDishes(r,rest.id,catMap);
+    await syncDishes(r,rest.id,catMap,user.id);
     const qr=await syncQr(r,rest.id);
 
     const url=publicUrl(qr.token);
@@ -287,6 +301,30 @@
     },true);
   }
 
+  window.MENUO_CREATE_RESTAURANT=async()=>{
+    if(!sb)throw new Error('Система сохранения ещё загружается.');
+    const {data:{user},error}=await sb.auth.getUser();
+    if(error)throw error;
+    if(!user)throw new Error('Войдите в аккаунт MENUO.');
+    const r=current();
+    if(!r)throw new Error('Сначала создайте ресторан.');
+    const rest=await saveRestaurant(r,user);
+    await syncCategories(r,rest.id);
+    saveLocal();
+    return rest;
+  };
+  window.MENUO_SAVE_MENU_DATA=async()=>{
+    if(!sb)throw new Error('Система сохранения ещё загружается.');
+    const {data:{user},error}=await sb.auth.getUser();
+    if(error)throw error;
+    if(!user)throw new Error('Войдите в аккаунт MENUO.');
+    const r=current();
+    if(!r)throw new Error('Сначала создайте ресторан.');
+    const rest=await saveRestaurant(r,user);
+    const catMap=await syncCategories(r,rest.id);
+    await syncDishes(r,rest.id,catMap,user.id);
+    return rest;
+  };
   window.MENUO_SAVE_RESTAURANT=async()=>{
     if(!sb)throw new Error('MENUO ещё загружает базу данных. Подождите секунду.');
     const {data:{user},error}=await sb.auth.getUser();
