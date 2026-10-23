@@ -105,7 +105,7 @@
   <div class="legal-links"><a href="/privacy.html" target="_blank" rel="noopener">Как обрабатываются и удаляются данные ↗</a></div>
 </section>
 
-<section class="screen hidden" id="subscription"><div class="top"><button class="back" onclick="show('owner')">‹</button><div class="brand">Тарифы</div><span></span></div><h1 class="section-title">Тарифы MENUO</h1><p class="sub" id="planSummary">Проверяем вашу подписку…</p><div id="subscriptionNotice" class="notice hidden" role="status"></div><div class="menu-card plan"><div class="plan-badge">F</div><div style="flex:1"><b>FREE</b><div class="price-large">€0</div><div class="mutedline">10 блюд · 1 ресторан · 1 QR · базовый дизайн</div><button class="primary hidden" id="chooseFreePlan" style="margin-top:12px" onclick="chooseFreePlan()">Перейти на FREE</button></div></div><div class="menu-card plan"><div class="plan-badge">P</div><div style="flex:1"><b>PRO</b><div class="price-large">$4.99/мес.</div><div class="mutedline">Без лимита блюд · до 2 ресторанов · 2 QR · аллергены · языки · статистика</div><button class="primary" id="chooseProPlan" style="margin-top:12px" onclick="startCheckout('pro')">Купить PRO</button></div></div><div class="menu-card plan"><div class="plan-badge">B</div><div style="flex:1"><b>BUSINESS</b><div class="price-large">$9.99/мес.</div><div class="mutedline">Без лимитов · филиалы · несколько QR · акции · специальные меню</div><button class="primary" id="chooseBusinessPlan" style="margin-top:12px" onclick="startCheckout('business')">Купить BUSINESS</button></div></div><div class="menu-card"><div style="flex:1"><b>Промокод</b><div class="mutedline">Если у вас есть персональный код на скидку, введите его перед оплатой.</div><div style="display:flex;gap:8px;margin-top:10px"><input id="promoCode" placeholder="Например MENUO20" autocomplete="off" style="flex:1;border:1px solid #dce4df;border-radius:13px;padding:13px;text-transform:uppercase"><button class="mini" onclick="checkPromo()">Проверить</button></div><div id="promoStatus" class="mutedline" style="margin-top:8px"></div></div></div><div class="notice">Оплата проходит через Stripe. Тариф активируется только после подтверждённого платежа.</div><div class="legal-links"><div class="eyebrow">Юридическая информация</div><a href="/terms.html" target="_blank" rel="noopener">Условия использования / Nutzungsbedingungen ↗</a><a href="/privacy.html" target="_blank" rel="noopener">Политика конфиденциальности / Datenschutzerklärung ↗</a><a href="/widerruf.html" target="_blank" rel="noopener">Информация о праве на отказ / Widerruf ↗</a><a href="/impressum.html" target="_blank" rel="noopener">Impressum ↗</a></div><div class="menu-card hidden" id="subscriptionCancelCard"><div style="flex:1"><b id="subscriptionCancelTitle">Полное завершение подписки</b><div class="mutedline" id="subscriptionCancelHint">Отмена автопродления. Текущий оплаченный период останется доступным.</div><button class="danger" id="subscriptionCancelButton" style="margin-top:12px;width:100%" onclick="cancelSubscription()">Отменить подписку</button></div></div></section>
+<section class="screen hidden" id="subscription"><div class="top"><button class="back" onclick="show('owner')">‹</button><div class="brand">Тарифы</div><span></span></div><h1 class="section-title">Тарифы MENUO</h1><p class="sub" id="planSummary">Проверяем вашу подписку…</p><div id="subscriptionNotice" class="notice hidden" role="status"></div><div class="menu-card hidden" id="proRecoveryCard" style="border-color:#b6c8bd;background:#f8fcf9"><div style="flex:1"><b>Восстановление оплаченного тарифа</b><div class="mutedline" style="margin-top:6px">Мы проверили подтверждённую оплату PRO для этой подписки. Восстановление вернёт цену и возможности PRO без нового списания сейчас; сама подписка и дата продления сохранятся.</div><button class="secondary" id="proRecoveryButton" style="margin-top:12px;width:100%" onclick="restorePaidProNoCharge()">Восстановить оплаченный PRO</button></div></div><div class="menu-card plan"><div class="plan-badge">F</div><div style="flex:1"><b>FREE</b><div class="price-large">€0</div><div class="mutedline">10 блюд · 1 ресторан · 1 QR · базовый дизайн</div><button class="primary hidden" id="chooseFreePlan" style="margin-top:12px" onclick="chooseFreePlan()">Перейти на FREE</button></div></div><div class="menu-card plan"><div class="plan-badge">P</div><div style="flex:1"><b>PRO</b><div class="price-large">$4.99/мес.</div><div class="mutedline">Без лимита блюд · до 2 ресторанов · 2 QR · аллергены · языки · статистика</div><button class="primary" id="chooseProPlan" style="margin-top:12px" onclick="startCheckout('pro')">Купить PRO</button></div></div><div class="menu-card plan"><div class="plan-badge">B</div><div style="flex:1"><b>BUSINESS</b><div class="price-large">$9.99/мес.</div><div class="mutedline">Без лимитов · филиалы · несколько QR · акции · специальные меню</div><button class="primary" id="chooseBusinessPlan" style="margin-top:12px" onclick="startCheckout('business')">Купить BUSINESS</button></div></div><div class="menu-card"><div style="flex:1"><b>Промокод</b><div class="mutedline">Если у вас есть персональный код на скидку, введите его перед оплатой.</div><div style="display:flex;gap:8px;margin-top:10px"><input id="promoCode" placeholder="Например MENUO20" autocomplete="off" style="flex:1;border:1px solid #dce4df;border-radius:13px;padding:13px;text-transform:uppercase"><button class="mini" onclick="checkPromo()">Проверить</button></div><div id="promoStatus" class="mutedline" style="margin-top:8px"></div></div></div><div class="notice">Оплата проходит через Stripe. Тариф активируется только после подтверждённого платежа.</div><div class="legal-links"><div class="eyebrow">Юридическая информация</div><a href="/terms.html" target="_blank" rel="noopener">Условия использования / Nutzungsbedingungen ↗</a><a href="/privacy.html" target="_blank" rel="noopener">Политика конфиденциальности / Datenschutzerklärung ↗</a><a href="/widerruf.html" target="_blank" rel="noopener">Информация о праве на отказ / Widerruf ↗</a><a href="/impressum.html" target="_blank" rel="noopener">Impressum ↗</a></div><div class="menu-card hidden" id="subscriptionCancelCard"><div style="flex:1"><b id="subscriptionCancelTitle">Полное завершение подписки</b><div class="mutedline" id="subscriptionCancelHint">Отмена автопродления. Текущий оплаченный период останется доступным.</div><button class="danger" id="subscriptionCancelButton" style="margin-top:12px;width:100%" onclick="cancelSubscription()">Отменить подписку</button></div></div></section>
 
 <div class="language-tray hidden" id="languageTray"><input id="languageSearch" type="search" placeholder="Найти язык" oninput="renderLanguages()"><div class="language-list" id="languageList"></div></div>
 <nav class="global-nav"><button onclick="show('home')"><svg class="icon-svg nav-icon" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h14V10M9 20v-6h6v6"/></svg>Главная</button><button onclick="openSubscription()"><span class="plan-icon" id="navPlan">F</span><span id="navPlanText">FREE</span></button><button onclick="openProfile()"><svg class="icon-svg nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c.7-4 3.2-6 8-6s7.3 2 8 6"/></svg><span id="navProfile">Профиль</span></button></nav>
@@ -534,6 +534,36 @@ function hideSubscriptionNotice(){
   const n=document.getElementById('subscriptionNotice');
   if(n){n.textContent='';n.classList.add('hidden');n.classList.remove('error');}
 }
+async function restorePaidProNoCharge(){
+  const button=document.getElementById('proRecoveryButton');
+  if(button){button.disabled=true;button.textContent='Проверяем оплату и восстанавливаем PRO…';}
+  try{
+    const sb=await waitForMenuoSupabase();
+    const status=await getSubscriptionStatus();
+    if(!status.authenticated||!status.recoveryAvailable){
+      throw new Error('Эта подписка больше не подходит для восстановления. Ничего не изменено.');
+    }
+    const {data,error}=await sb.functions.invoke('manage-subscription',{body:{action:'restore_pro_no_charge'}});
+    if(error){
+      const message=await subscriptionErrorMessage(error);
+      throw new Error(message||'Сервис подписок не смог восстановить PRO.');
+    }
+    if(data?.error)throw new Error(data.error);
+    if(!data?.restored||data.planId!=='pro'||data.chargedNow!==false){
+      throw new Error('Сервер не подтвердил безопасное восстановление. Проверь страницу тарифов перед повторной попыткой.');
+    }
+    await renderSubscription();
+    showSubscriptionNotice(
+      'Оплаченный PRO восстановлен. Новое списание не создавалось. Текущий период и дата продления сохранены.'+
+      (dateLabel(data.currentPeriodEnd)?' Оплачено до '+dateLabel(data.currentPeriodEnd)+'.':'')
+    );
+  }catch(e){
+    try{await renderSubscription()}catch(_){}
+    showSubscriptionNotice(e?.message||'Не удалось восстановить PRO.',true);
+  }finally{
+    if(button){button.disabled=false;button.textContent='Восстановить оплаченный PRO';}
+  }
+}
 function dateLabel(value){
   if(!value)return '';
   const d=new Date(value);
@@ -546,6 +576,8 @@ async function renderSubscription(){
   const cancelButton=document.getElementById('subscriptionCancelButton');
   const cancelTitle=document.getElementById('subscriptionCancelTitle');
   const cancelHint=document.getElementById('subscriptionCancelHint');
+  const recoveryCard=document.getElementById('proRecoveryCard');
+  if(recoveryCard)recoveryCard.classList.add('hidden');
   if(summary)summary.textContent='Проверяем активную подписку…';
   if(freeButton)freeButton.disabled=true;
   hideSubscriptionNotice();
@@ -561,6 +593,7 @@ async function renderSubscription(){
     const active=['active','trialing','past_due','unpaid'].includes(status);
     const current=active?p:'free';
     const endLabel=dateLabel(s.currentPeriodEnd);
+    if(recoveryCard)recoveryCard.classList.toggle('hidden',!s.recoveryAvailable);
     if(summary){
       summary.textContent='Ваш текущий тариф: '+current.toUpperCase()+
         (active&&current!=='free'&&endLabel?' · оплачено до '+endLabel:
