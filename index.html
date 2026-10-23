@@ -932,30 +932,46 @@ function updateGlobalLanguageButton(){
  positionGlobalLanguage();
 }
 async function setLanguage(l){state.language=l;save();updateGlobalLanguageButton();document.documentElement.lang=l;document.documentElement.dir=l==='ar'?'rtl':'ltr';document.getElementById('languageTray').classList.add('hidden');if(new URLSearchParams(location.search).get('menu')&&typeof window.__MENUO_RENDER_PUBLIC==='function'){await window.__MENUO_RENDER_PUBLIC();}else if(!document.getElementById('public').classList.contains('hidden'))renderPublic(publicRestaurant);await translateApplicationUI(l);renderLanguages()}
-async function handlePaymentReturn(payment){
+async function handlePaymentReturn(payment,targetPlan=null){
   const cleanUrl=new URL(location.href);
   cleanUrl.searchParams.delete('payment');
+  cleanUrl.searchParams.delete('plan_change');
+  cleanUrl.searchParams.delete('session_id');
   try{history.replaceState({},'',cleanUrl.pathname+cleanUrl.search+cleanUrl.hash)}catch(_){}
+  const expected=String(targetPlan||'').toLowerCase();
   if(payment==='cancel'){
-    showSubscriptionNotice('Оплата не завершена. Подписка не была изменена; можешь выбрать тариф ещё раз.');
+    showSubscriptionNotice('Оплата не завершена. Текущая подписка не изменена; можешь повторить переход на выбранный тариф.');
     return;
   }
   const summary=document.getElementById('planSummary');
-  if(summary)summary.textContent='Проверяем подтверждение оплаты Stripe…';
-  for(let attempt=0;attempt<7;attempt++){
+  if(summary)summary.textContent=expected
+    ?'Проверяем оплату перехода на '+expected.toUpperCase()+'…'
+    :'Проверяем подтверждение оплаты Stripe…';
+  for(let attempt=0;attempt<12;attempt++){
     try{
       const current=await getSubscriptionStatus();
-      if(['active','trialing'].includes(String(current.status||'').toLowerCase())&&String(current.planId||'free').toLowerCase()!=='free'){
+      const active=['active','trialing'].includes(String(current.status||'').toLowerCase());
+      const currentPlan=String(current.planId||'free').toLowerCase();
+      if(active && (expected ? currentPlan===expected : currentPlan!=='free')){
         await renderSubscription();
-        showSubscriptionNotice('Оплата подтверждена. Тариф '+String(current.planId).toUpperCase()+' активен'+(dateLabel(current.currentPeriodEnd)?' до '+dateLabel(current.currentPeriodEnd):'.')+'.');
+        showSubscriptionNotice(
+          expected
+            ?'Оплата перехода подтверждена. Теперь активен тариф '+expected.toUpperCase()+(dateLabel(current.currentPeriodEnd)?' до '+dateLabel(current.currentPeriodEnd):'.')+'.'
+            :'Оплата подтверждена. Тариф '+currentPlan.toUpperCase()+' активен'+(dateLabel(current.currentPeriodEnd)?' до '+dateLabel(current.currentPeriodEnd):'.')+'.'
+        );
         return;
       }
     }catch(e){console.warn('MENUO payment return status check failed',e)}
     await new Promise(resolve=>setTimeout(resolve,1500));
   }
   await renderSubscription();
-  showSubscriptionNotice('Мы вернулись из окна оплаты, но Stripe ещё не подтвердил подписку. Не покупай тариф повторно прямо сейчас: обнови страницу через минуту или проверь «Тарифы» позже.',true);
+  showSubscriptionNotice(
+    expected
+      ?'Платёж принят, но Stripe ещё не подтвердил применение тарифа '+expected.toUpperCase()+'. Не покупай повторно: обнови «Тарифы» через минуту и проверь статус.'
+      :'Мы вернулись из окна оплаты, но Stripe ещё не подтвердил подписку. Не покупай тариф повторно прямо сейчас: обнови страницу позже.',
+    true
+  );
 }
-(function init(){menuoSetupNavigation();applyUserTheme(state.userSettings?.theme||'light');updateGlobalLanguageButton();window.addEventListener('resize',positionGlobalLanguage);document.documentElement.lang=state.language;document.documentElement.dir=state.language==='ar'?'rtl':'ltr';renderLanguages();const r=findPublic();const restored=menuoRestoreScreen();const payment=new URLSearchParams(location.search).get('payment');if(payment==='success'||payment==='cancel'){show('subscription',{restoreOnly:true});setTimeout(()=>handlePaymentReturn(payment),300)}else if(r){publicRestaurant=r;show('public',{restoreOnly:true})}else if(restored){show(restored,{restoreOnly:true})}else show('home');setTimeout(()=>{translateApplicationUI(state.language);positionGlobalLanguage()},200)})();
+(function init(){menuoSetupNavigation();applyUserTheme(state.userSettings?.theme||'light');updateGlobalLanguageButton();window.addEventListener('resize',positionGlobalLanguage);document.documentElement.lang=state.language;document.documentElement.dir=state.language==='ar'?'rtl':'ltr';renderLanguages();const r=findPublic();const restored=menuoRestoreScreen();const returnParams=new URLSearchParams(location.search);const payment=returnParams.get('payment');const planChange=returnParams.get('plan_change');if(payment==='success'||payment==='cancel'){show('subscription',{restoreOnly:true});setTimeout(()=>handlePaymentReturn(payment,planChange),300)}else if(r){publicRestaurant=r;show('public',{restoreOnly:true})}else if(restored){show(restored,{restoreOnly:true})}else show('home');setTimeout(()=>{translateApplicationUI(state.language);positionGlobalLanguage()},200)})();
 </script>
 </body></html>
