@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.2" baseProfile="tiny-ps" width="512" height="512" viewBox="0 0 512 512">
+  <title>MENUO</title>
+  <desc>MENUO digital restaurant menu logo with a serving cloche, QR menu card, and tray.</desc>
+  <rect width="512" height="512" fill="#fffdfa"/>
+  <path d="M126 220 C137 128 202 83 256 83 C310 83 375 128 386 220" fill="none" stroke="#83b99b" stroke-width="13" stroke-linecap="round"/>
+  <path d="M153 274 C153 214 197 169 256 169 C315 169 359 214 359 274 L359 298 L153 298 Z" fill="#17201c"/>
+  <path d="M166 248 C180 209 206 190 235 183" fill="none" stroke="#69756e" stroke-width="7" stroke-linecap="round"/>
+  <rect x="246" y="147" width="20" height="18" rx="4" fill="#17201c"/>
+  <ellipse cx="256" cy="145" rx="22" ry="12" fill="#17201c"/>
+  <path d="M139 302 H373 C385 302 393 310 393 319 C393 326 386 331 375 331 H137 C126 331 119 326 119 319 C119 310 127 302 139 302 Z" fill="#17201c"/>
+  <path d="M136 310 H376" stroke="#69756e" stroke-width="3"/>
+  <g transform="rotate(9 342 261)">
+    <rect x="294" y="203" width="99" height="111" rx="10" fill="#fffdfa" stroke="#e3e9e5" stroke-width="3"/>
+    <g fill="#1b6b4e">
+      <path d="M306 215 H336 V245 H306 Z M313 222 V238 H329 V222 Z" fill-rule="evenodd"/>
+      <path d="M351 215 H381 V245 H351 Z M358 222 V238 H374 V222 Z" fill-rule="evenodd"/>
+      <path d="M306 260 H336 V290 H306 Z M313 267 V283 H329 V267 Z" fill-rule="evenodd"/>
+      <rect x="348" y="255" width="8" height="8"/><rect x="361" y="255" width="8" height="8"/>
+      <rect x="348" y="268" width="8" height="8"/><rect x="374" y="268" width="7" height="7"/>
+      <rect x="361" y="281" width="8" height="8"/><rect x="374" y="281" width="7" height="7"/>
+      <rect x="342" y="293" width="8" height="8"/><rect x="355" y="293" width="8" height="8"/>
+    </g>
+  </g>
+  <!-- MENUO wordmark as vector paths; the final O uses the brand green. -->
+  <g fill="#17201c">
+    <path d="M65 373 H79 L98 396 L117 373 H131 V434 H116 V397 L98 419 L80 397 V434 H65 Z"/>
+    <path d="M145 373 H190 V386 H160 V397 H186 V410 H160 V421 H190 V434 H145 Z"/>
+    <path d="M204 373 H218 L244 410 V373 H259 V434 H245 L219 397 V434 H204 Z"/>
+    <path d="M273 373 H288 V410 C288 418 292 422 300 422 C308 422 312 418 312 410 V373 H327 V411 C327 427 317 436 300 436 C283 436 273 427 273 411 Z"/>
+  </g>
+  <path d="M366 371 C384 371 397 384 397 403 C397 422 384 436 366 436 C348 436 335 422 335 403 C335 384 348 371 366 371 Z M366 385 C356 385 350 392 350 403 C350 414 356 422 366 422 C376 422 382 414 382 403 C382 392 376 385 366 385 Z" fill="#1b6b4e" fill-rule="evenodd"/>
+</svg>
