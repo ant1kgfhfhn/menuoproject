@@ -431,6 +431,85 @@
       }
     };
   }
+  async function hydrateAccountData() {
+    const { db, user } = await getAuth();
+    const [restaurantsQ, categoriesQ, dishesQ, qrsQ, planQ, subQ, profileQ] = await Promise.all([
+      db.from('restaurants').select('*').eq('owner_id', user.id).order('created_at', { ascending: true }),
+      db.from('categories').select('*').order('sort_order', { ascending: true }),
+      db.from('dishes').select('*').order('sort_order', { ascending: true }),
+      db.from('qr_codes').select('id,restaurant_id,token,is_active').eq('is_active', true),
+      db.rpc('get_my_plan'),
+      db.from('subscriptions').select('plan_id,status,current_period_end').eq('user_id', user.id).maybeSingle(),
+      db.from('profiles').select('first_name,last_name,full_name,phone,avatar_url,settings,locale').eq('id', user.id).maybeSingle()
+    ]);
+    for (const query of [restaurantsQ,categoriesQ,dishesQ,qrsQ,planQ,subQ,profileQ]) {
+      if (query.error) throw query.error;
+    }
+    const cats = categoriesQ.data || [];
+    const dishRows = dishesQ.data || [];
+    const qrRows = qrsQ.data || [];
+    const subscription = subQ.data || null;
+    const planRow = Array.isArray(planQ.data) ? planQ.data[0] : planQ.data;
+    const resolvedPlan = String(
+      subscription?.status === 'active' && subscription?.plan_id
+        ? subscription.plan_id
+        : (planRow?.code || planRow?.plan_code || planRow?.get_my_plan || 'FREE')
+    ).toUpperCase();
+    const localUser = (s()?.users || []).find((x) => x.id === user.id) || {};
+    const profile = profileQ.data || {};
+    let firstName = profile.first_name || user.user_metadata?.first_name || localUser.firstName || '';
+    let lastName = profile.last_name || user.user_metadata?.last_name || localUser.lastName || '';
+    if ((!firstName || !lastName) && profile.full_name) {
+      const parts = String(profile.full_name).trim().split(/\s+/);
+      firstName = firstName || parts.shift() || '';
+      lastName = lastName || parts.join(' ');
+    }
+    const restaurants = (restaurantsQ.data || []).map((row) => {
+      const rowCategories = cats.filter((cat) => cat.restaurant_id === row.id)
+        .sort((a,b) => (a.sort_order || 0) - (b.sort_order || 0));
+      const qr = qrRows.find((entry) => entry.restaurant_id === row.id);
+      const hours = row.hours && typeof row.hours === 'object' ? (row.hours.display || '') : (row.hours || '');
+      return {
+        id: row.id, remoteId: row.id, ownerId: user.id, name: row.name || 'Мой ресторан',
+        slug: row.slug || '', logoUrl: row.logo_url || '', address: row.address || '',
+        phone: row.phone || '', description: row.description || '', website: row.website || '',
+        instagram: row.instagram || '', facebook: row.facebook || '', hours,
+        defaultLocale: row.default_locale || 'ru', published: row.published !== false,
+        categories: rowCategories.map((cat) => cat.name), qrToken: qr?.token || '',
+        qrCreated: !!qr, publicUrl: qr ? new URL('?menu=' + encodeURIComponent(qr.token), location.origin + location.pathname).toString() : ''
+      };
+    });
+    const ids = new Set(restaurants.map((row) => row.id));
+    const euro = (cents) => (Number(cents || 0) / 100).toFixed(2).replace('.', ',') + ' €';
+    const dishes = dishRows.filter((row) => ids.has(row.restaurant_id)).map((row) => ({
+      id: row.id, remoteId: row.id, restaurantId: row.restaurant_id,
+      name: row.name || 'Блюдо', description: row.description || '',
+      price: euro(row.price_cents), priceCents: Number(row.price_cents || 0),
+      category: cats.find((cat) => cat.id === row.category_id)?.name || 'Основные',
+      available: row.is_available !== false, photo: row.image_url || '', imageUrl: row.image_url || '',
+      currency: row.currency || 'EUR', allergens: Array.isArray(row.allergens) ? row.allergens : []
+    }));
+    const st = s();
+    const oldActive = st.activeRestaurantId;
+    st.users = [{
+      ...localUser, id: user.id, email: user.email || '', phone: profile.phone || user.phone || '',
+      firstName, lastName, plan: resolvedPlan, avatarUrl: profile.avatar_url || '',
+      settings: { theme: 'light', showTips: true, productEmails: false, ...(profile.settings || {}) }
+    }];
+    st.restaurants = restaurants;
+    st.dishes = dishes;
+    st.session = user.id;
+    const max = Number((typeof plan === 'function' ? plan()?.restaurants : 1) ?? 1);
+    const allowed = Number.isFinite(max) ? restaurants.slice(0, max) : restaurants;
+    st.activeRestaurantId = allowed.some((row) => row.id === oldActive)
+      ? oldActive
+      : (allowed[0]?.id || null);
+    if (profile.locale) st.language = profile.locale;
+    localSave();
+    if (typeof updateNav === 'function') updateNav();
+    return true;
+  }
+
   async function installWhenReady() {
     if (initPromise) return initPromise;
     initPromise = (async () => {
@@ -443,7 +522,7 @@
             try {
               const { db, user } = await getAuth();
               authenticated = !!user;
-              if (typeof window.MENUO_HYDRATE === 'function') await window.MENUO_HYDRATE();
+              await hydrateAccountData();
             } catch (_) {}
             if (!authenticated) {
               if (typeof window.openAuth === 'function') window.openAuth('login', 'owner');
