@@ -341,6 +341,90 @@
       window.show = nextShow;
     }
   }
+
+  // Install the UI entry points immediately, before the older runtime bridge can register.
+  // The helpers below wait for Supabase only when a user actually saves data.
+  function installUiShell() {
+    const originalCreateUi = window.createRestaurant;
+    window.createRestaurant = async function () {
+      const st = s();
+      const name = document.getElementById('restaurantName')?.value.trim();
+      if (!name || !st?.session) return;
+      const list = typeof restaurants === 'function' ? restaurants() : [];
+      const limit = typeof plan === 'function' ? Number(plan()?.restaurants ?? 1) : 1;
+      if (list.length >= limit) { if (typeof show === 'function') show('subscription'); return; }
+      const r = {
+        id: typeof uid === 'function' ? uid() : (crypto.randomUUID ? crypto.randomUUID() : String(Date.now())),
+        ownerId: st.session,
+        name,
+        address: document.getElementById('restaurantAddress')?.value.trim() || '',
+        phone: document.getElementById('restaurantPhone')?.value.trim() || '',
+        description: document.getElementById('restaurantDescription')?.value.trim() || '',
+        hours: 'Пн–Вс 10:00–23:00',
+        slug: typeof slugify === 'function' ? slugify(name) : ('restaurant-' + Date.now()),
+        categories: ['Все', 'Основные'],
+        qrCreated: false
+      };
+      st.restaurants.push(r);
+      st.activeRestaurantId = r.id;
+      localSave();
+      ['restaurantName','restaurantAddress','restaurantPhone','restaurantDescription'].forEach((id) => {
+        const input = document.getElementById(id); if (input) input.value = '';
+      });
+      if (typeof show === 'function') show('editor');
+      try {
+        await createRestaurant();
+        await saveMenuData(r.id);
+        if (typeof show === 'function') show('editor');
+      } catch (error) {
+        console.error('MENUO restaurant create failed', error);
+        if (!r.remoteId) {
+          st.restaurants = st.restaurants.filter((item) => item.id !== r.id);
+          st.dishes = (st.dishes || []).filter((item) => item.restaurantId !== r.id);
+          st.activeRestaurantId = (typeof restaurants === 'function' ? restaurants()[0]?.id : null) || null;
+          localSave();
+          if (typeof show === 'function') show('owner');
+        }
+        alert(error?.message || 'Не удалось сохранить ресторан. Проверь подключение и тариф.');
+      }
+    };
+
+    let earlyAutosaveTimer = null;
+    window.queueMenuAutosave = function (immediate = false) {
+      const targetId = localRestaurant()?.id || null;
+      if (earlyAutosaveTimer) clearTimeout(earlyAutosaveTimer);
+      return new Promise((resolve) => {
+        earlyAutosaveTimer = setTimeout(async () => {
+          try {
+            await saveMenuData(targetId);
+            const status = document.getElementById('saveStatus');
+            if (status) status.textContent = 'Все изменения сохранены';
+            resolve(true);
+          } catch (error) {
+            console.warn('MENUO autosave failed', error);
+            const status = document.getElementById('saveStatus');
+            if (status) status.textContent = 'Не удалось синхронизировать изменения';
+            resolve(false);
+          }
+        }, immediate ? 0 : 900);
+      });
+    };
+
+    const qrButton = document.querySelector('button[onclick="saveMenuAndQr()"]');
+    if (qrButton) qrButton.textContent = 'Опубликовать меню и QR-код';
+    window.saveMenuAndQr = async function () {
+      const button = document.querySelector('button[onclick="saveMenuAndQr()"]');
+      if (button) button.disabled = true;
+      try {
+        await saveMenuAndQr();
+        if (typeof renderQr === 'function') renderQr();
+      } catch (error) {
+        alert(error?.message || 'Не удалось сохранить меню и QR-код.');
+      } finally {
+        if (button) button.disabled = false;
+      }
+    };
+  }
   async function installWhenReady() {
     if (initPromise) return initPromise;
     initPromise = (async () => {
@@ -371,6 +455,7 @@
     })();
     return initPromise;
   }
+  installUiShell();
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', installWhenReady, { once: true });
   else installWhenReady();
 })();
