@@ -544,7 +544,8 @@ async function renderSubscription(){
     const endLabel=dateLabel(s.currentPeriodEnd);
     if(summary){
       summary.textContent='Ваш текущий тариф: '+current.toUpperCase()+
-        (active&&endLabel?' · оплачено до '+endLabel:'');
+        (active&&current!=='free'&&endLabel?' · оплачено до '+endLabel:
+          (active&&current==='free'?' · бесплатный тариф':''));
     }
 
     const proButton=document.getElementById('chooseProPlan');
