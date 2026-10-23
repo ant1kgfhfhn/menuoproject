@@ -345,6 +345,12 @@
   // Install the UI entry points immediately, before the older runtime bridge can register.
   // The helpers below wait for Supabase only when a user actually saves data.
   function installUiShell() {
+    if (!document.getElementById('menuoLegalConsentStyles')) {
+      const style = document.createElement('style');
+      style.id = 'menuoLegalConsentStyles';
+      style.textContent = '#registrationLegal{background:#f5f8f5;border:1px solid var(--line);border-radius:13px;padding:12px;margin:12px 0 16px;font-size:12px;line-height:1.45;color:var(--muted)}#registrationLegal .legal-consent-row{display:flex;align-items:flex-start;gap:10px}#registrationLegal input[type=checkbox]{width:18px;height:18px;accent-color:var(--green);margin-top:1px;flex:none}#registrationLegal a{color:var(--green);font-weight:800;text-decoration:underline}';
+      document.head.appendChild(style);
+    }
     const originalCreateUi = window.createRestaurant;
     window.createRestaurant = async function () {
       const st = s();
