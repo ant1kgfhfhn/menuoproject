@@ -311,6 +311,16 @@ function applyUserTheme(theme){
  const value=theme==='system'?(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):theme;
  document.documentElement.dataset.theme=value||'light';
 }
+function profileAvatarStoragePath(url,userId){
+ try{
+  const parsed=new URL(String(url||''));
+  const marker='/storage/v1/object/public/profile-avatars/';
+  const idx=parsed.pathname.indexOf(marker);
+  if(idx<0)return null;
+  const path=decodeURIComponent(parsed.pathname.slice(idx+marker.length));
+  return path.startsWith(String(userId)+'/')?path:null;
+ }catch(_){return null}
+}
 function initialsFor(u){return ([u?.firstName,u?.lastName].filter(Boolean).join(' ')||u?.email||'U').trim().slice(0,2).toUpperCase()}
 function setAvatarUi(url,initials){
  ['pfAvatarImage','pfEditAvatarImage'].forEach(id=>{const im=document.getElementById(id);if(im){if(url){im.src=url;im.classList.remove('hidden')}else{im.removeAttribute('src');im.classList.add('hidden')}}});
@@ -380,9 +390,12 @@ async function uploadProfileAvatar(event){
    const path=`${au.id}/avatar-${Date.now()}.${ext}`;
    const upload=await sb.storage.from('profile-avatars').upload(path,file,{contentType:file.type,upsert:false,cacheControl:'3600'});
    if(upload.error)throw upload.error;
+   const oldPath=profileAvatarStoragePath(u.avatarUrl,au.id);
    const url=sb.storage.from('profile-avatars').getPublicUrl(path).data.publicUrl;
    const p=await sb.from('profiles').upsert({id:au.id,avatar_url:url},{onConflict:'id'});if(p.error)throw p.error;
-   u.avatarUrl=url;save();setAvatarUi(url,initialsFor(u));alert('Аватар профиля обновлён.');
+   u.avatarUrl=url;save();setAvatarUi(url,initialsFor(u));
+   if(oldPath&&oldPath!==path){const removed=await sb.storage.from('profile-avatars').remove([oldPath]);if(removed.error)console.warn('Old profile avatar cleanup failed',removed.error)}
+   alert('Аватар профиля обновлён.');
  }catch(e){alert(e?.message||'Не удалось загрузить аватар.')}
  finally{event.target.value=''}
 }
@@ -391,8 +404,11 @@ async function removeProfileAvatar(){
  if(!confirm('Удалить фотографию профиля?'))return;
  try{
    const {data:{user:au},error}=await sb.auth.getUser();if(error)throw error;if(!au)throw new Error('Войдите в аккаунт снова.');
+   const oldPath=profileAvatarStoragePath(u.avatarUrl,au.id);
    const p=await sb.from('profiles').update({avatar_url:null}).eq('id',au.id);if(p.error)throw p.error;
-   u.avatarUrl='';save();setAvatarUi('',initialsFor(u));alert('Фотография удалена.');
+   u.avatarUrl='';save();setAvatarUi('',initialsFor(u));
+   if(oldPath){const removed=await sb.storage.from('profile-avatars').remove([oldPath]);if(removed.error)console.warn('Profile avatar removal failed',removed.error)}
+   alert('Фотография удалена.');
  }catch(e){alert(e?.message||'Не удалось удалить фотографию.')}
 }
 async function sendProfilePasswordReset(){
