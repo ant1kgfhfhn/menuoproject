@@ -33,7 +33,7 @@
       return {
         id:r.id,remoteId:r.id,ownerId:u.id,name:r.name||'Мой ресторан',slug:r.slug||'',
         logoUrl:r.logo_url||'',address:r.address||'',phone:r.phone||'',description:r.description||'',
-        website:r.website||'',instagram:r.instagram||'',facebook:r.facebook||'',hours:r.hours||'',
+        website:r.website||'',instagram:r.instagram||'',facebook:r.facebook||'',hours:(r.hours&&typeof r.hours==='object'?(r.hours.display||''):r.hours)||'',
         defaultLocale:r.default_locale||'ru',published:r.published!==false,
         categories:rcats.map(c=>c.name),qrToken:qr?.token||'',qrCreated:!!qr,
         publicUrl:qr?new URL('?menu='+encodeURIComponent(qr.token),location.href).toString():''
