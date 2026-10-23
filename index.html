@@ -812,8 +812,10 @@ async function startCheckout(planId){
     if(!q?.data?.url)throw new Error('Stripe не вернул ссылку на оплату.');
     location.href=q.data.url;
   }catch(e){
-    setStatus('Ошибка оплаты: '+(e?.message||'неизвестная ошибка'));
-    showSubscriptionNotice(e?.message||'Не удалось изменить подписку.',true);
+    const message=await subscriptionErrorMessage(e);
+    setStatus('Ошибка оплаты: '+(message||'неизвестная ошибка'));
+    try{await renderSubscription()}catch(_){}
+    showSubscriptionNotice(message||'Не удалось изменить подписку.',true);
   }finally{
     if(button)button.disabled=false;
   }
