@@ -450,10 +450,12 @@
     const qrRows = qrsQ.data || [];
     const subscription = subQ.data || null;
     const planRow = Array.isArray(planQ.data) ? planQ.data[0] : planQ.data;
+    const rpcPlan = typeof planRow === 'string' ? planRow : (planRow?.code || planRow?.plan_code || planRow?.get_my_plan);
+    const subscriptionIsEntitled = ['active','trialing','past_due'].includes(String(subscription?.status || '').toLowerCase());
     const resolvedPlan = String(
-      subscription?.status === 'active' && subscription?.plan_id
+      subscriptionIsEntitled && subscription?.plan_id
         ? subscription.plan_id
-        : (planRow?.code || planRow?.plan_code || planRow?.get_my_plan || 'FREE')
+        : (rpcPlan || 'free')
     ).toUpperCase();
     const localUser = (s()?.users || []).find((x) => x.id === user.id) || {};
     const profile = profileQ.data || {};
