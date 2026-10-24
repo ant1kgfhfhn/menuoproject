@@ -181,21 +181,35 @@
       }
       if(!data)throw lastError||new Error('empty-public-menu');
 
-      const lang=(typeof state!=='undefined'&&state?.language)||'ru';
-      data=await translateMenu(data,lang);
-      const r=data.restaurant||{},cats=data.categories||[],dishes=data.dishes||[];
+      const requestedLang=(typeof state!=='undefined'&&state?.language)||'ru';
+      const r0=data.restaurant||{};
+      const multilingualEnabled=['pro','business'].includes(String(r0.plan_id||'free').toLowerCase());
+      const lang=multilingualEnabled?requestedLang:(String(r0.default_locale||'ru').toLowerCase().split('-')[0]||'ru');
+      if(multilingualEnabled)data=await translateMenu(data,lang);
+      const r=data.restaurant||{},cats=data.categories||[],dishes=data.dishes||[],promotions=multilingualEnabled&&String(r.plan_id||'').toLowerCase()==='business'?(data.promotions||[]):[];
       const byCat=new Map(cats.map(c=>[String(c.id),c.name]));
       const labels={ru:['Все','Цифровое меню MENUO'],de:['Alle','Digitales MENUO-Menü'],en:['All','MENUO digital menu'],uk:['Усі','Цифрове меню MENUO'],tr:['Tümü','MENUO dijital menü'],pl:['Wszystkie','Cyfrowe menu MENUO'],es:['Todos','Menú digital de MENUO'],fr:['Tous','Menu numérique MENUO'],it:['Tutti','Menu digitale MENUO'],pt:['Todos','Menu digital MENUO'],ro:['Toate','Meniu digital MENUO'],ar:['الكل','قائمة MENUO الرقمية']}[lang]||['Все','Цифровое меню MENUO'];
 
-      host.innerHTML='<div class="public-hero"><div class="top" style="margin-bottom:0"><div class="rest-logo">'+esc((r.name||'M').slice(0,1).toUpperCase())+'</div><button class="lang" onclick="toggleLanguages()">'+esc((lang||'ru').toUpperCase())+' ▾</button></div><h1>'+esc(r.name||'MENUO')+'</h1><p>'+esc([r.address,r.phone].filter(Boolean).join(' · ')||labels[1])+'</p></div><div class="category-row" id="menuoPublicCategories"></div><h2 class="section-title">'+esc(labels[1].split('MENUO')[0].trim()||'Наше меню')+'</h2><p class="sub">'+esc(r.description||'')+'</p><div id="menuoPublicItems"></div>';
+      host.innerHTML='<div class="public-hero"><div class="top" style="margin-bottom:0"><div class="rest-logo">'+esc((r.name||'M').slice(0,1).toUpperCase())+'</div>'+(multilingualEnabled?'<button class="lang" onclick="toggleLanguages()">'+esc((lang||'ru').toUpperCase())+' ▾</button>':'')+'</div><h1>'+esc(r.name||'MENUO')+'</h1><p>'+esc([r.address,r.phone].filter(Boolean).join(' · ')||labels[1])+'</p></div><div id="menuoPublicPromotions"></div><div class="category-row" id="menuoPublicCategories"></div><h2 class="section-title">'+esc(labels[1].split('MENUO')[0].trim()||'Наше меню')+'</h2><p class="sub">'+esc(r.description||'')+'</p><div id="menuoPublicItems"></div>';
 
       const catHost=host.querySelector('#menuoPublicCategories');
       const items=host.querySelector('#menuoPublicItems');
       const all=document.createElement('button');all.className='chip active';all.textContent=labels[0];catHost.appendChild(all);
 
+      const allergenLabels={
+        ru:{gluten:'Злаки с глютеном',crustaceans:'Ракообразные',eggs:'Яйца',fish:'Рыба',peanuts:'Арахис',soybeans:'Соя',milk:'Молоко',nuts:'Орехи',celery:'Сельдерей',mustard:'Горчица',sesame:'Кунжут',sulphites:'Диоксид серы и сульфиты',lupin:'Люпин',molluscs:'Моллюски'},
+        de:{gluten:'Glutenhaltiges Getreide',crustaceans:'Krebstiere',eggs:'Eier',fish:'Fisch',peanuts:'Erdnüsse',soybeans:'Soja',milk:'Milch',nuts:'Schalenfrüchte',celery:'Sellerie',mustard:'Senf',sesame:'Sesam',sulphites:'Schwefeldioxid und Sulfite',lupin:'Lupinen',molluscs:'Weichtiere'},
+        en:{gluten:'Cereals with gluten',crustaceans:'Crustaceans',eggs:'Eggs',fish:'Fish',peanuts:'Peanuts',soybeans:'Soybeans',milk:'Milk',nuts:'Tree nuts',celery:'Celery',mustard:'Mustard',sesame:'Sesame',sulphites:'Sulphites',lupin:'Lupin',molluscs:'Molluscs'}
+      };
+      const translateAllergen=id=>(allergenLabels[lang]||allergenLabels.en)[id]||id;
+      host.querySelector('#menuoPublicPromotions').innerHTML=promotions.length?promotions.map(p=>'<div class="promotion-row"><b>'+esc(p.title)+'</b><span class="promotion-discount">'+(p.discount_percent?'−'+Number(p.discount_percent)+'%':p.discount_cents?'−'+(Number(p.discount_cents)/100).toFixed(2)+' €':'Special offer')+'</span><div>'+esc(p.description||'')+'</div></div>').join(''):'';
       function render(catId){
         const list=catId?dishes.filter(d=>String(d.category_id)===String(catId)):dishes;
-        items.innerHTML=list.length?list.map(d=>'<article class="dish '+(d.is_available?'':'unavailable')+'"><div class="food">'+(d.image_url?'<img src="'+esc(d.image_url)+'" alt="">':'🍽️')+'</div><div class="dish-info"><h3>'+esc(d.name)+'</h3><p>'+esc(d.description||'')+'</p><small style="color:#69756e">'+esc(byCat.get(String(d.category_id))||'')+'</small></div><div class="price">'+(Number(d.price_cents||0)/100).toFixed(2).replace('.',',')+' '+esc(d.currency||'EUR')+'</div></article>').join(''):'<div class="empty">Меню пока пустое.</div>';
+        items.innerHTML=list.length?list.map(d=>{
+          const allergens=multilingualEnabled&&Array.isArray(d.allergens)?d.allergens:[];
+          const allergyHtml=allergens.length?'<div class="allergen-tags">'+allergens.map(id=>'<span class="allergen-tag">'+esc(translateAllergen(id))+'</span>').join('')+'</div>':'';
+          return '<article class="dish '+(d.is_available?'':'unavailable')+'"><div class="food">'+(d.image_url?'<img src="'+esc(d.image_url)+'" alt="">':'🍽️')+'</div><div class="dish-info"><h3>'+esc(d.name)+'</h3><p>'+esc(d.description||'')+'</p><small style="color:#69756e">'+esc(byCat.get(String(d.category_id))||'')+'</small>'+allergyHtml+'</div><div class="price">'+(Number(d.price_cents||0)/100).toFixed(2).replace('.',',')+' '+esc(d.currency||'EUR')+'</div></article>';
+        }).join(''):'<div class="empty">Меню пока пустое.</div>';
       }
       cats.forEach(c=>{const b=document.createElement('button');b.className='chip';b.textContent=c.name;b.onclick=()=>{catHost.querySelectorAll('.chip').forEach(x=>x.classList.remove('active'));b.classList.add('active');render(c.id)};catHost.appendChild(b)});
       all.onclick=()=>{catHost.querySelectorAll('.chip').forEach(x=>x.classList.remove('active'));all.classList.add('active');render(null)};
