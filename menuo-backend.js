@@ -352,7 +352,18 @@
     if(!user)throw new Error('Войдите в аккаунт MENUO.');
     const r=current();
     if(!r)throw new Error('Сначала создайте ресторан.');
+    const previousRestaurantId=String(r.id);
     const rest=await saveRestaurant(r,user);
+    // The first cloud save may assign a Supabase UUID different from the local draft ID.
+    // Re-key local dishes before sync so they cannot be silently skipped by localDishes().
+    r.remoteId=rest.id;
+    r.id=rest.id;
+    const local=localState();
+    if(local){
+      (local.dishes||[]).forEach(d=>{if(String(d.restaurantId)===previousRestaurantId)d.restaurantId=rest.id;});
+      local.activeRestaurantId=rest.id;
+      saveLocal();
+    }
     const catMap=await syncCategories(r,rest.id);
     await syncDishes(r,rest.id,catMap,user.id);
     return rest;
