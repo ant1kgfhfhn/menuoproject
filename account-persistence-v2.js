@@ -211,7 +211,14 @@
       q = await db.from('qr_codes').insert({
         restaurant_id: restaurant.id, name: 'Основной QR', is_active: true
       }).select('*').single();
-      if (q.error) throw q.error;
+      if (q.error) {
+        // Two simultaneous autosaves may race to create the same primary QR.
+        const recovered = await db.from('qr_codes').select('*')
+          .eq('restaurant_id', restaurant.id).eq('is_active', true).eq('name', 'Основной QR')
+          .order('created_at', { ascending: true }).limit(1).maybeSingle();
+        if (recovered.error || !recovered.data) throw q.error;
+        q = recovered;
+      }
     }
     r.qrToken = q.data.token;
     r.qrCreated = true;
