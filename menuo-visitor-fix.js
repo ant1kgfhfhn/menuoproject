@@ -160,6 +160,7 @@
     tr(result.restaurant,'name');tr(result.restaurant,'description');tr(result.restaurant,'address');
     (result.categories||[]).forEach(c=>tr(c,'name'));
     (result.dishes||[]).forEach(d=>{tr(d,'name');tr(d,'description')});
+    (result.promotions||[]).forEach(p=>{tr(p,'title');tr(p,'description')});
     await Promise.all(jobs);
     return result;
   }
