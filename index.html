@@ -792,6 +792,8 @@ function closePlanPurchaseConfirm(){
   const modal=document.getElementById('planPurchaseConfirm');
   if(modal)modal.classList.add('hidden');
   document.body.style.overflow='';
+  const status=document.getElementById('promoStatus');
+  if(status&&status.textContent==='Ожидается подтверждение покупки.')status.textContent='';
   pendingSeparatePlanPurchase=null;
 }
 async function confirmPlanPurchaseAndCheckout(){
