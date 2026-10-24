@@ -210,7 +210,7 @@
   }
 
   async function syncQr(r,restaurantId){
-    let q=await sb.from('qr_codes').select('*').eq('restaurant_id',restaurantId).maybeSingle();
+    let q=await sb.from('qr_codes').select('*').eq('restaurant_id',restaurantId).eq('is_active',true).order('created_at',{ascending:true}).limit(1).maybeSingle();
     if(q.error)throw q.error;
     if(!q.data){
       q=await sb.from('qr_codes').insert({
