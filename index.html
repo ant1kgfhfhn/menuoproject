@@ -776,9 +776,11 @@ function openPlanPurchaseConfirm(data){
   const end=dateLabel(pendingSeparatePlanPurchase.currentPeriodEnd);
   title.textContent='Тариф '+current+' уже оплачен';
   message.textContent=
-    'Тариф '+current+' уже оплачен'+(end?' до '+end:'')+'. Вы можете дождаться окончания оплаченного периода и затем приобрести '+target+'.\n\n'+
-    'Если приобрести '+target+' сейчас, деньги за тариф '+current+' не возвращаются. После успешной оплаты '+target+' станет вашим текущим тарифом сразу. Старый тариф останется оплачен до окончания своего периода, но его автопродление будет отключено, чтобы не было следующего списания за старый тариф.\n\n'+
+    'Тариф '+current+' уже оплачен'+(end?' до '+end:'')+'. Можно нажать «Отмена», пользоваться им до конца оплаченного периода и приобрести '+target+' позже. Если будете ждать, не забудьте отключить автопродление, чтобы старый тариф не продлился автоматически.\n\n'+
+    'Если приобрести '+target+' сейчас, деньги за тариф '+current+' не возвращаются. После успешной оплаты '+target+' станет вашим текущим тарифом сразу. Старый тариф останется оплачен до окончания своего периода, но его автопродление будет отключено, чтобы после окончания не списалась оплата за старый тариф.\n\n'+
     'Продолжить покупку '+target+'?';
+  // Move the overlay out of the app shell so overflow clipping cannot hide a centered modal.
+  if(modal.parentElement!==document.body)document.body.appendChild(modal);
   modal.classList.remove('hidden');
   document.body.style.overflow='hidden';
   const button=document.getElementById('confirmPlanPurchaseButton');
