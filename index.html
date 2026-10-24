@@ -512,7 +512,7 @@ async function getSubscriptionStatus(){
   if(data?.error)throw new Error(data.error);
   return {...data,authenticated:true};
 }
-function showSubscriptionNotice(message,isError=false){async function subscriptionErrorMessage(error){
+async function subscriptionErrorMessage(error){
   try{
     const response=error?.context;
     if(response&&typeof response.clone==="function"){
@@ -523,7 +523,7 @@ function showSubscriptionNotice(message,isError=false){async function subscripti
   }catch(_){}
   return error?.message||'Не удалось выполнить действие с подпиской.';
 }
-
+function showSubscriptionNotice(message,isError=false){
   const n=document.getElementById('subscriptionNotice');
   if(!n)return;
   n.textContent=message;
