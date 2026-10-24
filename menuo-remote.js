@@ -45,7 +45,7 @@
       description:d.description||'',price:money(d.price_cents),priceCents:Number(d.price_cents||0),
       category:(cats.find(c=>c.id===d.category_id)?.name)||'Основные',
       available:d.is_available!==false,photo:d.image_url||'',imageUrl:d.image_url||'',
-      currency:d.currency||'EUR',allergens:Array.isArray(d.allergens)?d.allergens:[]
+      currency:d.currency||'EUR',allergens:Array.isArray(d.allergens)?d.allergens:[],discountPercent:d.discount_percent==null?null:Number(d.discount_percent),discountCents:d.discount_cents==null?null:Number(d.discount_cents),discountType:d.discount_percent!=null?'percent':d.discount_cents!=null?'fixed':''
     }));
 
     const oldActive=state.activeRestaurantId;
