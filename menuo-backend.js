@@ -43,6 +43,7 @@
         auth:{persistSession:true,autoRefreshToken:true,detectSessionInUrl:true}
       });
       window.MENUO_SUPABASE=sb;
+      window.MENUO_SET_DISH_DISCOUNT=async(dishId,discountPercent,discountCents)=>{if(!sb)throw new Error('База данных ещё загружается.');const auth=await sb.auth.getUser();if(auth.error)throw auth.error;if(!auth.data.user)throw new Error('Войди в аккаунт перед сохранением скидки.');const percent=discountPercent==null||discountPercent===''?null:Number(discountPercent);const cents=discountCents==null||discountCents===''?null:Number(discountCents);const result=await sb.rpc('set_dish_discount',{p_dish_id:dishId,p_discount_percent:percent,p_discount_cents:cents});if(result.error)throw result.error;const check=await sb.from('dishes').select('discount_percent,discount_cents').eq('id',dishId).single();if(check.error)throw check.error;if(Number(check.data.discount_percent||0)!==Number(percent||0)||Number(check.data.discount_cents||0)!==Number(cents||0))throw new Error('Supabase не подтвердил сохранение скидки.');return true;};
       patchPublicLinks();
       patchSaveButton();
     }catch(e){console.error('MENUO backend boot failed',e)}
