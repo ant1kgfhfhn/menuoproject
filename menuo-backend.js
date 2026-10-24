@@ -151,7 +151,18 @@
 
   function localDishes(r){
     const s=localState();
-    return Array.isArray(s?.dishes)?s.dishes.filter(d=>String(d.restaurantId)===String(r.id)):[];
+    if(!Array.isArray(s?.dishes)||!r)return [];
+    const ids=new Set([r.id,r.remoteId].filter(x=>x!=null).map(String));
+    let matched=s.dishes.filter(d=>ids.has(String(d.restaurantId)));
+    if(matched.length)return matched;
+    // Recover draft dishes whose restaurantId was left pointing at an old local ID.
+    const known=new Set((s.restaurants||[]).map(x=>String(x.id)));
+    const active=String(s.activeRestaurantId||'')===String(r.id)||String(s.activeRestaurantId||'')===String(r.remoteId||'');
+    if(active){
+      const orphaned=s.dishes.filter(d=>!known.has(String(d.restaurantId)));
+      if(orphaned.length){orphaned.forEach(d=>{d.restaurantId=r.id});saveLocal();return orphaned;}
+    }
+    return [];
   }
 
   async function syncDishes(r,restaurantId,catMap,userId){
