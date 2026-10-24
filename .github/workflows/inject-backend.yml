@@ -28,9 +28,9 @@ jobs:
               s = s.replace(old, new)
           tags = [
               '<script src="menuo-auth.js?v=20261024-discount-persist1" defer></script>',
-              '<script src="menuo-backend.js?v=20261024-discount-persist1" defer></script>',
+              '<script src="menuo-backend.js?v=20261025-discount-persist2" defer></script>',
               '<script src="menuo-visitor-fix.js?v=20261024-discount-persist1" defer></script>',
-              '<script src="menuo-remote.js?v=20261024-discount-persist1" defer></script>'
+              '<script src="menuo-remote.js?v=20261025-discount-persist2" defer></script>'
           ]
           s = '\n'.join(line for line in s.splitlines() if 'script src="menuo-' not in line)
           marker = '</head>'
