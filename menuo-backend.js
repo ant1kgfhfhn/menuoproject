@@ -216,7 +216,14 @@
       q=await sb.from('qr_codes').insert({
         restaurant_id:restaurantId,name:'Основной QR',is_active:true
       }).select().single();
-      if(q.error)throw q.error;
+      if(q.error){
+        // Another save may have created the primary QR at the same time.
+        const recovered=await sb.from('qr_codes').select('*').eq('restaurant_id',restaurantId)
+          .eq('is_active',true).eq('name','Основной QR')
+          .order('created_at',{ascending:true}).limit(1).maybeSingle();
+        if(recovered.error||!recovered.data)throw q.error;
+        q=recovered;
+      }
     }
     r.qrToken=q.data.token;
     r.qrCreated=true;
