@@ -11,7 +11,7 @@
 
 /* Account center */
 .profile-identity{display:flex;align-items:center;gap:15px;margin:8px 0 22px}.profile-identity-copy{min-width:0;flex:1}.profile-identity-copy .section-title{overflow-wrap:anywhere}.profile-email{margin:4px 0 9px;font-size:13px;color:var(--muted);overflow-wrap:anywhere}.profile-avatar-large{width:78px;height:78px;position:relative;display:grid;place-items:center;flex:none;overflow:hidden;border-radius:50%;background:var(--green);color:white;font-weight:850;font-size:23px;border:3px solid var(--mint)}.profile-avatar-large img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:50%}.profile-menu{margin:20px 0;border:1px solid var(--line);border-radius:18px;overflow:hidden;background:#fff}.profile-link{display:flex;align-items:center;gap:12px;width:100%;padding:14px 13px;background:transparent;border:0;border-bottom:1px solid var(--line);text-align:left;color:var(--ink)}.profile-link:last-child{border-bottom:0}.profile-link-icon{width:42px;height:42px;border-radius:13px;background:var(--mint);color:var(--green);display:grid;place-items:center;font-weight:850;font-size:21px;flex:none}.profile-link-copy{min-width:0;flex:1}.profile-link-copy b{display:block;font-size:14px}.profile-link-copy small{display:block;color:var(--muted);font-size:11px;line-height:1.35;margin-top:3px}.profile-link-arrow{color:var(--muted);font-size:22px}.inbox-badge{background:var(--green);color:#fff;border-radius:999px;min-width:22px;text-align:center;padding:3px 7px;font-size:11px;font-weight:850}.legal-links{display:grid;gap:10px;margin:26px 0 12px;padding-top:16px;border-top:1px solid var(--line)}.legal-links .eyebrow{margin-bottom:2px}.legal-links a{color:var(--green);font-size:13px;font-weight:750;text-decoration:none}.profile-avatar-picker{display:flex;align-items:center;gap:14px;padding:16px;border:1px solid var(--line);border-radius:18px;margin-bottom:18px;background:var(--cream)}.avatar-pick-target{display:flex;align-items:center;gap:12px;font-size:13px;font-weight:800;color:var(--green);cursor:pointer}.avatar-pick-target .profile-avatar-large{width:70px;height:70px}.setting-card{border:1px solid var(--line);border-radius:16px;padding:15px;margin:12px 0;background:#fff}.setting-toggle{display:flex;align-items:center;justify-content:space-between;gap:14px;cursor:pointer}.setting-toggle span{flex:1}.setting-toggle b{display:block;font-size:14px}.setting-toggle small{display:block;color:var(--muted);font-size:12px;line-height:1.4;margin-top:4px}.setting-toggle input{width:20px;height:20px;accent-color:var(--green);flex:none}.message-card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:15px;margin:10px 0}.message-card.unread{border-color:#9acdb0;background:#f8fcf9}.message-card h3{font-size:15px;margin:0 0 7px}.message-card p{font-size:13px;line-height:1.5;margin:0 0 10px;white-space:pre-wrap;color:var(--muted)}.message-meta{font-size:11px;color:var(--muted);margin-bottom:8px}.account-danger-card{border-color:#f0c8c8;background:#fff9f9}.account-danger-card .profile-link-icon{background:#fde9e9;color:var(--red)}.screen select{width:100%;padding:14px;border-radius:13px;border:1px solid var(--line);background:#fff;color:var(--ink)}html[data-theme="dark"]{--ink:#eef5f0;--muted:#b0bdb4;--line:#35463b;--paper:#18211b;--cream:#111812;--green:#4ca77a;--mint:#223d2e;--shadow:0 12px 35px rgba(0,0,0,.2)}html[data-theme="dark"] .menu-card,html[data-theme="dark"] .profile-menu,html[data-theme="dark"] .setting-card,html[data-theme="dark"] .message-card,html[data-theme="dark"] .profile-link,html[data-theme="dark"] .screen select,html[data-theme="dark"] .field input,html[data-theme="dark"] .field textarea{background:#1f2b23;color:var(--ink)}html[data-theme="dark"] .message-card.unread{background:#20382a}html[data-theme="dark"] .account-danger-card{background:#352323}@media(max-width:370px){.profile-identity{align-items:flex-start}.profile-avatar-large{width:64px;height:64px}}
-</style>
+.menuo-plan-modal{position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:18px;background:rgba(16,25,20,.58);backdrop-filter:blur(4px)}.menuo-plan-dialog{width:min(100%,430px);max-height:calc(100vh - 36px);overflow:auto;padding:24px;border:1px solid var(--line);border-radius:22px;background:var(--paper);box-shadow:0 24px 80px rgba(8,20,13,.24);color:var(--ink);animation:menuoModalIn .16s ease-out}.menuo-plan-modal-icon{width:42px;height:42px;display:grid;place-items:center;border-radius:14px;background:#fff0d8;color:#9a5c12;font-weight:900;font-size:23px;margin-bottom:14px}.menuo-plan-dialog h2{margin:0 0 12px;font-size:22px;line-height:1.2}.menuo-plan-modal-copy{font-size:14px;line-height:1.55;color:var(--muted);white-space:pre-line;margin:0 0 20px}.menuo-plan-confirm-actions{display:grid;grid-template-columns:1fr;gap:10px}.menuo-plan-confirm-actions button{width:100%;min-height:48px}@keyframes menuoModalIn{from{opacity:0;transform:translateY(6px) scale(.985)}to{opacity:1;transform:translateY(0) scale(1)}}@media(prefers-reduced-motion:reduce){.menuo-plan-dialog{animation:none}}</style>
 <script src="account-persistence-v2.js?v=20261023-v2" defer></script>
 <script src="menuo-auth.js?v=20261024-subscriptions" defer></script>
 <script src="menuo-backend.js?v=20261024-subscriptions" defer></script>
@@ -105,7 +105,18 @@
   <div class="legal-links"><a href="/privacy.html" target="_blank" rel="noopener">Как обрабатываются и удаляются данные ↗</a></div>
 </section>
 
-<section class="screen hidden" id="subscription"><div class="top"><button class="back" onclick="show('owner')">‹</button><div class="brand">Тарифы</div><span></span></div><h1 class="section-title">Тарифы MENUO</h1><p class="sub" id="planSummary">Проверяем вашу подписку…</p><div id="subscriptionNotice" class="notice hidden" role="status"></div><div class="menu-card hidden" id="proRecoveryCard" style="border-color:#b6c8bd;background:#f8fcf9"><div style="flex:1"><b>Восстановление оплаченного тарифа</b><div class="mutedline" style="margin-top:6px">Мы проверили подтверждённую оплату PRO для этой подписки. Восстановление вернёт цену и возможности PRO без нового списания сейчас; сама подписка и дата продления сохранятся.</div><button class="secondary" id="proRecoveryButton" style="margin-top:12px;width:100%" onclick="restorePaidProNoCharge()">Восстановить оплаченный PRO</button></div></div><div class="menu-card plan"><div class="plan-badge">F</div><div style="flex:1"><b>FREE</b><div class="price-large">€0</div><div class="mutedline">10 блюд · 1 ресторан · 1 QR · базовый дизайн</div><button class="primary hidden" id="chooseFreePlan" style="margin-top:12px" onclick="chooseFreePlan()">Перейти на FREE</button></div></div><div class="menu-card plan"><div class="plan-badge">P</div><div style="flex:1"><b>PRO</b><div class="price-large">$4.99/мес.</div><div class="mutedline">Без лимита блюд · до 2 ресторанов · 2 QR · аллергены · языки · статистика</div><button class="primary" id="chooseProPlan" style="margin-top:12px" onclick="startCheckout('pro')">Купить PRO</button></div></div><div class="menu-card plan"><div class="plan-badge">B</div><div style="flex:1"><b>BUSINESS</b><div class="price-large">$9.99/мес.</div><div class="mutedline">Без лимитов · филиалы · несколько QR · акции · специальные меню</div><button class="primary" id="chooseBusinessPlan" style="margin-top:12px" onclick="startCheckout('business')">Купить BUSINESS</button></div></div><div class="menu-card"><div style="flex:1"><b>Промокод</b><div class="mutedline">Если у вас есть персональный код на скидку, введите его перед оплатой.</div><div style="display:flex;gap:8px;margin-top:10px"><input id="promoCode" placeholder="Например MENUO20" autocomplete="off" style="flex:1;border:1px solid #dce4df;border-radius:13px;padding:13px;text-transform:uppercase"><button class="mini" onclick="checkPromo()">Проверить</button></div><div id="promoStatus" class="mutedline" style="margin-top:8px"></div></div></div><div class="notice">Оплата проходит через Stripe. Тариф активируется только после подтверждённого платежа.</div><div class="legal-links"><div class="eyebrow">Юридическая информация</div><a href="/terms.html" target="_blank" rel="noopener">Условия использования / Nutzungsbedingungen ↗</a><a href="/privacy.html" target="_blank" rel="noopener">Политика конфиденциальности / Datenschutzerklärung ↗</a><a href="/widerruf.html" target="_blank" rel="noopener">Информация о праве на отказ / Widerruf ↗</a><a href="/impressum.html" target="_blank" rel="noopener">Impressum ↗</a></div><div class="menu-card hidden" id="subscriptionCancelCard"><div style="flex:1"><b id="subscriptionCancelTitle">Полное завершение подписки</b><div class="mutedline" id="subscriptionCancelHint">Отмена автопродления. Текущий оплаченный период останется доступным.</div><button class="danger" id="subscriptionCancelButton" style="margin-top:12px;width:100%" onclick="cancelSubscription()">Отменить подписку</button></div></div></section>
+<section class="screen hidden" id="subscription"><div class="top"><button class="back" onclick="show('owner')">‹</button><div class="brand">Тарифы</div><span></span></div><h1 class="section-title">Тарифы MENUO</h1><p class="sub" id="planSummary">Проверяем вашу подписку…</p><div id="subscriptionNotice" class="notice hidden" role="status"></div>
+<div class="menuo-plan-modal hidden" id="planPurchaseConfirm" role="dialog" aria-modal="true" aria-labelledby="planPurchaseTitle">
+  <div class="menuo-plan-dialog">
+    <div class="menuo-plan-modal-icon" aria-hidden="true">!</div>
+    <h2 id="planPurchaseTitle">Текущий тариф уже оплачен</h2>
+    <p id="planPurchaseMessage" class="menuo-plan-modal-copy"></p>
+    <div class="menuo-plan-confirm-actions">
+      <button type="button" class="primary" id="confirmPlanPurchaseButton" onclick="confirmPlanPurchaseAndCheckout()">Всё равно приобрести</button>
+      <button type="button" class="secondary" onclick="closePlanPurchaseConfirm()">Отмена</button>
+    </div>
+  </div>
+</div><div class="menu-card plan"><div class="plan-badge">F</div><div style="flex:1"><b>FREE</b><div class="price-large">€0</div><div class="mutedline">10 блюд · 1 ресторан · 1 QR · базовый дизайн</div><button class="primary hidden" id="chooseFreePlan" style="margin-top:12px" onclick="chooseFreePlan()">Перейти на FREE</button></div></div><div class="menu-card plan"><div class="plan-badge">P</div><div style="flex:1"><b>PRO</b><div class="price-large">$4.99/мес.</div><div class="mutedline">Без лимита блюд · до 2 ресторанов · 2 QR · аллергены · языки · статистика</div><button class="primary" id="chooseProPlan" style="margin-top:12px" onclick="startCheckout('pro')">Купить PRO</button></div></div><div class="menu-card plan"><div class="plan-badge">B</div><div style="flex:1"><b>BUSINESS</b><div class="price-large">$9.99/мес.</div><div class="mutedline">Без лимитов · филиалы · несколько QR · акции · специальные меню</div><button class="primary" id="chooseBusinessPlan" style="margin-top:12px" onclick="startCheckout('business')">Купить BUSINESS</button></div></div><div class="menu-card"><div style="flex:1"><b>Промокод</b><div class="mutedline">Если у вас есть персональный код на скидку, введите его перед оплатой.</div><div style="display:flex;gap:8px;margin-top:10px"><input id="promoCode" placeholder="Например MENUO20" autocomplete="off" style="flex:1;border:1px solid #dce4df;border-radius:13px;padding:13px;text-transform:uppercase"><button class="mini" onclick="checkPromo()">Проверить</button></div><div id="promoStatus" class="mutedline" style="margin-top:8px"></div></div></div><div class="notice">Оплата проходит через Stripe. Тариф активируется только после подтверждённого платежа.</div><div class="legal-links"><div class="eyebrow">Юридическая информация</div><a href="/terms.html" target="_blank" rel="noopener">Условия использования / Nutzungsbedingungen ↗</a><a href="/privacy.html" target="_blank" rel="noopener">Политика конфиденциальности / Datenschutzerklärung ↗</a><a href="/widerruf.html" target="_blank" rel="noopener">Информация о праве на отказ / Widerruf ↗</a><a href="/impressum.html" target="_blank" rel="noopener">Impressum ↗</a></div><div class="menu-card hidden" id="subscriptionCancelCard"><div style="flex:1"><b id="subscriptionCancelTitle">Полное завершение подписки</b><div class="mutedline" id="subscriptionCancelHint">Отмена автопродления. Текущий оплаченный период останется доступным.</div><button class="danger" id="subscriptionCancelButton" style="margin-top:12px;width:100%" onclick="cancelSubscription()">Отменить подписку</button></div></div></section>
 
 <div class="language-tray hidden" id="languageTray"><input id="languageSearch" type="search" placeholder="Найти язык" oninput="renderLanguages()"><div class="language-list" id="languageList"></div></div>
 <nav class="global-nav"><button onclick="show('home')"><svg class="icon-svg nav-icon" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h14V10M9 20v-6h6v6"/></svg>Главная</button><button onclick="openSubscription()"><span class="plan-icon" id="navPlan">F</span><span id="navPlanText">FREE</span></button><button onclick="openProfile()"><svg class="icon-svg nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c.7-4 3.2-6 8-6s7.3 2 8 6"/></svg><span id="navProfile">Профиль</span></button></nav>
@@ -534,40 +545,6 @@ function hideSubscriptionNotice(){
   const n=document.getElementById('subscriptionNotice');
   if(n){n.textContent='';n.classList.add('hidden');n.classList.remove('error');}
 }
-async function performPaidProRecovery(){
-  const sb=await waitForMenuoSupabase();
-  const status=await getSubscriptionStatus();
-  if(!status.authenticated||!status.recoveryAvailable){
-    throw new Error('Оплаченную подписку PRO уже восстановили либо эта подписка не подходит для автоматического восстановления. Данные не изменены.');
-  }
-  const {data,error}=await sb.functions.invoke('manage-subscription',{body:{action:'restore_pro_no_charge'}});
-  if(error){
-    const message=await subscriptionErrorMessage(error);
-    throw new Error(message||'Сервис подписок не смог восстановить PRO.');
-  }
-  if(data?.error)throw new Error(data.error);
-  if(!data?.restored||data.planId!=='pro'||data.chargedNow!==false){
-    throw new Error('Сервер не подтвердил восстановление без нового списания. Других изменений не выполняли.');
-  }
-  return data;
-}
-async function restorePaidProNoCharge(){
-  const button=document.getElementById('proRecoveryButton');
-  if(button){button.disabled=true;button.textContent='Проверяем оплату и восстанавливаем PRO…';}
-  try{
-    const data=await performPaidProRecovery();
-    await renderSubscription();
-    showSubscriptionNotice(
-      'Оплаченный PRO восстановлен. Новое списание не создавалось. Текущий период и дата продления сохранены.'+
-      (dateLabel(data.currentPeriodEnd)?' Оплачено до '+dateLabel(data.currentPeriodEnd)+'.':'')
-    );
-  }catch(e){
-    try{await renderSubscription()}catch(_){}
-    showSubscriptionNotice(e?.message||'Не удалось восстановить PRO.',true);
-  }finally{
-    if(button){button.disabled=false;button.textContent='Восстановить оплаченный PRO';}
-  }
-}
 function dateLabel(value){
   if(!value)return '';
   const d=new Date(value);
@@ -580,8 +557,6 @@ async function renderSubscription(){
   const cancelButton=document.getElementById('subscriptionCancelButton');
   const cancelTitle=document.getElementById('subscriptionCancelTitle');
   const cancelHint=document.getElementById('subscriptionCancelHint');
-  const recoveryCard=document.getElementById('proRecoveryCard');
-  if(recoveryCard)recoveryCard.classList.add('hidden');
   if(summary)summary.textContent='Проверяем активную подписку…';
   if(freeButton)freeButton.disabled=true;
   hideSubscriptionNotice();
@@ -597,7 +572,6 @@ async function renderSubscription(){
     const active=['active','trialing','past_due','unpaid'].includes(status);
     const current=active?p:'free';
     const endLabel=dateLabel(s.currentPeriodEnd);
-    if(recoveryCard)recoveryCard.classList.toggle('hidden',!s.recoveryAvailable);
     if(summary){
       summary.textContent='Ваш текущий тариф: '+current.toUpperCase()+
         (active&&current!=='free'&&endLabel?' · оплачено до '+endLabel:
@@ -611,16 +585,6 @@ async function renderSubscription(){
       const isCurrent=active&&current===planId;
       const hasPendingFree=String(s.pendingPlanId||'').toLowerCase()==='free';
       const scheduledCancel=active&&s.cancelAtPeriodEnd;
-      // The previous billing bug left the current paid subscription labelled BUSINESS
-      // although the verified Checkout payment was for PRO. Route all plan clicks through repair.
-      if(s.recoveryAvailable){
-        button.textContent='Восстановить PRO и продолжить';
-        button.disabled=false;
-        button.title='Восстановит оплаченный PRO без нового списания, затем продолжит выбранное действие';
-        button.onclick=()=>startCheckout(planId);
-        button.setAttribute('aria-current','false');
-        return;
-      }
       button.onclick=()=>startCheckout(planId);
       if(isCurrent&&(hasPendingFree||scheduledCancel)){
         button.textContent='Оставить '+planId.toUpperCase();
@@ -792,7 +756,50 @@ async function resumePaidPlan(){
     if(button){delete button.dataset.pending;button.disabled=false;}
   }
 }
-async function startCheckout(planId){
+let pendingSeparatePlanPurchase=null;
+function openPlanPurchaseConfirm(data){
+  const modal=document.getElementById('planPurchaseConfirm');
+  const title=document.getElementById('planPurchaseTitle');
+  const message=document.getElementById('planPurchaseMessage');
+  if(!modal||!title||!message){
+    showSubscriptionNotice('У вас уже оплачен тариф '+String(data.currentPlan||'').toUpperCase()+
+      '. Подождите окончания периода или подтвердите новую покупку.',true);
+    return false;
+  }
+  pendingSeparatePlanPurchase={
+    targetPlan:String(data.requestedPlan||'').toLowerCase(),
+    currentPlan:String(data.currentPlan||'').toLowerCase(),
+    currentPeriodEnd:data.currentPeriodEnd||null
+  };
+  const current=pendingSeparatePlanPurchase.currentPlan.toUpperCase();
+  const target=pendingSeparatePlanPurchase.targetPlan.toUpperCase();
+  const end=dateLabel(pendingSeparatePlanPurchase.currentPeriodEnd);
+  title.textContent='Тариф '+current+' уже оплачен';
+  message.textContent=
+    'Тариф '+current+' уже оплачен'+(end?' до '+end:'')+'. Вы можете дождаться окончания оплаченного периода и затем приобрести '+target+'.\n\n'+
+    'Если приобрести '+target+' сейчас, деньги за тариф '+current+' не возвращаются. После успешной оплаты '+target+' станет вашим текущим тарифом сразу. Старый тариф останется оплачен до окончания своего периода, но его автопродление будет отключено, чтобы не было следующего списания за старый тариф.\n\n'+
+    'Продолжить покупку '+target+'?';
+  modal.classList.remove('hidden');
+  document.body.style.overflow='hidden';
+  const button=document.getElementById('confirmPlanPurchaseButton');
+  if(button){button.textContent='Всё равно приобрести';button.disabled=false;}
+  setTimeout(()=>button?.focus(),0);
+  return true;
+}
+function closePlanPurchaseConfirm(){
+  const modal=document.getElementById('planPurchaseConfirm');
+  if(modal)modal.classList.add('hidden');
+  document.body.style.overflow='';
+  pendingSeparatePlanPurchase=null;
+}
+async function confirmPlanPurchaseAndCheckout(){
+  const purchase=pendingSeparatePlanPurchase;
+  if(!purchase)return;
+  closePlanPurchaseConfirm();
+  await startCheckout(purchase.targetPlan,true);
+}
+
+async function startCheckout(planId,confirmSeparatePurchase=false){
   const out=document.getElementById('promoStatus');
   const button=document.getElementById(planId==='pro'?'chooseProPlan':'chooseBusinessPlan');
   const setStatus=(msg)=>{if(out)out.textContent=msg;};
@@ -808,17 +815,6 @@ async function startCheckout(planId){
     const authUser=authResult?.data?.user;
     if(authResult?.error||!authUser){window.openAuth('login','subscription');return;}
     let s=await getSubscriptionStatus();
-    if(s.recoveryAvailable){
-      setStatus('Восстанавливаем ранее оплаченный PRO без нового списания…');
-      await performPaidProRecovery();
-      await renderSubscription();
-      s=await getSubscriptionStatus();
-      if(!s.authenticated||String(s.planId||'').toLowerCase()!=='pro'||s.recoveryAvailable){
-        throw new Error('PRO не подтверждён после восстановления. Переход на другой тариф остановлен; повторное списание не запускалось.');
-      }
-      showSubscriptionNotice('Оплаченный PRO восстановлен без нового списания. Теперь открываем оплату выбранного тарифа.');
-      setStatus('PRO восстановлен. Готовим оплату '+planId.toUpperCase()+'…');
-    }
     const active=['active','trialing','past_due','unpaid'].includes(String(s.status||'').toLowerCase());
     const current=active?String(s.planId||'free').toLowerCase():'free';
     const pendingFree=String(s.pendingPlanId||'').toLowerCase()==='free';
@@ -836,11 +832,16 @@ async function startCheckout(planId){
     }
     const promo=document.getElementById('promoCode')?.value.trim().toUpperCase()||'';
     const q=await Promise.race([
-      sb.functions.invoke('create-checkout',{body:{planId,promoCode:promo}}),
+      sb.functions.invoke('create-checkout',{body:{planId,promoCode:promo,confirmSeparatePurchase:!!confirmSeparatePurchase}}),
       new Promise((_,reject)=>setTimeout(()=>reject(new Error('Сервер оплаты не ответил за 15 секунд.')),15000))
     ]);
     if(q?.error)throw q.error;
     if(q?.data?.error)throw new Error(q.data.error);
+    if(q?.data?.confirmationRequired){
+      setStatus('Ожидается подтверждение покупки.');
+      openPlanPurchaseConfirm(q.data);
+      return;
+    }
     if(q?.data?.paymentRequired&&q?.data?.paymentUrl){
       showSubscriptionNotice('Чтобы завершить переход на '+String(q.data.requestedPlanId||planId).toUpperCase()+', подтверди оплату на странице Stripe. Текущий тариф останется активным до успешного платежа.');
       setStatus('Требуется подтверждение оплаты Stripe…');
