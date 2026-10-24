@@ -438,7 +438,7 @@
       db.from('restaurants').select('*').eq('owner_id', user.id).order('created_at', { ascending: true }),
       db.from('categories').select('*').order('sort_order', { ascending: true }),
       db.from('dishes').select('*').order('sort_order', { ascending: true }),
-      db.from('qr_codes').select('id,restaurant_id,token,is_active').eq('is_active', true),
+      db.from('qr_codes').select('id,restaurant_id,token,is_active,created_at').eq('is_active', true).order('created_at', { ascending: true }),
       db.rpc('get_my_plan'),
       db.from('subscriptions').select('plan_id,status,current_period_end').eq('user_id', user.id).maybeSingle(),
       db.from('profiles').select('first_name,last_name,full_name,phone,avatar_url,settings,locale').eq('id', user.id).maybeSingle()
