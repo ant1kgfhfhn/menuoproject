@@ -151,7 +151,7 @@
 
   function localDishes(r){
     const s=localState();
-    return Array.isArray(s?.dishes)?s.dishes.filter(d=>d.restaurantId===r.id):[];
+    return Array.isArray(s?.dishes)?s.dishes.filter(d=>String(d.restaurantId)===String(r.id)):[];
   }
 
   async function syncDishes(r,restaurantId,catMap,userId){
@@ -201,6 +201,15 @@
     if(ds.length){
       const q=await sb.from('dishes').upsert(ds,{onConflict:'id'}).select('id');
       if(q.error)throw q.error;
+      const expected=ds.filter(d=>d.discount_percent!==null||d.discount_cents!==null);
+      if(expected.length){
+        const ids=expected.map(d=>d.id).filter(Boolean);
+        const check=await sb.from('dishes').select('id,discount_percent,discount_cents').in('id',ids);
+        if(check.error)throw check.error;
+        const savedById=new Map((check.data||[]).map(d=>[String(d.id),d]));
+        const missing=expected.find(d=>{const actual=savedById.get(String(d.id));return !actual||Number(actual.discount_percent||0)!==Number(d.discount_percent||0)||Number(actual.discount_cents||0)!==Number(d.discount_cents||0)});
+        if(missing)throw new Error('Скидка блюда не подтвердилась в базе данных. Повтори сохранение.');
+      }
     }
     const keep=new Set(ds.map(d=>d.id).filter(Boolean));
     const stale=(old.data||[]).map(d=>d.id).filter(id=>!keep.has(id));
