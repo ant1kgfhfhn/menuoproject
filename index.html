@@ -982,7 +982,7 @@ function toggleLanguages(){document.getElementById('languageTray').classList.tog
  const wrap=document.querySelector('.global-language'),btn=document.getElementById('globalLanguageButton');
  if(!wrap||!btn)return;
  const activeScreen=typeof menuoCurrentScreen==='function'?menuoCurrentScreen():document.querySelector('.screen:not(.hidden)')?.id;
- if(activeScreen==='public'){wrap.style.display='none';return}else{wrap.style.display=''}
+ if(activeScreen==='public'){wrap.style.display='none';const publicBtn=document.getElementById('publicLanguageButton'),tray=document.getElementById('languageTray');if(publicBtn&&tray){const pr=publicBtn.getBoundingClientRect(),tw=Math.min(300,window.innerWidth-32),left=Math.max(16,Math.min(pr.left,window.innerWidth-tw-16));tray.style.left=left+'px';tray.style.right='auto';tray.style.top=(pr.bottom+8)+'px'}return}else{wrap.style.display=''}
  const screen=typeof menuoCurrentScreen==='function'
    ? document.getElementById(menuoCurrentScreen())
    : document.querySelector('.screen:not(.hidden)');
@@ -1019,8 +1019,10 @@ function toggleLanguages(){document.getElementById('languageTray').classList.tog
  }
 }
 function updateGlobalLanguageButton(){
- const b=document.getElementById('globalLanguageButton');
- if(b)b.textContent=(state.language||'ru').toUpperCase()+' ▾';
+ const label=(state.language||'ru').toUpperCase()+' ▾';
+ const b=document.getElementById('globalLanguageButton'),publicButton=document.getElementById('publicLanguageButton');
+ if(b)b.textContent=label;
+ if(publicButton)publicButton.textContent=label;
  positionGlobalLanguage();
 }
 async function setLanguage(l){state.language=l;save();updateGlobalLanguageButton();document.documentElement.lang=l;document.documentElement.dir=l==='ar'?'rtl':'ltr';document.getElementById('languageTray').classList.add('hidden');if(new URLSearchParams(location.search).get('menu')&&typeof window.__MENUO_RENDER_PUBLIC==='function'){await window.__MENUO_RENDER_PUBLIC();}else if(!document.getElementById('public').classList.contains('hidden'))renderPublic(publicRestaurant);await translateApplicationUI(l);renderLanguages()}
