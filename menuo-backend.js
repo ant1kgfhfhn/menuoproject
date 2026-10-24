@@ -190,7 +190,9 @@
         image_url:image.startsWith('http')?image:null,
         is_available:d.available!==false&&d.isAvailable!==false,
         sort_order:i,
-        allergens:Array.isArray(d.allergens)?d.allergens:[]
+        allergens:Array.isArray(d.allergens)?d.allergens:[],
+        discount_percent:Number(d.discountPercent)>0?Math.max(1,Math.min(100,Math.round(Number(d.discountPercent)))):null,
+        discount_cents:Number(d.discountCents)>0?Math.max(1,Math.round(Number(d.discountCents))):null
       };
       if(stableId)row.id=stableId;
       ds.push(row);
