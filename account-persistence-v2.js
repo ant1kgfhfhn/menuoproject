@@ -204,7 +204,8 @@
     await syncCategories(r, restaurant.id, db);
     await syncDishes(r, restaurant.id, db, user);
     let q = await db.from('qr_codes').select('*')
-      .eq('restaurant_id', restaurant.id).eq('is_active', true).maybeSingle();
+      .eq('restaurant_id', restaurant.id).eq('is_active', true)
+      .order('created_at', { ascending: true }).limit(1).maybeSingle();
     if (q.error) throw q.error;
     if (!q.data) {
       q = await db.from('qr_codes').insert({
