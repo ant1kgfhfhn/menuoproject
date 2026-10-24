@@ -26,7 +26,7 @@
     const cats=cq.data||[], dishes=dq.data||[], qrs=qq.data||[];
     const planRow=Array.isArray(pq.data)?pq.data[0]:pq.data;
     const subscriptionRow=sq.data||null;
-    const resolvedPlan=String(subscriptionRow?.status==='active'&&subscriptionRow?.plan_id?subscriptionRow.plan_id:(planRow?.code||planRow?.plan_code||planRow?.get_my_plan||'FREE')).toUpperCase();
+    const rpcPlan=typeof planRow==='string'?planRow:(planRow?.code||planRow?.plan_code||planRow?.get_my_plan);const subscriptionIsEntitled=['active','trialing','past_due'].includes(String(subscriptionRow?.status||'').toLowerCase());const resolvedPlan=String(subscriptionIsEntitled&&subscriptionRow?.plan_id?subscriptionRow.plan_id:(rpcPlan||'free')).toUpperCase();
     const restaurants=(rq.data||[]).map(r=>{
       const rcats=cats.filter(c=>c.restaurant_id===r.id).sort((a,b)=>(a.sort_order||0)-(b.sort_order||0));
       const qr=qrs.find(x=>x.restaurant_id===r.id);
