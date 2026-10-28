@@ -163,13 +163,29 @@
         image_url: await dishImage(d, authUser.id, restaurantId, id, db),
         is_available: d.available !== false && d.isAvailable !== false,
         sort_order: i,
-        allergens: Array.isArray(d.allergens) ? d.allergens : []
+        allergens: Array.isArray(d.allergens) ? d.allergens : [],
+        discount_percent: Number(d.discountPercent) > 0 ? Math.max(1, Math.min(100, Math.round(Number(d.discountPercent)))) : null,
+        discount_cents: Number(d.discountCents) > 0 ? Math.max(1, Math.round(Number(d.discountCents))) : null
       });
     }
     // Upsert records before any deletion. Ordinary saves only upsert; explicit delete removes one row.
     if (rows.length) {
       const saved = await db.from('dishes').upsert(rows, { onConflict: 'id' }).select('id');
       if (saved.error) throw saved.error;
+      const discounted = rows.filter((row) => row.discount_percent !== null || row.discount_cents !== null);
+      if (discounted.length) {
+        const ids = discounted.map((row) => row.id);
+        const verify = await db.from('dishes').select('id,discount_percent,discount_cents').in('id', ids);
+        if (verify.error) throw verify.error;
+        const actual = new Map((verify.data || []).map((row) => [String(row.id), row]));
+        const missing = discounted.find((row) => {
+          const stored = actual.get(String(row.id));
+          return !stored ||
+            Number(stored.discount_percent || 0) !== Number(row.discount_percent || 0) ||
+            Number(stored.discount_cents || 0) !== Number(row.discount_cents || 0);
+        });
+        if (missing) throw new Error('Скидка не сохранилась в базе данных. Повтори сохранение.');
+      }
     }
     localSave();
   }
