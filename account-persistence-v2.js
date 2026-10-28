@@ -513,7 +513,11 @@
       price: euro(row.price_cents), priceCents: Number(row.price_cents || 0),
       category: cats.find((cat) => cat.id === row.category_id)?.name || 'Основные',
       available: row.is_available !== false, photo: row.image_url || '', imageUrl: row.image_url || '',
-      currency: row.currency || 'EUR', allergens: Array.isArray(row.allergens) ? row.allergens : []
+      currency: row.currency || 'EUR',
+      discountPercent: Number(row.discount_percent) > 0 ? Number(row.discount_percent) : null,
+      discountCents: Number(row.discount_cents) > 0 ? Number(row.discount_cents) : null,
+      discountType: Number(row.discount_percent) > 0 ? 'percent' : (Number(row.discount_cents) > 0 ? 'fixed' : ''),
+      allergens: Array.isArray(row.allergens) ? row.allergens : []
     }));
     const st = s();
     const oldActive = st.activeRestaurantId;
