@@ -17,6 +17,24 @@
 <script src="menuo-backend.js?v=20261029-promotions-targets1" defer></script>
 <script src="menuo-visitor-fix.js?v=20261029-promotions-targets1" defer></script>
 <script src="menuo-remote.js?v=20261029-promotions-targets1" defer></script>
+
+<style id="menuo-restaurant-management-layout">
+.restaurant-manage-card{display:block;background:#fff;border:1px solid var(--line);border-radius:18px;padding:15px;margin:11px 0;box-shadow:0 5px 20px rgba(23,32,28,.04);min-width:0}
+.restaurant-manage-main{display:flex;align-items:center;gap:12px;min-width:0}
+.restaurant-manage-copy{min-width:0;flex:1;overflow-wrap:anywhere}
+.restaurant-manage-copy b{display:block;font-size:15px;line-height:1.3}
+.restaurant-manage-copy small{display:block;color:var(--muted);margin-top:4px;line-height:1.4}
+.restaurant-manage-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:14px}
+.restaurant-manage-actions button{width:100%;min-width:0;white-space:normal;min-height:40px;padding:9px 7px;line-height:1.2}
+.restaurant-manage-actions .textbtn{background:#fff5f5;border-radius:10px}
+.qr-code-actions{display:flex;flex-wrap:wrap;align-items:center;gap:10px;margin-top:8px}
+.qr-code-actions a,.qr-code-actions button{font-size:12px;font-weight:800}
+.qr-code-row{display:flex;align-items:center;gap:12px;padding:12px;border:1px solid var(--line);border-radius:16px;background:#fff;margin:10px 0;min-width:0}
+.qr-code-row>img{width:92px;height:92px;object-fit:contain;flex:none}
+.qr-code-row>div{min-width:0;flex:1;overflow-wrap:anywhere}
+.qr-code-row .qr-code-actions{gap:8px}
+@media(max-width:380px){.restaurant-manage-actions{grid-template-columns:1fr 1fr}.qr-code-row>img{width:78px;height:78px}}
+</style>
 </head>
 <body>
 <main class="app" id="app"><div class="global-language"><button id="globalLanguageButton" onclick="toggleLanguages()">RU ▾</button></div>
@@ -279,10 +297,27 @@ async function refreshRemoteMenu(){if(window.MENUO_HYDRATE)await window.MENUO_HY
 function renderRestaurantManagement(){
  const host=document.getElementById('restaurantManagementList');if(!host)return;
  const rs=restaurants();
- host.innerHTML=rs.length?rs.map(r=>'<div class="menu-card" style="align-items:center"><div class="avatar">'+esc(String(r.name||'R').slice(0,2).toUpperCase())+'</div><div style="min-width:0;flex:1"><b>'+esc(r.name)+'</b><small>'+state.dishes.filter(d=>String(d.restaurantId)===String(r.id)).length+' блюд · '+(r.published===false?'Не опубликован':'Опубликован')+'</small></div><div class="stack" style="min-width:110px;gap:6px"><button class="mini" onclick="selectRestaurant(\''+r.id+'\')">Открыть меню</button><button class="mini" onclick="editManagedRestaurant(\''+r.id+'\')">Редактировать</button><button class="mini" onclick="createQrForRestaurant(\''+r.id+'\')">Создать QR</button><button class="textbtn red" onclick="deleteManagedRestaurant(\''+r.id+'\')">Удалить</button></div></div>').join(''):'<div class="empty">Ресторанов пока нет. Создайте первый ресторан.</div>';
+ host.innerHTML=rs.length?rs.map(r=>'<article class="restaurant-manage-card"><div class="restaurant-manage-main"><div class="avatar">'+esc(String(r.name||'R').slice(0,2).toUpperCase())+'</div><div class="restaurant-manage-copy"><b>'+esc(r.name)+'</b><small>'+state.dishes.filter(d=>String(d.restaurantId)===String(r.id)).length+' блюд · '+(r.published===false?'Не опубликован':'Опубликован')+'</small></div></div><div class="restaurant-manage-actions"><button class="mini" onclick="selectRestaurant(\''+r.id+'\')">Открыть меню</button><button class="mini" onclick="editManagedRestaurant(\''+r.id+'\')">Редактировать</button><button class="mini" onclick="createQrForRestaurant(\''+r.id+'\')">Создать QR</button><button class="textbtn red" onclick="deleteManagedRestaurant(\''+r.id+'\')">Удалить ресторан</button></div></article>').join(''):'<div class="empty">Ресторанов пока нет. Создайте первый ресторан.</div>';
 }
 function editManagedRestaurant(id){const r=restaurants().find(x=>String(x.id)===String(id));if(!r)return;state.activeRestaurantId=r.id;save();show('restaurantProfile')}
-async function createQrForRestaurant(id){const r=restaurants().find(x=>String(x.id)===String(id));if(!r)return;try{state.activeRestaurantId=r.id;save();const sb=await waitForMenuoSupabase();let restaurantId=r.remoteId||r.id;if(!r.remoteId&&window.MENUO_SAVE_RESTAURANT){const saved=await window.MENUO_SAVE_RESTAURANT();restaurantId=saved.id}await assertQrCapacity(sb);const q=await sb.from('qr_codes').insert({restaurant_id:restaurantId,name:'Основной QR',is_active:true}).select().single();if(q.error)throw q.error;r.remoteId=restaurantId;r.qrToken=q.data.token;r.qrCreated=true;save();show('qrManagement')}catch(e){managementNotice('restaurantManagementNotice','Не удалось создать QR: '+(e?.message||'ошибка'),true)}}
+async function createQrForRestaurant(id){
+ const r=restaurants().find(x=>String(x.id)===String(id));if(!r)return;
+ try{
+  state.activeRestaurantId=r.id;save();
+  const sb=await waitForMenuoSupabase();
+  let restaurantId=r.remoteId||r.id;
+  if(!r.remoteId&&window.MENUO_SAVE_RESTAURANT){const saved=await window.MENUO_SAVE_RESTAURANT();restaurantId=saved.id;r.remoteId=restaurantId}
+  await assertQrCapacity(sb);
+  const existing=await sb.from('qr_codes').select('id').eq('restaurant_id',restaurantId).eq('is_active',true).eq('name','Основной QR').maybeSingle();
+  if(existing.error)throw existing.error;
+  const all=await sb.from('qr_codes').select('id').eq('restaurant_id',restaurantId);
+  if(all.error)throw all.error;
+  const next=(all.data||[]).length+1;
+  const q=await sb.from('qr_codes').insert({restaurant_id:restaurantId,name:existing.data?'QR-код '+next:'Основной QR',is_active:true}).select().single();
+  if(q.error)throw q.error;
+  r.qrToken=q.data.token;r.qrCreated=true;save();await refreshRemoteMenu();show('qrManagement');
+ }catch(e){managementNotice('restaurantManagementNotice','Не удалось создать QR: '+(e?.message||'ошибка'),true)}
+}
 async function deleteManagedRestaurant(id){
  const r=restaurants().find(x=>String(x.id)===String(id));if(!r)return;
  if(!confirm('Удалить ресторан «'+r.name+'» вместе со всеми блюдами, категориями, акциями, QR-кодами и статистикой? Это действие нельзя отменить.'))return;
@@ -1002,7 +1037,7 @@ async function deleteRestaurantPromotion(id){if(!confirm('Удалить эту 
 async function renderQrCodesList(){
  const host=document.getElementById('qrCodesList'),button=document.getElementById('createExtraQrButton'),notice=document.getElementById('qrCodeLimitNotice');if(!host||document.getElementById('qr')?.classList.contains('hidden'))return;const r=currentRestaurant();if(!r){host.innerHTML='<div class="empty">Сначала выберите заведение.</div>';return}
  try{const sb=await waitForMenuoSupabase(),auth=await sb.auth.getUser();if(auth.error)throw auth.error;if(!auth.data.user)throw new Error('Войдите в аккаунт.');const restaurantsQ=await sb.from('restaurants').select('id').eq('owner_id',auth.data.user.id);if(restaurantsQ.error)throw restaurantsQ.error;const ids=(restaurantsQ.data||[]).map(x=>x.id);if(!ids.length){host.innerHTML='<div class="empty">Сначала создайте заведение.</div>';return}const q=await sb.from('qr_codes').select('id,restaurant_id,token,name,is_active,created_at').in('restaurant_id',ids).order('created_at',{ascending:true});if(q.error)throw q.error;const all=q.data||[],current=all.filter(x=>x.restaurant_id===(r.remoteId||r.id)),limit=Number(plan().qrs||1),count=all.length,limited=Number.isFinite(limit)&&count>=limit;if(button)button.disabled=limited;if(notice)notice.textContent=Number.isFinite(limit)?'Использовано QR-кодов: '+count+' из '+limit+'.':'Использовано QR-кодов: '+count+' · лимита нет.';
-  host.innerHTML=current.map((x,i)=>{const url=qrPublicUrl(x.token),qr='https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=6&data='+encodeURIComponent(url);return '<div class="qr-code-row"><img loading="lazy" src="'+qr+'" alt="QR-код"><div><b>'+esc(x.name||('QR-код '+(i+1)))+'</b><div class="mutedline">Ресторан: '+esc(r.name||'Ресторан')+' · '+(x.is_active?'Активен':'Отключён')+'</div><div class="qr-code-actions"><a href="'+esc(url)+'" target="_blank" rel="noopener">Открыть меню</a><a href="'+qr+'" download="menuo-qr-'+encodeURIComponent(x.name||String(i+1))+'.png">Скачать QR</a></div></div></div>'}).join('')||'<div class="empty">QR-коды ещё не созданы.</div>';
+  host.innerHTML=current.map((x,i)=>{const url=qrPublicUrl(x.token),qr='https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=6&data='+encodeURIComponent(url);return '<div class="qr-code-row"><img loading="lazy" src="'+qr+'" alt="QR-код"><div><b>'+esc(x.name||('QR-код '+(i+1)))+'</b><div class="mutedline">Ресторан: '+esc(r.name||'Ресторан')+' · '+(x.is_active?'Активен':'Отключён')+'</div><div class="qr-code-actions"><a href="'+esc(url)+'" target="_blank" rel="noopener">Открыть меню</a><a href="'+qr+'" download="menuo-qr-'+encodeURIComponent(x.name||String(i+1))+'.png">Скачать QR</a><button class="textbtn red" onclick="deleteManagedQr(\''+x.id+'\')">Удалить QR</button></div></div></div>'}).join('')||'<div class="empty">QR-коды ещё не созданы.</div>';
  }catch(e){host.innerHTML='<div class="notice error">'+esc(await subscriptionErrorMessage(e))+'</div>'}
 }
 async function createAdditionalQrCode(){
