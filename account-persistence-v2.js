@@ -255,44 +255,49 @@
   async function saveMenuAndQr() {
     const r = localRestaurant();
     if (!r) throw new Error('Сначала создай ресторан.');
-    const { db, user } = await getAuth();
-    const restaurant = await persistRestaurant(r, db, user);
-    await syncCategories(r, restaurant.id, db);
-    await syncDishes(r, restaurant.id, db, user);
-    // Always use the restaurant's stable primary QR, never a secondary code.
-    let q = await db.from('qr_codes').select('*')
-      .eq('restaurant_id', restaurant.id).eq('is_active', true).eq('name', 'Основной QR')
-      .order('created_at', { ascending: true }).limit(1).maybeSingle();
-    if (q.error) throw q.error;
-    if (!q.data) {
-      const prior = await db.from('qr_codes').select('*')
-        .eq('restaurant_id', restaurant.id).eq('name', 'Основной QR')
+    try {
+      const { db, user } = await getAuth();
+      const restaurant = await persistRestaurant(r, db, user);
+      await syncCategories(r, restaurant.id, db);
+      await syncDishes(r, restaurant.id, db, user);
+      // Always use the restaurant's stable primary QR, never a secondary code.
+      let q = await db.from('qr_codes').select('*')
+        .eq('restaurant_id', restaurant.id).eq('is_active', true).eq('name', 'Основной QR')
         .order('created_at', { ascending: true }).limit(1).maybeSingle();
-      if (prior.error) throw prior.error;
-      if (prior.data) {
-        q = await db.from('qr_codes').update({ is_active: true })
-          .eq('id', prior.data.id).select('*').single();
-      } else {
-        q = await db.from('qr_codes').insert({
-          restaurant_id: restaurant.id, name: 'Основной QR', is_active: true
-        }).select('*').single();
-      }
-      if (q.error) {
-        // Recover a primary QR created concurrently by another device/save.
-        const recovered = await db.from('qr_codes').select('*')
-          .eq('restaurant_id', restaurant.id).eq('is_active', true).eq('name', 'Основной QR')
+      if (q.error) throw q.error;
+      if (!q.data) {
+        const prior = await db.from('qr_codes').select('*')
+          .eq('restaurant_id', restaurant.id).eq('name', 'Основной QR')
           .order('created_at', { ascending: true }).limit(1).maybeSingle();
-        if (recovered.error || !recovered.data) throw q.error;
-        q = recovered;
+        if (prior.error) throw prior.error;
+        if (prior.data) {
+          q = await db.from('qr_codes').update({ is_active: true })
+            .eq('id', prior.data.id).select('*').single();
+        } else {
+          q = await db.from('qr_codes').insert({
+            restaurant_id: restaurant.id, name: 'Основной QR', is_active: true
+          }).select('*').single();
+        }
+        if (q.error) {
+          // Recover a primary QR created concurrently by another device/save.
+          const recovered = await db.from('qr_codes').select('*')
+            .eq('restaurant_id', restaurant.id).eq('is_active', true).eq('name', 'Основной QR')
+            .order('created_at', { ascending: true }).limit(1).maybeSingle();
+          if (recovered.error || !recovered.data) throw q.error;
+          q = recovered;
+        }
       }
+      r.qrToken = q.data.token;
+      r.qrCreated = true;
+      r.publicUrl = new URL('?menu=' + encodeURIComponent(q.data.token), PUBLIC_MENU_ORIGIN).toString();
+      r.syncPending = false;
+      delete r.syncError;
+      localSave();
+      return { restaurant, qr: q.data, url: r.publicUrl };
+    } catch (error) {
+      markSyncPending(r, error);
+      throw error;
     }
-    r.qrToken = q.data.token;
-    r.qrCreated = true;
-    r.publicUrl = new URL('?menu=' + encodeURIComponent(q.data.token), PUBLIC_MENU_ORIGIN).toString();
-    r.syncPending = false;
-    delete r.syncError;
-    localSave();
-    return { restaurant, qr: q.data, url: r.publicUrl };
   }
   function installPublicUrl() {
     const old = window.publicUrl;
