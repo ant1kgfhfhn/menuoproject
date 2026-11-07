@@ -191,42 +191,66 @@
     }
     localSave();
   }
+  function markSyncPending(r, error) {
+    if (!r) return;
+    r.syncPending = true;
+    r.syncError = String(error?.message || error || 'Не удалось синхронизировать ресторан.');
+    localSave();
+  }
   async function saveMenuData(localId) {
     const r = localRestaurant(localId);
     if (!r) throw new Error('Сначала выбери ресторан.');
-    const { db, user } = await getAuth();
-    const previousId = String(r.id);
-    const restaurant = await persistRestaurant(r, db, user);
-    await syncCategories(r, restaurant.id, db);
-    await syncDishes(r, restaurant.id, db, user);
-    r.id = restaurant.id;
-    r.remoteId = restaurant.id;
-    r.ownerId = user.id;
-    r.syncPending = false;
-    delete r.syncError;
-    const st = s();
-    if (st) {
-      (st.dishes || []).forEach((dish) => {
-        if (String(dish.restaurantId) === previousId) dish.restaurantId = restaurant.id;
-      });
-      if (String(st.activeRestaurantId) === previousId) st.activeRestaurantId = restaurant.id;
-      localSave();
+    try {
+      const { db, user } = await getAuth();
+      const previousId = String(r.id);
+      const restaurant = await persistRestaurant(r, db, user);
+      await syncCategories(r, restaurant.id, db);
+      await syncDishes(r, restaurant.id, db, user);
+      r.id = restaurant.id;
+      r.remoteId = restaurant.id;
+      r.ownerId = user.id;
+      r.syncPending = false;
+      delete r.syncError;
+      const st = s();
+      if (st) {
+        (st.dishes || []).forEach((dish) => {
+          if (String(dish.restaurantId) === previousId) dish.restaurantId = restaurant.id;
+        });
+        if (String(st.activeRestaurantId) === previousId) st.activeRestaurantId = restaurant.id;
+        localSave();
+      }
+      return { restaurant };
+    } catch (error) {
+      markSyncPending(r, error);
+      throw error;
     }
-    return { restaurant };
   }
   async function createRestaurant() {
     const r = localRestaurant();
     if (!r) throw new Error('Сначала создай ресторан.');
-    const { db, user } = await getAuth();
-    const row = await persistRestaurant(r, db, user);
-    await syncCategories(r, row.id, db);
-    return row;
+    try {
+      const { db, user } = await getAuth();
+      const row = await persistRestaurant(r, db, user);
+      await syncCategories(r, row.id, db);
+      return row;
+    } catch (error) {
+      markSyncPending(r, error);
+      throw error;
+    }
   }
   async function saveRestaurant() {
     const r = localRestaurant();
     if (!r) throw new Error('Сначала выбери ресторан.');
-    const { db, user } = await getAuth();
-    return persistRestaurant(r, db, user);
+    try {
+      const { db, user } = await getAuth();
+      const row = await persistRestaurant(r, db, user);
+      r.syncPending = false;
+      delete r.syncError;
+      return row;
+    } catch (error) {
+      markSyncPending(r, error);
+      throw error;
+    }
   }
   async function saveMenuAndQr() {
     const r = localRestaurant();
