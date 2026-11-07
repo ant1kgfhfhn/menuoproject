@@ -29,8 +29,6 @@
   function esc(v){
     return String(v??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   }
-  // Public QR links must always use the production website. Capacitor's
-  // Android WebView origin is https://localhost and must never be encoded in QR.
   const PUBLIC_MENU_ORIGIN='https://menuo-qr.com/';
   function publicUrl(token){
     const u=new URL(PUBLIC_MENU_ORIGIN);
@@ -235,7 +233,7 @@
   }
 
   async function syncQr(r,restaurantId){
-    let q=await sb.from('qr_codes').select('*').eq('restaurant_id',restaurantId).eq('is_active',true).order('created_at',{ascending:true}).limit(1).maybeSingle();
+    let q=await sb.from('qr_codes').select('*').eq('restaurant_id',restaurantId).eq('is_active',true).order('created_at',{ascending:false}).limit(1).maybeSingle();
     if(q.error)throw q.error;
     if(!q.data){
       q=await sb.from('qr_codes').insert({
@@ -337,8 +335,9 @@
       e.preventDefault();e.stopImmediatePropagation();
       try{
         b.disabled=true;
-        const x=await syncLocalMenu();
-        showQr(x.url);
+        await syncLocalMenu();
+        if(typeof window.renderQr==='function')window.renderQr();
+        else if(typeof window.show==='function')window.show('qr');
       }catch(err){
         console.error('MENUO save/QR error',err);
         const message=err?.message||'Не удалось сохранить меню.';
@@ -393,7 +392,7 @@
   };
   window.MENUO_SYNC_MENU=syncLocalMenu;
   window.MENUO_OPEN_QR=async()=>{
-    try{const x=await syncLocalMenu();showQr(x.url)}
+    try{await syncLocalMenu();if(typeof window.renderQr==='function')window.renderQr();else if(typeof window.show==='function')window.show('qr')}
     catch(e){alert(e?.message||'Не удалось открыть QR-код.')}
   };
 
