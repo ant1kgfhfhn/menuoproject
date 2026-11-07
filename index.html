@@ -149,7 +149,12 @@ async function queueMenuAutosave(immediate=false){
 }
 function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function slugify(s){return (s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,45)||'restaurant')+'-'+uid().slice(0,6)}
-function publicUrl(r){return location.origin+location.pathname+'?menu='+encodeURIComponent(r.qrToken||r.slug)}
+const MENUO_PUBLIC_MENU_ORIGIN='https://menuo-qr.com/';
+function publicUrl(r){
+ const u=new URL(MENUO_PUBLIC_MENU_ORIGIN);
+ u.searchParams.set('menu',r.qrToken||r.slug);
+ return u.toString();
+}
 
 const MENUO_UI_CACHE='menuo-ui-translations-v1';
 const MENUO_NAV_HISTORY=[];
@@ -950,7 +955,7 @@ async function deleteRestaurantPromotion(id){if(!confirm('Удалить эту 
 async function renderQrCodesList(){
  const host=document.getElementById('qrCodesList'),button=document.getElementById('createExtraQrButton'),notice=document.getElementById('qrCodeLimitNotice');if(!host||document.getElementById('qr')?.classList.contains('hidden'))return;const r=currentRestaurant();if(!r){host.innerHTML='<div class="empty">Сначала выберите заведение.</div>';return}
  try{const sb=await waitForMenuoSupabase(),auth=await sb.auth.getUser();if(auth.error)throw auth.error;if(!auth.data.user)throw new Error('Войдите в аккаунт.');const restaurantsQ=await sb.from('restaurants').select('id').eq('owner_id',auth.data.user.id);if(restaurantsQ.error)throw restaurantsQ.error;const ids=(restaurantsQ.data||[]).map(x=>x.id);if(!ids.length){host.innerHTML='<div class="empty">Сначала создайте заведение.</div>';return}const q=await sb.from('qr_codes').select('id,restaurant_id,token,name,is_active,created_at').in('restaurant_id',ids).order('created_at',{ascending:true});if(q.error)throw q.error;const all=q.data||[],current=all.filter(x=>x.restaurant_id===(r.remoteId||r.id)),limit=Number(plan().qrs||1),count=all.length,limited=Number.isFinite(limit)&&count>=limit;if(button)button.disabled=limited;if(notice)notice.textContent=Number.isFinite(limit)?'Использовано QR-кодов: '+count+' из '+limit+'.':'Использовано QR-кодов: '+count+' · лимита нет.';
-  host.innerHTML=current.map((x,i)=>{const url=location.origin+location.pathname+'?menu='+encodeURIComponent(x.token),qr='https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=6&data='+encodeURIComponent(url);return '<div class="qr-code-row"><img loading="lazy" src="'+qr+'" alt="QR-код"><div><b>'+esc(x.name||('QR-код '+(i+1)))+'</b><div class="mutedline">'+(x.is_active?'Активен':'Отключён')+'</div><div class="qr-code-actions"><a href="'+esc(url)+'" target="_blank" rel="noopener">Открыть меню</a><a href="'+qr+'" download="menuo-qr-'+encodeURIComponent(x.name||String(i+1))+'.png">Скачать QR</a></div></div></div>'}).join('')||'<div class="empty">QR-коды ещё не созданы.</div>';
+  host.innerHTML=current.map((x,i)=>{const url=new URL(MENUO_PUBLIC_MENU_ORIGIN);url.searchParams.set('menu',x.token);const publicMenuUrl=url.toString(),qr='https://api.qrserver.com/v1/create-qr-code/?size=240x240&margin=6&data='+encodeURIComponent(publicMenuUrl);return '<div class="qr-code-row"><img loading="lazy" src="'+qr+'" alt="QR-код"><div><b>'+esc(x.name||('QR-код '+(i+1)))+'</b><div class="mutedline">'+(x.is_active?'Активен':'Отключён')+'</div><div class="qr-code-actions"><a href="'+esc(publicMenuUrl)+'" target="_blank" rel="noopener">Открыть меню</a><a href="'+qr+'" download="menuo-qr-'+encodeURIComponent(x.name||String(i+1))+'.png">Скачать QR</a></div></div></div>'}).join('')||'<div class="empty">QR-коды ещё не созданы.</div>';
  }catch(e){host.innerHTML='<div class="notice error">'+esc(await subscriptionErrorMessage(e))+'</div>'}
 }
 async function createAdditionalQrCode(){
