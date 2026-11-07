@@ -1,6 +1,21 @@
 /* MENUO remote-first cache bridge. Supabase is the source of truth. */
 (function(){
   'use strict';
+  // account-persistence-v2 owns the authenticated cloud cache and is the
+  // only hydrator. Running a second hydrator races state replacement and can
+  // overwrite the stable primary QR selection.
+  if (window.MENUO_ACCOUNT_PERSISTENCE_V2) {
+    if (typeof window.MENUO_HYDRATE !== 'function') {
+      let attempts = 0;
+      const waitForPrimaryHydrator = setInterval(() => {
+        attempts += 1;
+        if (typeof window.MENUO_HYDRATE === 'function' || attempts >= 150) {
+          clearInterval(waitForPrimaryHydrator);
+        }
+      }, 100);
+    }
+    return;
+  }
   const wait=ms=>new Promise(r=>setTimeout(r,ms));
   const money=c=> (Number(c||0)/100).toFixed(2).replace('.',',')+' €';
 
