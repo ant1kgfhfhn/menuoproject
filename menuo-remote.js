@@ -36,7 +36,7 @@
         website:r.website||'',instagram:r.instagram||'',facebook:r.facebook||'',hours:(r.hours&&typeof r.hours==='object'?(r.hours.display||''):r.hours)||'',
         defaultLocale:r.default_locale||'ru',published:r.published!==false,
         categories:rcats.map(c=>c.name),qrToken:qr?.token||'',qrCreated:!!qr,
-        publicUrl:qr?new URL('?menu='+encodeURIComponent(qr.token),location.href).toString():''
+        publicUrl:qr?new URL('?menu='+encodeURIComponent(qr.token),'https://menuo-qr.com/').toString():''
       };
     });
     const ids=new Set(restaurants.map(r=>r.id));
