@@ -15,7 +15,7 @@
       sb.from('restaurants').select('*').eq('owner_id',u.id).order('created_at',{ascending:true}),
       sb.from('categories').select('*').order('sort_order',{ascending:true}),
       sb.from('dishes').select('*').order('sort_order',{ascending:true}),
-      sb.from('qr_codes').select('id,restaurant_id,token,is_active,created_at').eq('is_active',true).order('created_at',{ascending:true}),
+      sb.from('qr_codes').select('id,restaurant_id,token,is_active,created_at').eq('is_active',true).order('created_at',{ascending:false}),
       sb.rpc('get_my_plan'),
       sb.from('subscriptions').select('plan_id,status,current_period_end').eq('user_id',u.id).maybeSingle()
     ]);
@@ -36,7 +36,7 @@
         website:r.website||'',instagram:r.instagram||'',facebook:r.facebook||'',hours:(r.hours&&typeof r.hours==='object'?(r.hours.display||''):r.hours)||'',
         defaultLocale:r.default_locale||'ru',published:r.published!==false,
         categories:rcats.map(c=>c.name),qrToken:qr?.token||'',qrCreated:!!qr,
-        publicUrl:qr?new URL('?menu='+encodeURIComponent(qr.token),location.href).toString():''
+        publicUrl:qr?new URL('?menu='+encodeURIComponent(qr.token),'https://menuo-qr.com/').toString():''
       };
     });
     const ids=new Set(restaurants.map(r=>r.id));
