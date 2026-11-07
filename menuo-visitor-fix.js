@@ -187,7 +187,7 @@
       const multilingualEnabled=['pro','business'].includes(String(r0.plan_id||'free').toLowerCase());
       const lang=multilingualEnabled?requestedLang:(String(r0.default_locale||'ru').toLowerCase().split('-')[0]||'ru');
       if(multilingualEnabled)data=await translateMenu(data,lang);
-      const r=data.restaurant||{},cats=data.categories||[],dishes=data.dishes||[],promotions=multilingualEnabled&&String(r.plan_id||'').toLowerCase()==='business'?(data.promotions||[]):[];
+      const r=data.restaurant||{},cats=data.categories||[],dishes=data.dishes||[],promotions=Array.isArray(data.promotions)?data.promotions:[];
       const byCat=new Map(cats.map(c=>[String(c.id),c.name]));
       const labels={ru:['Все','Цифровое меню MENUO'],de:['Alle','Digitales MENUO-Menü'],en:['All','MENUO digital menu'],uk:['Усі','Цифрове меню MENUO'],tr:['Tümü','MENUO dijital menü'],pl:['Wszystkie','Cyfrowe menu MENUO'],es:['Todos','Menú digital de MENUO'],fr:['Tous','Menu numérique MENUO'],it:['Tutti','Menu digitale MENUO'],pt:['Todos','Menu digital MENUO'],ro:['Toate','Meniu digital MENUO'],ar:['الكل','قائمة MENUO الرقمية']}[lang]||['Все','Цифровое меню MENUO'];
 
