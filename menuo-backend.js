@@ -29,9 +29,11 @@
   function esc(v){
     return String(v??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
   }
+  // Public QR links must always use the production website. Capacitor's
+  // Android WebView origin is https://localhost and must never be encoded in QR.
+  const PUBLIC_MENU_ORIGIN='https://menuo-qr.com/';
   function publicUrl(token){
-    const u=new URL(location.href);
-    u.search='';u.hash='';
+    const u=new URL(PUBLIC_MENU_ORIGIN);
     u.searchParams.set('menu',token);
     return u.toString();
   }
