@@ -195,9 +195,23 @@
     const r = localRestaurant(localId);
     if (!r) throw new Error('Сначала выбери ресторан.');
     const { db, user } = await getAuth();
+    const previousId = String(r.id);
     const restaurant = await persistRestaurant(r, db, user);
     await syncCategories(r, restaurant.id, db);
     await syncDishes(r, restaurant.id, db, user);
+    r.id = restaurant.id;
+    r.remoteId = restaurant.id;
+    r.ownerId = user.id;
+    r.syncPending = false;
+    delete r.syncError;
+    const st = s();
+    if (st) {
+      (st.dishes || []).forEach((dish) => {
+        if (String(dish.restaurantId) === previousId) dish.restaurantId = restaurant.id;
+      });
+      if (String(st.activeRestaurantId) === previousId) st.activeRestaurantId = restaurant.id;
+      localSave();
+    }
     return { restaurant };
   }
   async function createRestaurant() {
@@ -251,6 +265,8 @@
     r.qrToken = q.data.token;
     r.qrCreated = true;
     r.publicUrl = new URL('?menu=' + encodeURIComponent(q.data.token), PUBLIC_MENU_ORIGIN).toString();
+    r.syncPending = false;
+    delete r.syncError;
     localSave();
     return { restaurant, qr: q.data, url: r.publicUrl };
   }
@@ -495,9 +511,17 @@
       try {
         const saved = await persistRestaurant(draft, db, user);
         await syncCategories(draft, saved.id, db);
+        const previousId = String(draft.id);
         await syncDishes(draft, saved.id, db, user);
+        draft.id = saved.id;
+        draft.remoteId = saved.id;
+        draft.ownerId = user.id;
         draft.syncPending = false;
         delete draft.syncError;
+        (st.dishes || []).forEach((dish) => {
+          if (String(dish.restaurantId) === previousId) dish.restaurantId = saved.id;
+        });
+        if (String(st.activeRestaurantId) === previousId) st.activeRestaurantId = saved.id;
         migratedDrafts = true;
       } catch (error) {
         draft.syncPending = true;
@@ -569,29 +593,44 @@
     }));
     const st = s();
     const oldActive = st.activeRestaurantId;
+    const oldActiveRestaurant = (st.restaurants || []).find((row) => String(row.id) === String(oldActive));
+    const preferredActive = oldActiveRestaurant?.remoteId || oldActive;
     st.users = [{
       ...localUser, id: user.id, email: user.email || '', phone: profile.phone || user.phone || '',
       firstName, lastName, plan: resolvedPlan, avatarUrl: profile.avatar_url || '',
       settings: { theme: 'light', showTips: true, productEmails: false, ...(profile.settings || {}) }
     }];
     const unsyncedDrafts = localDrafts.filter((draft) => draft.syncPending);
-    const remoteRestaurantIds = new Set(restaurants.map((row) => String(row.id)));
-    const preservedDrafts = unsyncedDrafts.filter((draft) =>
-      !draft.remoteId || !remoteRestaurantIds.has(String(draft.remoteId))
-    );
+    const remoteById = new Map(restaurants.map((row) => [String(row.id), row]));
+    const preservedDrafts = [];
+    const preservedDishRows = [];
+    for (const draft of unsyncedDrafts) {
+      const remoteId = draft.remoteId ? String(draft.remoteId) : '';
+      const cloudRow = remoteId ? remoteById.get(remoteId) : null;
+      if (cloudRow) {
+        Object.assign(cloudRow, draft, { id: cloudRow.id, remoteId: cloudRow.id, ownerId: user.id });
+        (st.dishes || []).filter((dish) => String(dish.restaurantId) === String(draft.id))
+          .forEach((dish) => preservedDishRows.push({ ...dish, restaurantId: cloudRow.id }));
+      } else {
+        preservedDrafts.push(draft);
+        (st.dishes || []).filter((dish) => String(dish.restaurantId) === String(draft.id))
+          .forEach((dish) => preservedDishRows.push(dish));
+      }
+    }
     const mergedRestaurants = [...restaurants, ...preservedDrafts];
-    const preservedDraftIds = new Set(preservedDrafts.map((row) => String(row.id)));
-    const preservedDishes = (st.dishes || []).filter((dish) => preservedDraftIds.has(String(dish.restaurantId)));
+    const mergedDishMap = new Map(dishes.map((dish) => [String(dish.id), dish]));
+    preservedDishRows.forEach((dish) => {
+      const key = String(dish.id);
+      mergedDishMap.set(key, { ...(mergedDishMap.get(key) || {}), ...dish });
+    });
     st.restaurants = mergedRestaurants;
-    st.dishes = [...dishes, ...preservedDishes];
+    st.dishes = [...mergedDishMap.values()];
     st.session = user.id;
     const limits = { FREE: 1, PRO: 2, BUSINESS: Infinity };
     const max = limits[resolvedPlan] ?? 1;
     const allowed = Number.isFinite(max) ? mergedRestaurants.slice(0, max) : mergedRestaurants;
-    const oldActiveDraft = (st.restaurants || []).find((row) => String(row.id) === String(oldActive));
-    const preferredActive = oldActiveDraft?.remoteId || oldActive;
     st.activeRestaurantId = allowed.some((row) => String(row.id) === String(preferredActive))
-      ? preferredActive
+      ? (allowed.find((row) => String(row.id) === String(preferredActive))?.id || preferredActive)
       : (allowed[0]?.id || null);
     if (profile.locale) st.language = profile.locale;
     localSave();
