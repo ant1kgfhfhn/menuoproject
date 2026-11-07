@@ -1,6 +1,21 @@
 /* MENUO remote-first cache bridge. Supabase is the source of truth. */
 (function(){
   'use strict';
+  // account-persistence-v2 owns the authenticated cloud cache and is the
+  // only hydrator. Running a second hydrator races state replacement and can
+  // overwrite the stable primary QR selection.
+  if (window.MENUO_ACCOUNT_PERSISTENCE_V2) {
+    if (typeof window.MENUO_HYDRATE !== 'function') {
+      let attempts = 0;
+      const waitForPrimaryHydrator = setInterval(() => {
+        attempts += 1;
+        if (typeof window.MENUO_HYDRATE === 'function' || attempts >= 150) {
+          clearInterval(waitForPrimaryHydrator);
+        }
+      }, 100);
+    }
+    return;
+  }
   const wait=ms=>new Promise(r=>setTimeout(r,ms));
   const money=c=> (Number(c||0)/100).toFixed(2).replace('.',',')+' €';
 
@@ -15,7 +30,7 @@
       sb.from('restaurants').select('*').eq('owner_id',u.id).order('created_at',{ascending:true}),
       sb.from('categories').select('*').order('sort_order',{ascending:true}),
       sb.from('dishes').select('*').order('sort_order',{ascending:true}),
-      sb.from('qr_codes').select('id,restaurant_id,token,is_active,created_at').eq('is_active',true).order('created_at',{ascending:true}),
+      sb.from('qr_codes').select('id,restaurant_id,token,is_active,created_at').eq('is_active',true).order('created_at',{ascending:false}),
       sb.rpc('get_my_plan'),
       sb.from('subscriptions').select('plan_id,status,current_period_end').eq('user_id',u.id).maybeSingle()
     ]);
