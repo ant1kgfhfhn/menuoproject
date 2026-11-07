@@ -1,6 +1,8 @@
 /* MENUO account persistence bridge (cache-independent). */
 (function () {
   'use strict';
+  const PUBLIC_MENU_ORIGIN = 'https://menuo-qr.com/';
+  window.MENUO_ACCOUNT_PERSISTENCE_V2 = true;
   const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
   const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
   let initPromise;
@@ -140,7 +142,7 @@
   }
   async function syncDishes(r, restaurantId, db, authUser) {
     const st = s();
-    const items = (st?.dishes || []).filter((d) => d.restaurantId === r.id);
+    const items = (st?.dishes || []).filter((d) => String(d.restaurantId) === String(r.id));
     const cq = await db.from('categories').select('id,name').eq('restaurant_id', restaurantId);
     if (cq.error) throw cq.error;
     const catMap = new Map((cq.data || []).map((x) => [x.name, x.id]));
@@ -219,16 +221,26 @@
     const restaurant = await persistRestaurant(r, db, user);
     await syncCategories(r, restaurant.id, db);
     await syncDishes(r, restaurant.id, db, user);
+    // Always use the restaurant's stable primary QR, never a secondary code.
     let q = await db.from('qr_codes').select('*')
-      .eq('restaurant_id', restaurant.id).eq('is_active', true)
+      .eq('restaurant_id', restaurant.id).eq('is_active', true).eq('name', 'Основной QR')
       .order('created_at', { ascending: true }).limit(1).maybeSingle();
     if (q.error) throw q.error;
     if (!q.data) {
-      q = await db.from('qr_codes').insert({
-        restaurant_id: restaurant.id, name: 'Основной QR', is_active: true
-      }).select('*').single();
+      const prior = await db.from('qr_codes').select('*')
+        .eq('restaurant_id', restaurant.id).eq('name', 'Основной QR')
+        .order('created_at', { ascending: true }).limit(1).maybeSingle();
+      if (prior.error) throw prior.error;
+      if (prior.data) {
+        q = await db.from('qr_codes').update({ is_active: true })
+          .eq('id', prior.data.id).select('*').single();
+      } else {
+        q = await db.from('qr_codes').insert({
+          restaurant_id: restaurant.id, name: 'Основной QR', is_active: true
+        }).select('*').single();
+      }
       if (q.error) {
-        // Two simultaneous autosaves may race to create the same primary QR.
+        // Recover a primary QR created concurrently by another device/save.
         const recovered = await db.from('qr_codes').select('*')
           .eq('restaurant_id', restaurant.id).eq('is_active', true).eq('name', 'Основной QR')
           .order('created_at', { ascending: true }).limit(1).maybeSingle();
@@ -238,15 +250,16 @@
     }
     r.qrToken = q.data.token;
     r.qrCreated = true;
-    r.publicUrl = new URL('?menu=' + encodeURIComponent(q.data.token), location.origin + location.pathname).toString();
+    r.publicUrl = new URL('?menu=' + encodeURIComponent(q.data.token), PUBLIC_MENU_ORIGIN).toString();
     localSave();
     return { restaurant, qr: q.data, url: r.publicUrl };
   }
   function installPublicUrl() {
     const old = window.publicUrl;
     window.publicUrl = function (r) {
-      if (r?.qrToken) return new URL('?menu=' + encodeURIComponent(r.qrToken), location.origin + location.pathname).toString();
-      return typeof old === 'function' ? old(r) : location.href;
+      const token = r?.qrToken || r?.slug;
+      if (token) return new URL('?menu=' + encodeURIComponent(token), PUBLIC_MENU_ORIGIN).toString();
+      return PUBLIC_MENU_ORIGIN;
     };
   }
   function wrapDeleteDish() {
@@ -275,6 +288,7 @@
     } catch (_) { return false; }
   }
   function installApi() {
+    window.MENUO_HYDRATE = hydrateAccountData;
     window.MENUO_CREATE_RESTAURANT = createRestaurant;
     window.MENUO_SAVE_RESTAURANT = saveRestaurant;
     window.MENUO_SAVE_MENU_DATA = saveMenuData;
@@ -461,7 +475,7 @@
       db.from('restaurants').select('*').eq('owner_id', user.id).order('created_at', { ascending: true }),
       db.from('categories').select('*').order('sort_order', { ascending: true }),
       db.from('dishes').select('*').order('sort_order', { ascending: true }),
-      db.from('qr_codes').select('id,restaurant_id,token,is_active,created_at').eq('is_active', true).order('created_at', { ascending: true }),
+      db.from('qr_codes').select('id,restaurant_id,token,name,is_active,created_at').eq('is_active', true).order('created_at', { ascending: false }),
       db.rpc('get_my_plan'),
       db.from('subscriptions').select('plan_id,status,current_period_end').eq('user_id', user.id).maybeSingle(),
       db.from('profiles').select('first_name,last_name,full_name,phone,avatar_url,settings,locale').eq('id', user.id).maybeSingle()
@@ -493,7 +507,8 @@
     const restaurants = (restaurantsQ.data || []).map((row) => {
       const rowCategories = cats.filter((cat) => cat.restaurant_id === row.id)
         .sort((a,b) => (a.sort_order || 0) - (b.sort_order || 0));
-      const qr = qrRows.find((entry) => entry.restaurant_id === row.id);
+      const restaurantQrs = qrRows.filter((entry) => entry.restaurant_id === row.id);
+      const qr = restaurantQrs.find((entry) => entry.name === 'Основной QR') || restaurantQrs[0] || null;
       const hours = row.hours && typeof row.hours === 'object' ? (row.hours.display || '') : (row.hours || '');
       return {
         id: row.id, remoteId: row.id, ownerId: user.id, name: row.name || 'Мой ресторан',
@@ -502,7 +517,7 @@
         instagram: row.instagram || '', facebook: row.facebook || '', hours,
         defaultLocale: row.default_locale || 'ru', published: row.published !== false,
         categories: rowCategories.map((cat) => cat.name), qrToken: qr?.token || '',
-        qrCreated: !!qr, publicUrl: qr ? new URL('?menu=' + encodeURIComponent(qr.token), location.origin + location.pathname).toString() : ''
+        qrCreated: !!qr, publicUrl: qr ? new URL('?menu=' + encodeURIComponent(qr.token), PUBLIC_MENU_ORIGIN).toString() : ''
       };
     });
     const ids = new Set(restaurants.map((row) => row.id));
@@ -547,6 +562,23 @@
       for (let i = 0; i < 240; i++) {
         if (window.MENUO_SUPABASE && s() && typeof currentRestaurant === 'function' && typeof save === 'function') {
           installApi();
+          // Supabase is the single source of truth across web and Capacitor devices.
+          hydrateAccountData().catch((error) => console.warn('MENUO initial cloud hydration failed', error));
+          const authClient = window.MENUO_SUPABASE;
+          if (authClient && !window.__MENUO_V2_AUTH_LISTENER) {
+            window.__MENUO_V2_AUTH_LISTENER = true;
+            authClient.auth.onAuthStateChange((event, session) => {
+              if (event === 'SIGNED_IN' && session?.user) {
+                setTimeout(() => hydrateAccountData().catch((error) => console.warn('MENUO sign-in hydration failed', error)), 0);
+              } else if (event === 'SIGNED_OUT') {
+                const st = s();
+                if (st) {
+                  st.users = []; st.restaurants = []; st.dishes = [];
+                  st.session = null; st.activeRestaurantId = null; localSave();
+                }
+              }
+            });
+          }
           const originalOpenOwner = window.openOwner;
           window.openOwner = async function () {
             let authenticated = false;
