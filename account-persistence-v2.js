@@ -471,7 +471,7 @@
   }
   async function hydrateAccountData() {
     const { db, user } = await getAuth();
-    const [restaurantsQ, categoriesQ, dishesQ, qrsQ, planQ, subQ, profileQ] = await Promise.all([
+    let [restaurantsQ, categoriesQ, dishesQ, qrsQ, planQ, subQ, profileQ] = await Promise.all([
       db.from('restaurants').select('*').eq('owner_id', user.id).order('created_at', { ascending: true }),
       db.from('categories').select('*').order('sort_order', { ascending: true }),
       db.from('dishes').select('*').order('sort_order', { ascending: true }),
@@ -482,6 +482,39 @@
     ]);
     for (const query of [restaurantsQ,categoriesQ,dishesQ,qrsQ,planQ,subQ,profileQ]) {
       if (query.error) throw query.error;
+    }
+
+    // Migrate local-only restaurant drafts before replacing device state with cloud data.
+    // This recovers restaurants created by older mobile builds that stayed in localStorage.
+    const st = s();
+    const localDrafts = (st?.restaurants || []).filter((row) =>
+      row && row.ownerId === user.id && (!row.remoteId || row.syncPending)
+    );
+    let migratedDrafts = false;
+    for (const draft of localDrafts) {
+      try {
+        const saved = await persistRestaurant(draft, db, user);
+        await syncCategories(draft, saved.id, db);
+        await syncDishes(draft, saved.id, db, user);
+        draft.syncPending = false;
+        delete draft.syncError;
+        migratedDrafts = true;
+      } catch (error) {
+        draft.syncPending = true;
+        draft.syncError = String(error?.message || 'Не удалось синхронизировать ресторан.');
+        console.warn('MENUO local restaurant migration failed', draft.name, error);
+      }
+    }
+    if (migratedDrafts) {
+      [restaurantsQ, categoriesQ, dishesQ, qrsQ] = await Promise.all([
+        db.from('restaurants').select('*').eq('owner_id', user.id).order('created_at', { ascending: true }),
+        db.from('categories').select('*').order('sort_order', { ascending: true }),
+        db.from('dishes').select('*').order('sort_order', { ascending: true }),
+        db.from('qr_codes').select('id,restaurant_id,token,name,is_active,created_at').eq('is_active', true).order('created_at', { ascending: false })
+      ]);
+      for (const query of [restaurantsQ,categoriesQ,dishesQ,qrsQ]) {
+        if (query.error) throw query.error;
+      }
     }
     const cats = categoriesQ.data || [];
     const dishRows = dishesQ.data || [];
@@ -541,14 +574,24 @@
       firstName, lastName, plan: resolvedPlan, avatarUrl: profile.avatar_url || '',
       settings: { theme: 'light', showTips: true, productEmails: false, ...(profile.settings || {}) }
     }];
-    st.restaurants = restaurants;
-    st.dishes = dishes;
+    const unsyncedDrafts = localDrafts.filter((draft) => draft.syncPending);
+    const remoteRestaurantIds = new Set(restaurants.map((row) => String(row.id)));
+    const preservedDrafts = unsyncedDrafts.filter((draft) =>
+      !draft.remoteId || !remoteRestaurantIds.has(String(draft.remoteId))
+    );
+    const mergedRestaurants = [...restaurants, ...preservedDrafts];
+    const preservedDraftIds = new Set(preservedDrafts.map((row) => String(row.id)));
+    const preservedDishes = (st.dishes || []).filter((dish) => preservedDraftIds.has(String(dish.restaurantId)));
+    st.restaurants = mergedRestaurants;
+    st.dishes = [...dishes, ...preservedDishes];
     st.session = user.id;
     const limits = { FREE: 1, PRO: 2, BUSINESS: Infinity };
     const max = limits[resolvedPlan] ?? 1;
-    const allowed = Number.isFinite(max) ? restaurants.slice(0, max) : restaurants;
-    st.activeRestaurantId = allowed.some((row) => row.id === oldActive)
-      ? oldActive
+    const allowed = Number.isFinite(max) ? mergedRestaurants.slice(0, max) : mergedRestaurants;
+    const oldActiveDraft = (st.restaurants || []).find((row) => String(row.id) === String(oldActive));
+    const preferredActive = oldActiveDraft?.remoteId || oldActive;
+    st.activeRestaurantId = allowed.some((row) => String(row.id) === String(preferredActive))
+      ? preferredActive
       : (allowed[0]?.id || null);
     if (profile.locale) st.language = profile.locale;
     localSave();
