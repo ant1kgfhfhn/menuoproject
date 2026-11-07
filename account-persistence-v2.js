@@ -191,68 +191,113 @@
     }
     localSave();
   }
+  function markSyncPending(r, error) {
+    if (!r) return;
+    r.syncPending = true;
+    r.syncError = String(error?.message || error || 'Не удалось синхронизировать ресторан.');
+    localSave();
+  }
   async function saveMenuData(localId) {
     const r = localRestaurant(localId);
     if (!r) throw new Error('Сначала выбери ресторан.');
-    const { db, user } = await getAuth();
-    const restaurant = await persistRestaurant(r, db, user);
-    await syncCategories(r, restaurant.id, db);
-    await syncDishes(r, restaurant.id, db, user);
-    return { restaurant };
+    try {
+      const { db, user } = await getAuth();
+      const previousId = String(r.id);
+      const restaurant = await persistRestaurant(r, db, user);
+      await syncCategories(r, restaurant.id, db);
+      await syncDishes(r, restaurant.id, db, user);
+      r.id = restaurant.id;
+      r.remoteId = restaurant.id;
+      r.ownerId = user.id;
+      r.syncPending = false;
+      delete r.syncError;
+      const st = s();
+      if (st) {
+        (st.dishes || []).forEach((dish) => {
+          if (String(dish.restaurantId) === previousId) dish.restaurantId = restaurant.id;
+        });
+        if (String(st.activeRestaurantId) === previousId) st.activeRestaurantId = restaurant.id;
+        localSave();
+      }
+      return { restaurant };
+    } catch (error) {
+      markSyncPending(r, error);
+      throw error;
+    }
   }
   async function createRestaurant() {
     const r = localRestaurant();
     if (!r) throw new Error('Сначала создай ресторан.');
-    const { db, user } = await getAuth();
-    const row = await persistRestaurant(r, db, user);
-    await syncCategories(r, row.id, db);
-    return row;
+    try {
+      const { db, user } = await getAuth();
+      const row = await persistRestaurant(r, db, user);
+      await syncCategories(r, row.id, db);
+      return row;
+    } catch (error) {
+      markSyncPending(r, error);
+      throw error;
+    }
   }
   async function saveRestaurant() {
     const r = localRestaurant();
     if (!r) throw new Error('Сначала выбери ресторан.');
-    const { db, user } = await getAuth();
-    return persistRestaurant(r, db, user);
+    try {
+      const { db, user } = await getAuth();
+      const row = await persistRestaurant(r, db, user);
+      r.syncPending = false;
+      delete r.syncError;
+      return row;
+    } catch (error) {
+      markSyncPending(r, error);
+      throw error;
+    }
   }
   async function saveMenuAndQr() {
     const r = localRestaurant();
     if (!r) throw new Error('Сначала создай ресторан.');
-    const { db, user } = await getAuth();
-    const restaurant = await persistRestaurant(r, db, user);
-    await syncCategories(r, restaurant.id, db);
-    await syncDishes(r, restaurant.id, db, user);
-    // Always use the restaurant's stable primary QR, never a secondary code.
-    let q = await db.from('qr_codes').select('*')
-      .eq('restaurant_id', restaurant.id).eq('is_active', true).eq('name', 'Основной QR')
-      .order('created_at', { ascending: true }).limit(1).maybeSingle();
-    if (q.error) throw q.error;
-    if (!q.data) {
-      const prior = await db.from('qr_codes').select('*')
-        .eq('restaurant_id', restaurant.id).eq('name', 'Основной QR')
+    try {
+      const { db, user } = await getAuth();
+      const restaurant = await persistRestaurant(r, db, user);
+      await syncCategories(r, restaurant.id, db);
+      await syncDishes(r, restaurant.id, db, user);
+      // Always use the restaurant's stable primary QR, never a secondary code.
+      let q = await db.from('qr_codes').select('*')
+        .eq('restaurant_id', restaurant.id).eq('is_active', true).eq('name', 'Основной QR')
         .order('created_at', { ascending: true }).limit(1).maybeSingle();
-      if (prior.error) throw prior.error;
-      if (prior.data) {
-        q = await db.from('qr_codes').update({ is_active: true })
-          .eq('id', prior.data.id).select('*').single();
-      } else {
-        q = await db.from('qr_codes').insert({
-          restaurant_id: restaurant.id, name: 'Основной QR', is_active: true
-        }).select('*').single();
-      }
-      if (q.error) {
-        // Recover a primary QR created concurrently by another device/save.
-        const recovered = await db.from('qr_codes').select('*')
-          .eq('restaurant_id', restaurant.id).eq('is_active', true).eq('name', 'Основной QR')
+      if (q.error) throw q.error;
+      if (!q.data) {
+        const prior = await db.from('qr_codes').select('*')
+          .eq('restaurant_id', restaurant.id).eq('name', 'Основной QR')
           .order('created_at', { ascending: true }).limit(1).maybeSingle();
-        if (recovered.error || !recovered.data) throw q.error;
-        q = recovered;
+        if (prior.error) throw prior.error;
+        if (prior.data) {
+          q = await db.from('qr_codes').update({ is_active: true })
+            .eq('id', prior.data.id).select('*').single();
+        } else {
+          q = await db.from('qr_codes').insert({
+            restaurant_id: restaurant.id, name: 'Основной QR', is_active: true
+          }).select('*').single();
+        }
+        if (q.error) {
+          // Recover a primary QR created concurrently by another device/save.
+          const recovered = await db.from('qr_codes').select('*')
+            .eq('restaurant_id', restaurant.id).eq('is_active', true).eq('name', 'Основной QR')
+            .order('created_at', { ascending: true }).limit(1).maybeSingle();
+          if (recovered.error || !recovered.data) throw q.error;
+          q = recovered;
+        }
       }
+      r.qrToken = q.data.token;
+      r.qrCreated = true;
+      r.publicUrl = new URL('?menu=' + encodeURIComponent(q.data.token), PUBLIC_MENU_ORIGIN).toString();
+      r.syncPending = false;
+      delete r.syncError;
+      localSave();
+      return { restaurant, qr: q.data, url: r.publicUrl };
+    } catch (error) {
+      markSyncPending(r, error);
+      throw error;
     }
-    r.qrToken = q.data.token;
-    r.qrCreated = true;
-    r.publicUrl = new URL('?menu=' + encodeURIComponent(q.data.token), PUBLIC_MENU_ORIGIN).toString();
-    localSave();
-    return { restaurant, qr: q.data, url: r.publicUrl };
   }
   function installPublicUrl() {
     const old = window.publicUrl;
@@ -471,7 +516,7 @@
   }
   async function hydrateAccountData() {
     const { db, user } = await getAuth();
-    const [restaurantsQ, categoriesQ, dishesQ, qrsQ, planQ, subQ, profileQ] = await Promise.all([
+    let [restaurantsQ, categoriesQ, dishesQ, qrsQ, planQ, subQ, profileQ] = await Promise.all([
       db.from('restaurants').select('*').eq('owner_id', user.id).order('created_at', { ascending: true }),
       db.from('categories').select('*').order('sort_order', { ascending: true }),
       db.from('dishes').select('*').order('sort_order', { ascending: true }),
@@ -482,6 +527,47 @@
     ]);
     for (const query of [restaurantsQ,categoriesQ,dishesQ,qrsQ,planQ,subQ,profileQ]) {
       if (query.error) throw query.error;
+    }
+
+    // Migrate local-only restaurant drafts before replacing device state with cloud data.
+    // This recovers restaurants created by older mobile builds that stayed in localStorage.
+    const st = s();
+    const localDrafts = (st?.restaurants || []).filter((row) =>
+      row && row.ownerId === user.id && (!row.remoteId || row.syncPending)
+    );
+    let migratedDrafts = false;
+    for (const draft of localDrafts) {
+      try {
+        const saved = await persistRestaurant(draft, db, user);
+        await syncCategories(draft, saved.id, db);
+        const previousId = String(draft.id);
+        await syncDishes(draft, saved.id, db, user);
+        draft.id = saved.id;
+        draft.remoteId = saved.id;
+        draft.ownerId = user.id;
+        draft.syncPending = false;
+        delete draft.syncError;
+        (st.dishes || []).forEach((dish) => {
+          if (String(dish.restaurantId) === previousId) dish.restaurantId = saved.id;
+        });
+        if (String(st.activeRestaurantId) === previousId) st.activeRestaurantId = saved.id;
+        migratedDrafts = true;
+      } catch (error) {
+        draft.syncPending = true;
+        draft.syncError = String(error?.message || 'Не удалось синхронизировать ресторан.');
+        console.warn('MENUO local restaurant migration failed', draft.name, error);
+      }
+    }
+    if (migratedDrafts) {
+      [restaurantsQ, categoriesQ, dishesQ, qrsQ] = await Promise.all([
+        db.from('restaurants').select('*').eq('owner_id', user.id).order('created_at', { ascending: true }),
+        db.from('categories').select('*').order('sort_order', { ascending: true }),
+        db.from('dishes').select('*').order('sort_order', { ascending: true }),
+        db.from('qr_codes').select('id,restaurant_id,token,name,is_active,created_at').eq('is_active', true).order('created_at', { ascending: false })
+      ]);
+      for (const query of [restaurantsQ,categoriesQ,dishesQ,qrsQ]) {
+        if (query.error) throw query.error;
+      }
     }
     const cats = categoriesQ.data || [];
     const dishRows = dishesQ.data || [];
@@ -536,19 +622,44 @@
     }));
     const st = s();
     const oldActive = st.activeRestaurantId;
+    const oldActiveRestaurant = (st.restaurants || []).find((row) => String(row.id) === String(oldActive));
+    const preferredActive = oldActiveRestaurant?.remoteId || oldActive;
     st.users = [{
       ...localUser, id: user.id, email: user.email || '', phone: profile.phone || user.phone || '',
       firstName, lastName, plan: resolvedPlan, avatarUrl: profile.avatar_url || '',
       settings: { theme: 'light', showTips: true, productEmails: false, ...(profile.settings || {}) }
     }];
-    st.restaurants = restaurants;
-    st.dishes = dishes;
+    const unsyncedDrafts = localDrafts.filter((draft) => draft.syncPending);
+    const remoteById = new Map(restaurants.map((row) => [String(row.id), row]));
+    const preservedDrafts = [];
+    const preservedDishRows = [];
+    for (const draft of unsyncedDrafts) {
+      const remoteId = draft.remoteId ? String(draft.remoteId) : '';
+      const cloudRow = remoteId ? remoteById.get(remoteId) : null;
+      if (cloudRow) {
+        Object.assign(cloudRow, draft, { id: cloudRow.id, remoteId: cloudRow.id, ownerId: user.id });
+        (st.dishes || []).filter((dish) => String(dish.restaurantId) === String(draft.id))
+          .forEach((dish) => preservedDishRows.push({ ...dish, restaurantId: cloudRow.id }));
+      } else {
+        preservedDrafts.push(draft);
+        (st.dishes || []).filter((dish) => String(dish.restaurantId) === String(draft.id))
+          .forEach((dish) => preservedDishRows.push(dish));
+      }
+    }
+    const mergedRestaurants = [...restaurants, ...preservedDrafts];
+    const mergedDishMap = new Map(dishes.map((dish) => [String(dish.id), dish]));
+    preservedDishRows.forEach((dish) => {
+      const key = String(dish.id);
+      mergedDishMap.set(key, { ...(mergedDishMap.get(key) || {}), ...dish });
+    });
+    st.restaurants = mergedRestaurants;
+    st.dishes = [...mergedDishMap.values()];
     st.session = user.id;
     const limits = { FREE: 1, PRO: 2, BUSINESS: Infinity };
     const max = limits[resolvedPlan] ?? 1;
-    const allowed = Number.isFinite(max) ? restaurants.slice(0, max) : restaurants;
-    st.activeRestaurantId = allowed.some((row) => row.id === oldActive)
-      ? oldActive
+    const allowed = Number.isFinite(max) ? mergedRestaurants.slice(0, max) : mergedRestaurants;
+    st.activeRestaurantId = allowed.some((row) => String(row.id) === String(preferredActive))
+      ? (allowed.find((row) => String(row.id) === String(preferredActive))?.id || preferredActive)
       : (allowed[0]?.id || null);
     if (profile.locale) st.language = profile.locale;
     localSave();
