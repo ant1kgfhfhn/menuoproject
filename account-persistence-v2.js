@@ -563,12 +563,11 @@
         if (window.MENUO_SUPABASE && s() && typeof currentRestaurant === 'function' && typeof save === 'function') {
           installApi();
           // Supabase is the single source of truth across web and Capacitor devices.
-          hydrateAccountData().catch((error) => console.warn('MENUO initial cloud hydration failed', error));
           const authClient = window.MENUO_SUPABASE;
           if (authClient && !window.__MENUO_V2_AUTH_LISTENER) {
             window.__MENUO_V2_AUTH_LISTENER = true;
             authClient.auth.onAuthStateChange((event, session) => {
-              if (event === 'SIGNED_IN' && session?.user) {
+              if ((event === 'INITIAL_SESSION' || event === 'SIGNED_IN') && session?.user) {
                 setTimeout(() => hydrateAccountData().catch((error) => console.warn('MENUO sign-in hydration failed', error)), 0);
               } else if (event === 'SIGNED_OUT') {
                 const st = s();
