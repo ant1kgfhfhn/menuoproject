@@ -620,7 +620,6 @@
       discountType: Number(row.discount_percent) > 0 ? 'percent' : (Number(row.discount_cents) > 0 ? 'fixed' : ''),
       allergens: Array.isArray(row.allergens) ? row.allergens : []
     }));
-    const st = s();
     const oldActive = st.activeRestaurantId;
     const oldActiveRestaurant = (st.restaurants || []).find((row) => String(row.id) === String(oldActive));
     const preferredActive = oldActiveRestaurant?.remoteId || oldActive;
