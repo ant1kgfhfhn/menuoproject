@@ -144,7 +144,7 @@
   </div>
 </div><div class="menu-card plan"><div class="plan-badge">F</div><div style="flex:1"><b>FREE</b><div class="price-large">€0</div><div class="mutedline">10 dishes · 1 restaurant · 1 QR code · basic menu</div><button class="primary hidden" id="chooseFreePlan" style="margin-top:12px" onclick="chooseFreePlan()">Switch to FREE</button></div></div><div class="menu-card plan"><div class="plan-badge">P</div><div style="flex:1"><b>PRO</b><div class="price-large">€4.99/month</div><div class="mutedline">2 restaurants · unlimited dishes · 2 QR codes · allergens · menu languages · analytics</div><button class="primary" id="chooseProPlan" style="margin-top:12px" onclick="startCheckout('pro')">Get PRO</button></div></div><div class="menu-card plan"><div class="plan-badge">B</div><div style="flex:1"><b>BUSINESS</b><div class="price-large">€9.99/month</div><div class="mutedline">Unlimited restaurants, dishes, and QR codes · allergens · languages · analytics · promotions and discounts</div><button class="primary" id="chooseBusinessPlan" style="margin-top:12px" onclick="startCheckout('business')">Get BUSINESS</button></div></div><div class="menu-card"><div style="flex:1"><b>Promo code</b><div class="mutedline">If you have a personal discount code, enter it before checkout.</div><div style="display:flex;gap:8px;margin-top:10px"><input id="promoCode" placeholder="Например MENUO20" autocomplete="off" style="flex:1;border:1px solid #dce4df;border-radius:13px;padding:13px;text-transform:uppercase"><button class="mini" onclick="checkPromo()">Validate</button></div><div id="promoStatus" class="mutedline" style="margin-top:8px"></div></div></div><div class="notice">Payments are processed by Stripe. Your plan is activated only after payment is confirmed.</div><div class="legal-links"><div class="eyebrow">Юридическая информация</div><a href="/terms.html" target="_blank" rel="noopener">Terms of Service ↗</a><a href="/privacy.html" target="_blank" rel="noopener">Privacy Policy ↗</a><a href="/widerruf.html" target="_blank" rel="noopener">Right of withdrawal ↗</a><a href="/impressum.html" target="_blank" rel="noopener">Impressum ↗</a></div><div class="menu-card hidden" id="subscriptionCancelCard"><div style="flex:1"><b id="subscriptionCancelTitle">Cancel subscription</b><div class="mutedline" id="subscriptionCancelHint">Cancel автопродления. Текущий оплаченный период останется доступным.</div><button class="danger" id="subscriptionCancelButton" style="margin-top:12px;width:100%" onclick="cancelSubscription()">Отменить подписку</button></div></div></section>
 
-<div class="language-tray hidden" id="languageTray"><input id="languageSearch" type="search" placeholder="Найти язык" oninput="renderLanguages()"><div class="language-list" id="languageList"></div></div>
+<div class="language-tray hidden" id="languageTray"><input id="languageSearch" type="search" placeholder="Search languages" oninput="renderLanguages()"><div class="language-list" id="languageList"></div></div>
 <nav class="global-nav"><button onclick="show('home')"><svg class="icon-svg nav-icon" viewBox="0 0 24 24"><path d="M3 11l9-8 9 8M5 10v10h14V10M9 20v-6h6v6"/></svg>Home</button><button onclick="openSubscription()"><span class="plan-icon" id="navPlan">F</span><span id="navPlanText">FREE</span></button><button onclick="openProfile()"><svg class="icon-svg nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c.7-4 3.2-6 8-6s7.3 2 8 6"/></svg><span id="navProfile">Profile</span></button></nav>
 </main>
 <script>
@@ -1214,6 +1214,26 @@ async function handlePaymentReturn(payment,targetPlan=null){
     true
   );
 }
+(function installUiTranslationObserver(){
+  if(window.__MENUO_UI_TRANSLATION_OBSERVER)return;
+  window.__MENUO_UI_TRANSLATION_OBSERVER=true;
+  const nativeAlert=window.alert.bind(window);
+  window.alert=function(message){
+    const text=String(message??'');
+    const language=String(state?.language||'en').slice(0,2).toLowerCase();
+    if(/[А-Яа-яЁёЇїІіЄєҐґ]/.test(text)&&typeof menuoTranslateText==='function'){
+      menuoTranslateText(text,language).then(nativeAlert).catch(()=>nativeAlert(text));
+      return;
+    }
+    nativeAlert(text);
+  };
+  const observer=new MutationObserver(records=>{
+    if(!records.some(record=>[...record.addedNodes].some(node=>node.nodeType===1||node.nodeType===3)))return;
+    clearTimeout(window.__MENUO_UI_TRANSLATION_TIMER);
+    window.__MENUO_UI_TRANSLATION_TIMER=setTimeout(()=>translateApplicationUI(state?.language||'en'),80);
+  });
+  observer.observe(document.body,{childList:true,subtree:true});
+})();
 (function init(){try{if(!localStorage.getItem('menuo-language-explicit-v1')&&(!state.language||state.language==='ru'))state.language='en'}catch(_){}menuoSetupNavigation();applyUserTheme(state.userSettings?.theme||'light');updateGlobalLanguageButton();window.addEventListener('resize',positionGlobalLanguage);document.documentElement.lang=state.language;document.documentElement.dir=state.language==='ar'?'rtl':'ltr';renderLanguages();const r=findPublic();const restored=menuoRestoreScreen();const returnParams=new URLSearchParams(location.search);const payment=returnParams.get('payment');const planChange=returnParams.get('plan_change');if(payment==='success'||payment==='cancel'){show('subscription',{restoreOnly:true});setTimeout(()=>handlePaymentReturn(payment,planChange),300)}else if(r){publicRestaurant=r;show('public',{restoreOnly:true})}else if(restored){show(restored,{restoreOnly:true})}else show('home');setTimeout(()=>{translateApplicationUI(state.language);positionGlobalLanguage()},200)})();
 </script>
 </body></html>
