@@ -660,7 +660,7 @@
     st.activeRestaurantId = allowed.some((row) => String(row.id) === String(preferredActive))
       ? (allowed.find((row) => String(row.id) === String(preferredActive))?.id || preferredActive)
       : (allowed[0]?.id || null);
-    if (profile.locale && (profile.locale !== 'ru' || localStorage.getItem('menuo-language-explicit-v1'))) st.language = profile.locale; else if (!localStorage.getItem('menuo-language-explicit-v1')) st.language = 'en';
+    if (profile.locale && (profile.locale !== 'ru' || profile.settings?.menuoLanguageExplicit || localStorage.getItem('menuo-language-explicit-v1'))) st.language = profile.locale; else if (!localStorage.getItem('menuo-language-explicit-v1')) st.language = 'en';
     localSave();
     if (typeof updateNav === 'function') updateNav();
     return true;
