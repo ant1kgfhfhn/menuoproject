@@ -428,7 +428,7 @@ function profileAvatarStoragePath(value,userId){
  try{
   const raw=String(value||'').trim();
   let path=raw;
-  if(/^https?:\\/\\//i.test(raw)){
+  if(/^https?:\/\//i.test(raw)){
    const parsed=new URL(raw);
    const markers=['/storage/v1/object/public/profile-avatars/','/storage/v1/object/sign/profile-avatars/'];
    const marker=markers.find(item=>parsed.pathname.includes(item));
