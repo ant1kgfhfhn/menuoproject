@@ -660,7 +660,13 @@
     st.activeRestaurantId = allowed.some((row) => String(row.id) === String(preferredActive))
       ? (allowed.find((row) => String(row.id) === String(preferredActive))?.id || preferredActive)
       : (allowed[0]?.id || null);
-    if (profile.locale && (profile.locale !== 'ru' || profile.settings?.menuoLanguageExplicit || localStorage.getItem('menuo-language-explicit-v1'))) st.language = profile.locale; else if (!localStorage.getItem('menuo-language-explicit-v1')) st.language = 'en';
+    const hasLocalLanguageChoice = localStorage.getItem('menuo-language-explicit-v1') === '1';
+    const supportedLocales = ['en','de','ru','uk','tr','pl','es','fr','it','pt','ro','ar'];
+    if (hasLocalLanguageChoice) {
+      if (!supportedLocales.includes(st.language)) st.language = 'en';
+    } else {
+      st.language = supportedLocales.includes(profile.locale) ? profile.locale : 'en';
+    }
     localSave();
     document.documentElement.lang = st.language || 'en';
     document.documentElement.dir = st.language === 'ar' ? 'rtl' : 'ltr';
