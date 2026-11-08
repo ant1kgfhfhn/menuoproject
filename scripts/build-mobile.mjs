@@ -85,6 +85,9 @@ const mobileBillingGuard = `
       : language === 'uk' ? 'Недоступно в застосунку'
       : 'Недоступно в приложении';
     button.setAttribute('aria-disabled', 'true');
+    const planCard = button.closest('.menu-card');
+    const price = planCard?.querySelector('.price-large');
+    if (price) price.hidden = true;
   });
 
   const promo = document.getElementById('promoCode')?.closest('.menu-card');
