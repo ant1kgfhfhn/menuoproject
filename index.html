@@ -424,15 +424,28 @@ function applyUserTheme(theme){
  const value=theme==='system'?(window.matchMedia&&window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light'):theme;
  document.documentElement.dataset.theme=value||'light';
 }
-function profileAvatarStoragePath(url,userId){
+function profileAvatarStoragePath(value,userId){
  try{
-  const parsed=new URL(String(url||''));
-  const marker='/storage/v1/object/public/profile-avatars/';
-  const idx=parsed.pathname.indexOf(marker);
-  if(idx<0)return null;
-  const path=decodeURIComponent(parsed.pathname.slice(idx+marker.length));
+  const raw=String(value||'').trim();
+  let path=raw;
+  if(/^https?:\/\//i.test(raw)){
+   const parsed=new URL(raw);
+   const markers=['/storage/v1/object/public/profile-avatars/','/storage/v1/object/sign/profile-avatars/'];
+   const marker=markers.find(item=>parsed.pathname.includes(item));
+   if(!marker)return null;
+   const idx=parsed.pathname.indexOf(marker);
+   path=parsed.pathname.slice(idx+marker.length);
+  }
+  path=decodeURIComponent(String(path).replace(/^\/+/, ''));
   return path.startsWith(String(userId)+'/')?path:null;
  }catch(_){return null}
+}
+async function getProfileAvatarUrl(value,userId,client){
+ const path=profileAvatarStoragePath(value,userId);
+ if(!path||!client)return '';
+ const {data,error}=await client.storage.from('profile-avatars').createSignedUrl(path,3600);
+ if(error){console.warn('MENUO private avatar URL failed',error);return ''}
+ return data?.signedUrl||'';
 }
 function initialsFor(u){return ([u?.firstName,u?.lastName].filter(Boolean).join(' ')||u?.email||'U').trim().slice(0,2).toUpperCase()}
 function setAvatarUi(url,initials){
@@ -449,8 +462,20 @@ async function readRemoteAccountProfile(){
 }
 async function renderProfile(){
  const u=user();if(!u)return openProfile();
- let email=u.email||'',profile=u.settings||{},url=u.avatarUrl||'',remote=null;
- try{const x=await readRemoteAccountProfile();if(x){remote=x.remote;profile=x.profile||{};email=remote.email||email;u.firstName=profile.first_name||remote.user_metadata?.first_name||u.firstName||'';u.lastName=profile.last_name||remote.user_metadata?.last_name||u.lastName||'';u.phone=profile.phone||u.phone||'';u.avatarUrl=profile.avatar_url||'';u.settings={...DEFAULT_USER_SETTINGS,...(profile.settings||{})};url=u.avatarUrl;state.userSettings=u.settings;save()}}catch(e){console.warn('MENUO profile read failed',e)}
+ let email=u.email||'',profile=u.settings||{},url='',remote=null;
+ try{
+  const x=await readRemoteAccountProfile();
+  if(x){
+   remote=x.remote;profile=x.profile||{};email=remote.email||email;
+   u.firstName=profile.first_name||remote.user_metadata?.first_name||u.firstName||'';
+   u.lastName=profile.last_name||remote.user_metadata?.last_name||u.lastName||'';
+   u.phone=profile.phone||u.phone||'';
+   u.avatarUrl=profile.avatar_url||'';
+   url=u.avatarUrl?await getProfileAvatarUrl(u.avatarUrl,remote.id,window.MENUO_SUPABASE):'';
+   u.settings={...DEFAULT_USER_SETTINGS,...(profile.settings||{})};
+   state.userSettings=u.settings;save();
+  }
+ }catch(e){console.warn('MENUO profile read failed',e)}
  const name=[u.firstName,u.lastName].filter(Boolean).join(' ')||'Мой профиль';
  document.getElementById('pfDisplayName').textContent=name;
  document.getElementById('pfEmailSummary').textContent=email;
@@ -504,9 +529,12 @@ async function uploadProfileAvatar(event){
    const upload=await sb.storage.from('profile-avatars').upload(path,file,{contentType:file.type,upsert:false,cacheControl:'3600'});
    if(upload.error)throw upload.error;
    const oldPath=profileAvatarStoragePath(u.avatarUrl,au.id);
-   const url=sb.storage.from('profile-avatars').getPublicUrl(path).data.publicUrl;
-   const p=await sb.from('profiles').upsert({id:au.id,avatar_url:url},{onConflict:'id'});if(p.error)throw p.error;
-   u.avatarUrl=url;save();setAvatarUi(url,initialsFor(u));
+   const signed=await sb.storage.from('profile-avatars').createSignedUrl(path,3600);
+   if(signed.error)throw signed.error;
+   const url=signed.data?.signedUrl||'';
+   if(!url)throw new Error('Не удалось создать защищённую ссылку на аватар.');
+   const p=await sb.from('profiles').upsert({id:au.id,avatar_url:path},{onConflict:'id'});if(p.error)throw p.error;
+   u.avatarUrl=path;save();setAvatarUi(url,initialsFor(u));
    if(oldPath&&oldPath!==path){const removed=await sb.storage.from('profile-avatars').remove([oldPath]);if(removed.error)console.warn('Old profile avatar cleanup failed',removed.error)}
    alert('Аватар профиля обновлён.');
  }catch(e){alert(e?.message||'Не удалось загрузить аватар.')}
