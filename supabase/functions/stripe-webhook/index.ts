@@ -92,7 +92,7 @@ Deno.serve(async req=>{
               }
               const previousSub=await stripe.subscriptions.retrieve(previousId);
               const previousPlan=String(meta.previous_plan_id||primary.plan_id||previousSub.metadata?.plan_id||"free").toLowerCase();
-              if(String(previousSub.customer||"")!==String(session.customer||"")||
+              if(String(previousSub.customer||"")!==String(primary.stripe_customer_id||"")||
                  String(previousSub.metadata?.supabase_user_id||uid)!==uid){
                 throw new Error("MENUO previous subscription could not be verified. It was not modified.");
               }
