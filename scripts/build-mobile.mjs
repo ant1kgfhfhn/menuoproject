@@ -56,9 +56,10 @@ const mobileBillingGuard = `
     uk: 'У цій версії застосунку оформлення нових підписок і платна зміна тарифу тимчасово недоступні. Чинна підписка продовжує діяти.'
   };
 
-  const language = String(
-    document.documentElement.lang || navigator.language || 'ru'
-  ).slice(0, 2).toLowerCase();
+  const selectedLanguage = typeof state !== 'undefined' && state?.language
+    ? state.language
+    : (document.documentElement.lang || navigator.language || 'ru');
+  const language = String(selectedLanguage).slice(0, 2).toLowerCase();
   let note = document.getElementById('menuo-mobile-billing-note');
   if (!note) {
     const anchor = document.getElementById('subscriptionNotice');
