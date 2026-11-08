@@ -43,6 +43,66 @@ const mobileNavigationStyles = `
 if (!indexHtml.includes('</head>')) {
   throw new Error('MENUO index.html has no closing </head> element.');
 }
-await writeFile(indexPath, indexHtml.replace('</head>', mobileNavigationStyles + '\n</head>'), 'utf8');
+const mobileBillingGuard = `
+<script id="menuo-mobile-billing-guard">
+(() => {
+  'use strict';
+  window.MENUO_MOBILE_APP = true;
+
+  const copy = {
+    ru: 'В этой версии приложения оформление новых подписок и смена тарифа через оплату временно недоступны. Уже активная подписка продолжает действовать.',
+    de: 'In dieser App-Version sind neue Abonnements und kostenpflichtige Tarifwechsel vorübergehend nicht verfügbar. Ein bestehendes Abonnement bleibt aktiv.',
+    en: 'New subscriptions and paid plan changes are temporarily unavailable in this app version. Existing subscriptions remain active.',
+    uk: 'У цій версії застосунку оформлення нових підписок і платна зміна тарифу тимчасово недоступні. Чинна підписка продовжує діяти.'
+  };
+
+  const language = String(
+    document.documentElement.lang || navigator.language || 'ru'
+  ).slice(0, 2).toLowerCase();
+  const note = document.getElementById('menuo-mobile-billing-note');
+  if (note) {
+    note.textContent = copy[language] || copy.en;
+    note.hidden = false;
+  }
+
+  ['chooseProPlan', 'chooseBusinessPlan'].forEach((id) => {
+    const button = document.getElementById(id);
+    if (!button) return;
+    button.disabled = true;
+    button.textContent = language === 'de' ? 'In der App nicht verfügbar'
+      : language === 'en' ? 'Unavailable in app'
+      : language === 'uk' ? 'Недоступно в застосунку'
+      : 'Недоступно в приложении';
+    button.setAttribute('aria-disabled', 'true');
+  });
+
+  const promo = document.getElementById('promoCode')?.closest('.menu-card');
+  if (promo) promo.hidden = true;
+
+  document.querySelectorAll('#subscription .notice').forEach((element) => {
+    if (element.textContent.includes('Оплата проходит через Stripe')) {
+      element.hidden = true;
+    }
+  });
+
+  // Keep a runtime guard as well as disabled controls: inline handlers or
+  // accidental future UI changes must not start a Stripe Checkout from Android.
+  window.startCheckout = async function menuoBlockedMobileCheckout() {
+    if (note) {
+      note.hidden = false;
+      note.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+    return false;
+  };
+})();
+</script>`;
+
+if (!indexHtml.includes('</body>')) {
+  throw new Error('MENUO index.html has no closing </body> element.');
+}
+const mobileIndexHtml = indexHtml
+  .replace('</head>', mobileNavigationStyles + '\\n</head>')
+  .replace('</body>', mobileBillingGuard + '\\n</body>');
+await writeFile(indexPath, mobileIndexHtml, 'utf8');
 
 console.log(`MENUO mobile web assets prepared in ${out} (${files.length} files) with native navigation styles.`);
