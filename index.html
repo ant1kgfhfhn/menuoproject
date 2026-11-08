@@ -798,7 +798,7 @@ async function renderSubscription(){
     }else if(active&&String(s.pendingPlanId||'').toLowerCase()==='free'){
       showSubscriptionNotice(
         'Переход на FREE запланирован на '+(dateLabel(s.pendingPlanAt)||endLabel||'конец оплаченного периода')+
-        '. До этой даты сохраняется тариф '+current.toUpperCase()+'. Затем включится FREE за 0 USD в месяц; автоматического списания за следующий платный период не будет.'
+        '. До этой даты сохраняется тариф '+current.toUpperCase()+'. Затем включится FREE за 0 € в месяц; автоматического списания за следующий платный период не будет.'
       );
     }else if(active&&current!=='free'&&endLabel){
       showSubscriptionNotice('Следующая дата продления: '+endLabel+'. Другой платный тариф приобретается отдельно; оплаты за уже оплаченный период не возвращаются.');
@@ -829,7 +829,7 @@ async function switchToFreePlan(){
     const end=dateLabel(s.currentPeriodEnd)||'конца оплаченного периода';
     const confirmed=confirm(
       'Перейти на FREE в конце уже оплаченного периода ('+end+')?\n\n'+
-      'До этой даты текущий тариф останется доступен. После неё включится FREE за 0 USD в месяц, и подписка не будет продлеваться по платной цене. Это не удаляет ваш аккаунт.'
+      'До этой даты текущий тариф останется доступен. После неё включится FREE за 0 € в месяц, и подписка не будет продлеваться по платной цене. Это не удаляет ваш аккаунт.'
     );
     if(!confirmed)return;
     const sb=window.MENUO_SUPABASE;
@@ -839,7 +839,7 @@ async function switchToFreePlan(){
     await renderSubscription();
     showSubscriptionNotice(
       'Переход на FREE запланирован на '+(dateLabel(data.pendingPlanAt)||dateLabel(data.currentPeriodEnd)||end)+
-      '. До этой даты сохранится текущий тариф; после неё цена будет 0 USD в месяц.'
+      '. До этой даты сохранится текущий тариф; после неё цена будет 0 € в месяц.'
     );
   }catch(e){
     const message=await subscriptionErrorMessage(e);
