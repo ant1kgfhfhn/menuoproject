@@ -67,11 +67,29 @@
       status.textContent='Камера включена. Загружаем сканер…';
     }catch(e){
       console.error('MENUO camera error',e);
-      status.textContent=e.message==='secure-context'
-        ?'Сканер работает только по HTTPS. Откройте MENUO через защищённый адрес.'
-        :e.message==='camera-unsupported'
-          ?'Этот браузер не поддерживает доступ к камере.'
-          :'Камера не доступна. Проверьте разрешение камеры для menuo-qr.com в настройках Safari.';
+      const errorName=String(e?.name||'');
+      const isNativeAndroid=!!(window.Capacitor?.isNativePlatform?.()&&window.Capacitor?.getPlatform?.()==='android');
+      let message;
+      if(e.message==='secure-context'){
+        message='Для камеры нужен защищённый контекст. Закройте приложение и откройте MENUO заново.';
+      }else if(e.message==='camera-unsupported'){
+        message='Не удалось получить доступ к камере в этом WebView. Обновите Android System WebView и Chrome.';
+      }else if(errorName==='NotAllowedError'||errorName==='PermissionDeniedError'){
+        message=isNativeAndroid
+          ?'Android запретил доступ к камере. Откройте Настройки телефона → Приложения → MENUO → Разрешения → Камера → Разрешить, затем перезапустите приложение.'
+          :'Разрешите доступ к камере для браузера в настройках Android и попробуйте снова.';
+      }else if(errorName==='NotFoundError'||errorName==='DevicesNotFoundError'){
+        message='Камера не найдена. Проверьте, что камера телефона работает и не занята другим приложением.';
+      }else if(errorName==='NotReadableError'||errorName==='TrackStartError'){
+        message='Камера занята другим приложением. Закройте приложения, использующие камеру, и попробуйте снова.';
+      }else if(errorName==='OverconstrainedError'){
+        message='Не удалось выбрать заднюю камеру. Попробуйте запустить сканер ещё раз.';
+      }else{
+        message='Не удалось включить камеру ('+(errorName||'ошибка доступа')+'). Проверьте разрешение MENUO на использование камеры в настройках Android.';
+      }
+      status.textContent=message;
+      const help=s.querySelector('#scannerHelp');
+      if(help)help.textContent=message;
       return;
     }
 
