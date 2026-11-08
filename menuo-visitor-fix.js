@@ -119,13 +119,14 @@
       const u=new URL(raw,location.href);
       const token=u.searchParams.get('menu');
       if(token){
-        const target=new URL(location.href);
-        target.search='';target.hash='';
-        target.searchParams.set('menu',token);
-        location.href=target.toString();
+        renderPublic(token);
         return;
       }
-      if(/^https?:\/\//i.test(raw)){location.href=raw;return}
+      if(/^https?:\/\//i.test(raw)){
+        if(u.origin===location.origin){location.href=u.toString();return}
+        window.open(u.toString(),'_blank','noopener');
+        return;
+      }
       alert('Это не ссылка MENUO.');
     }catch(_){alert('QR-код не распознан как ссылка.')}
   }
@@ -183,8 +184,8 @@
     return result;
   }
 
-  async function renderPublic(){
-    const token=String(new URLSearchParams(location.search).get('menu')||'').trim();
+  async function renderPublic(tokenOverride){
+    const token=String(tokenOverride||new URLSearchParams(location.search).get('menu')||'').trim();
     if(!token)return;
     const host=document.getElementById('public');
     if(!host)return;
