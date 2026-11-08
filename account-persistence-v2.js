@@ -662,7 +662,10 @@
       : (allowed[0]?.id || null);
     if (profile.locale && (profile.locale !== 'ru' || profile.settings?.menuoLanguageExplicit || localStorage.getItem('menuo-language-explicit-v1'))) st.language = profile.locale; else if (!localStorage.getItem('menuo-language-explicit-v1')) st.language = 'en';
     localSave();
+    document.documentElement.lang = st.language || 'en';
+    document.documentElement.dir = st.language === 'ar' ? 'rtl' : 'ltr';
     if (typeof updateNav === 'function') updateNav();
+    if (typeof translateApplicationUI === 'function') translateApplicationUI(st.language || 'en');
     return true;
   }
 
