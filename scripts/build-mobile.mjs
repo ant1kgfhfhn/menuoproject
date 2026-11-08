@@ -10,6 +10,7 @@ const files = [
   'impressum.html',
   'privacy.html',
   'terms.html',
+  'account-deletion.html',
   'widerruf.html',
   'account-persistence-v2.js',
   'account-persistence.js',
