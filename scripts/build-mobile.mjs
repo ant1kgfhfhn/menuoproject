@@ -43,6 +43,6 @@ const mobileNavigationStyles = `
 if (!indexHtml.includes('</head>')) {
   throw new Error('MENUO index.html has no closing </head> element.');
 }
-await writeFile(indexPath, indexHtml.replace('</head>', mobileNavigationStyles + '\\n</head>'), 'utf8');
+await writeFile(indexPath, indexHtml.replace('</head>', mobileNavigationStyles + '\n</head>'), 'utf8');
 
 console.log(`MENUO mobile web assets prepared in ${out} (${files.length} files) with native navigation styles.`);
