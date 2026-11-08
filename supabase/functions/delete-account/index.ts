@@ -19,6 +19,11 @@ const ALLOWED_ORIGINS = new Set([
   "ionic://localhost"
 ]);
 
+const BILLABLE_STATUSES = new Set(["active", "trialing", "past_due", "unpaid"]);
+const POSSIBLY_BILLABLE_STATUSES = new Set([
+  ...BILLABLE_STATUSES, "incomplete", "paused"
+]);
+
 function corsHeaders(req: Request): HeadersInit {
   const origin = req.headers.get("origin") || "";
   const localDevOrigin = /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin);
@@ -39,6 +44,79 @@ function json(body: unknown, status = 200, headers: HeadersInit = {}) {
   });
 }
 
+function stripeId(value: unknown): string | null {
+  if (!value) return null;
+  if (typeof value === "string") return value;
+  if (typeof value === "object" && value !== null && "id" in value) {
+    const id = (value as { id?: unknown }).id;
+    return typeof id === "string" ? id : null;
+  }
+  return null;
+}
+
+async function cancelAllAccountSubscriptions(userId: string) {
+  const [primaryResult, contractsResult] = await Promise.all([
+    admin.from("subscriptions")
+      .select("status,stripe_subscription_id")
+      .eq("user_id", userId)
+      .maybeSingle(),
+    admin.from("subscription_contracts")
+      .select("status,stripe_subscription_id")
+      .eq("user_id", userId)
+  ]);
+
+  if (primaryResult.error) throw primaryResult.error;
+  if (contractsResult.error) throw contractsResult.error;
+
+  const rows = [
+    ...(primaryResult.data ? [primaryResult.data] : []),
+    ...(contractsResult.data || [])
+  ];
+  const ids = [...new Set(rows
+    .map((row) => String(row.stripe_subscription_id || "").trim())
+    .filter(Boolean))];
+
+  if (!ids.length) return;
+
+  if (!STRIPE_SECRET_KEY) {
+    const hasPotentialBilling = rows.some((row) =>
+      POSSIBLY_BILLABLE_STATUSES.has(String(row.status || "").toLowerCase())
+    );
+    if (hasPotentialBilling) {
+      throw new Error("Найдена платная подписка, но сервер не может подтвердить её отмену. Обратись в поддержку MENUO перед удалением аккаунта.");
+    }
+    return;
+  }
+
+  const stripe = new Stripe(STRIPE_SECRET_KEY);
+  for (const subscriptionId of ids) {
+    let current: any;
+    try {
+      current = await stripe.subscriptions.retrieve(subscriptionId);
+    } catch (error: any) {
+      // A stale database reference to an already deleted Stripe subscription
+      // cannot renew or charge the customer.
+      if (error?.statusCode === 404 || error?.code === "resource_missing") continue;
+      throw error;
+    }
+
+    if (!BILLABLE_STATUSES.has(String(current.status || "").toLowerCase())) continue;
+
+    const scheduleId = stripeId(current.schedule);
+    if (scheduleId) {
+      await stripe.subscriptionSchedules.release(scheduleId);
+      current = await stripe.subscriptions.retrieve(subscriptionId);
+    }
+
+    if (BILLABLE_STATUSES.has(String(current.status || "").toLowerCase())) {
+      await stripe.subscriptions.cancel(subscriptionId, {
+        invoice_now: false,
+        prorate: false
+      });
+    }
+  }
+}
+
 async function purgeStoragePrefix(bucket: string, prefix: string) {
   async function walk(path: string): Promise<void> {
     let offset = 0;
@@ -49,6 +127,7 @@ async function purgeStoragePrefix(bucket: string, prefix: string) {
         sortBy: { column: "name", order: "asc" }
       });
       if (error) throw error;
+
       const rows = data || [];
       const files: string[] = [];
       for (const item of rows) {
@@ -56,14 +135,17 @@ async function purgeStoragePrefix(bucket: string, prefix: string) {
         if (item.id === null) await walk(fullPath);
         else files.push(fullPath);
       }
+
       if (files.length) {
         const removed = await admin.storage.from(bucket).remove(files);
         if (removed.error) throw removed.error;
       }
+
       if (rows.length < 100) break;
       offset += rows.length;
     }
   }
+
   await walk(prefix);
 }
 
@@ -84,33 +166,24 @@ Deno.serve(async (req: Request) => {
       return json({ error: "Подтверждение удаления не получено." }, 400, cors);
     }
 
-    const { data: profileSub, error: subError } = await admin
-      .from("subscriptions")
-      .select("status,stripe_subscription_id")
-      .eq("user_id", user.id)
-      .maybeSingle();
-    if (subError) throw subError;
+    // Cancel every Stripe subscription associated with this account, including
+    // older/additional contracts not represented by the primary plan row.
+    await cancelAllAccountSubscriptions(user.id);
 
-    if (
-      profileSub?.stripe_subscription_id &&
-      ["active", "trialing", "past_due", "unpaid"].includes(String(profileSub.status))
-    ) {
-      if (!STRIPE_SECRET_KEY) {
-        return json({
-          error: "Найдена платная подписка. Отмените её в разделе «Тарифы» перед удалением аккаунта."
-        }, 409, cors);
-      }
-      const stripe = new Stripe(STRIPE_SECRET_KEY);
-      const current = await stripe.subscriptions.retrieve(profileSub.stripe_subscription_id);
-      if (["active", "trialing", "past_due", "unpaid"].includes(current.status)) {
-        await stripe.subscriptions.cancel(current.id);
-      }
-    }
-
+    // Remove account-owned files before deleting the Auth user.
     await purgeStoragePrefix("profile-avatars", user.id);
     await purgeStoragePrefix("restaurant-photos", user.id);
 
-    // Profile-owned records cascade from profiles; payment history keeps its audit row.
+    // These tables are not all linked by foreign keys, so delete explicitly.
+    const deletedMessages = await admin.from("user_messages").delete().eq("user_id", user.id);
+    if (deletedMessages.error) throw deletedMessages.error;
+
+    const deletedContracts = await admin.from("subscription_contracts").delete().eq("user_id", user.id);
+    if (deletedContracts.error) throw deletedContracts.error;
+
+    // Profile foreign keys cascade to restaurants, menus, QR codes, promotions,
+    // subscriptions and promo redemptions. Payment-event audit rows are retained
+    // with their user_id set to NULL by the existing FK.
     const deletedProfile = await admin.from("profiles").delete().eq("id", user.id);
     if (deletedProfile.error) throw deletedProfile.error;
 
