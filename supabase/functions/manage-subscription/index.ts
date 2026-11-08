@@ -412,7 +412,7 @@ Deno.serve(async (req: Request) => {
         "Переход на FREE запланирован",
         "Тариф " + currentPlan.toUpperCase() + " остаётся доступен до " +
           new Date(endTimestamp * 1000).toLocaleDateString("de-DE") +
-          ". После этой даты автоматически включится FREE за 0 USD в месяц. Дополнительное списание при планировании перехода не создаётся.",
+          ". После этой даты автоматически включится FREE за " + (subscriptionCurrency === "eur" ? "0 €" : "0 USD") + " в месяц. Дополнительное списание при планировании перехода не создаётся.",
         "success"
       );
       return json({
