@@ -85,7 +85,7 @@
       }else if(errorName==='OverconstrainedError'){
         message='Не удалось выбрать заднюю камеру. Попробуйте запустить сканер ещё раз.';
       }else{
-        message='Не удалось включить камеру ('+(errorName||'ошибка доступа')+'). Проверьте разрешение MENUO на использование камеры в настройках Android.';
+        message='Не удалось включить камеру ('+(errorName||'ошибка доступа')+'). Проверьте разрешение камеры для MENUO в настройках приложения или браузера.';
       }
       status.textContent=message;
       const help=s.querySelector('#scannerHelp');
