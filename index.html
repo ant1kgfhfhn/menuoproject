@@ -604,7 +604,7 @@ async function deleteAccount(){
    if(data?.success!==true)throw new Error('Сервер не подтвердил удаление аккаунта. Повтори попытку.');
    try{await sb.auth.signOut()}catch(_){}
    state.users=[];state.restaurants=[];state.dishes=[];state.session=null;state.activeRestaurantId=null;state.userSettings={};save();
-   if(Array.isArray(window.MENUO_NAV_HISTORY))window.MENUO_NAV_HISTORY.length=0;
+   MENUO_NAV_HISTORY.length=0;
    alert('Аккаунт и связанные данные удалены.');
    show('home',{skipHistory:true});
  }catch(e){
