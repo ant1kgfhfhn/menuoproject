@@ -1168,7 +1168,7 @@ function updateGlobalLanguageButton(){
  if(publicButton)publicButton.textContent=label;
  positionGlobalLanguage();
 }
-async function setLanguage(l){state.language=l;save();updateGlobalLanguageButton();document.documentElement.lang=l;document.documentElement.dir=l==='ar'?'rtl':'ltr';document.getElementById('languageTray').classList.add('hidden');if(new URLSearchParams(location.search).get('menu')&&typeof window.__MENUO_RENDER_PUBLIC==='function'){await window.__MENUO_RENDER_PUBLIC();}else if(!document.getElementById('public').classList.contains('hidden'))renderPublic(publicRestaurant);await translateApplicationUI(l);renderLanguages()}
+async function setLanguage(l){if(!LANGS.some(([code])=>code===l))return;state.language=l;save();try{localStorage.setItem('menuo-language-explicit-v1','1')}catch(_){}updateGlobalLanguageButton();document.documentElement.lang=l;document.documentElement.dir=l==='ar'?'rtl':'ltr';document.getElementById('languageTray').classList.add('hidden');try{const client=window.MENUO_SUPABASE;if(client){const {data}=await client.auth.getUser();if(data?.user){const result=await client.from('profiles').update({locale:l}).eq('id',data.user.id);if(result.error)console.warn('MENUO language preference sync failed',result.error)}}}catch(e){console.warn('MENUO language preference sync failed',e)}if(new URLSearchParams(location.search).get('menu')&&typeof window.__MENUO_RENDER_PUBLIC==='function'){await window.__MENUO_RENDER_PUBLIC();}else if(!document.getElementById('public').classList.contains('hidden'))renderPublic(publicRestaurant);await translateApplicationUI(l);renderLanguages()}
 async function handlePaymentReturn(payment,targetPlan=null){
   const cleanUrl=new URL(location.href);
   cleanUrl.searchParams.delete('payment');
