@@ -210,7 +210,7 @@ function menuoUiEligible(n){
   const e=n.parentElement;
   if(!e)return false;
   if(e.closest('#public,[data-no-translate],script,style,svg,input,textarea,select,option'))return false;
-  if(e.closest('.avatar,.rest-logo,.editor-head b,.dish-info h3,.dish-info p,.price,.plan-badge,.brand,.profile-name,.profile-email,#inboxList,#pfDisplayName,#pfEmailSummary,[contenteditable="true"]'))return false;
+  if(e.closest('.avatar,.rest-logo,.dish-info h3,.dish-info p,.price,.plan-badge,.brand,.profile-name,.profile-email,#inboxList,#pfDisplayName,#pfEmailSummary,[contenteditable="true"]'))return false;
   const t=n.nodeValue.replace(/\s+/g,' ').trim();
   return t.length>0 && /[\p{L}]/u.test(t);
 }
