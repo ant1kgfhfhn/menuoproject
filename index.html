@@ -436,7 +436,7 @@ function profileAvatarStoragePath(value,userId){
    const idx=parsed.pathname.indexOf(marker);
    path=parsed.pathname.slice(idx+marker.length);
   }
-  path=decodeURIComponent(String(path).replace(/^\\/+/, ''));
+  path=decodeURIComponent(String(path).replace(/^\/+/, ''));
   return path.startsWith(String(userId)+'/')?path:null;
  }catch(_){return null}
 }
