@@ -168,7 +168,7 @@ Deno.serve(async req=>{
       if(!p)throw new Error("Промокод недействителен, истёк или уже использован.");
       const full=await supabase.from("promo_codes").select("*").eq("id",p.id).single();
       if(full.error)throw full.error;
-      const fixedDiscount=Number(full.data.discount_cents||0)>0;
+      const fixedDiscount=!Number(full.data.discount_percent||0)&&Number(full.data.discount_cents||0)>0;
       let couponId=fixedDiscount?full.data.stripe_coupon_eur_id:full.data.stripe_coupon_id;
       if(!couponId){
         const coupon=await stripe.coupons.create({
