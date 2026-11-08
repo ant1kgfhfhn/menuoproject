@@ -579,16 +579,40 @@ async function markMessageRead(id){
  await renderInbox();
 }
 async function deleteAccount(){
- const sb=window.MENUO_SUPABASE;if(!sb)return alert('Система аккаунтов ещё загружается.');
+ const sb=window.MENUO_SUPABASE;
+ if(!sb)return alert('Система аккаунтов ещё загружается.');
+ if(window.__MENUO_ACCOUNT_DELETE_RUNNING)return;
  if(!confirm('Точно удалить аккаунт MENUO? Будут удалены профиль, рестораны, блюда, аватар и сообщения. Это действие нельзя отменить.'))return;
- const phrase=prompt('Для окончательного подтверждения введи слово УДАЛИТЬ:');if(phrase!=='УДАЛИТЬ')return alert('Удаление отменено.');
+ const phrase=prompt('Для окончательного подтверждения введи слово УДАЛИТЬ:');
+ if(phrase!=='УДАЛИТЬ')return alert('Удаление отменено.');
+ window.__MENUO_ACCOUNT_DELETE_RUNNING=true;
  try{
    const {data,error}=await sb.functions.invoke('delete-account',{body:{confirmation:'DELETE'}});
-   if(error)throw error;if(data?.error)throw new Error(data.error);
+   if(error){
+     let message=error.message||'Не удалось удалить аккаунт.';
+     try{
+       const response=error.context;
+       const payload=typeof response?.clone==='function'
+         ?await response.clone().json()
+         :typeof response?.json==='function'?await response.json():null;
+       if(payload?.error)message=payload.error;
+       else if(payload?.message)message=payload.message;
+     }catch(_){}
+     throw new Error(message);
+   }
+   if(data?.error)throw new Error(data.error);
+   if(data?.success!==true)throw new Error('Сервер не подтвердил удаление аккаунта. Повтори попытку.');
    try{await sb.auth.signOut()}catch(_){}
-   state.users=[];state.restaurants=[];state.dishes=[];state.session=null;state.activeRestaurantId=null;state.userSettings={};save();MENUO_NAV_HISTORY.length=0;
-   alert('Аккаунт и связанные данные удалены.');show('home',{skipHistory:true});
- }catch(e){alert(e?.message||'Не удалось удалить аккаунт. Если активна подписка, сначала проверь раздел «Тарифы».')}
+   state.users=[];state.restaurants=[];state.dishes=[];state.session=null;state.activeRestaurantId=null;state.userSettings={};save();
+   if(Array.isArray(window.MENUO_NAV_HISTORY))window.MENUO_NAV_HISTORY.length=0;
+   alert('Аккаунт и связанные данные удалены.');
+   show('home',{skipHistory:true});
+ }catch(e){
+   console.error('MENUO account deletion failed',e);
+   alert(e?.message||'Не удалось удалить аккаунт. Проверь подключение и попробуй ещё раз.');
+ }finally{
+   window.__MENUO_ACCOUNT_DELETE_RUNNING=false;
+ }
 }
 async function checkPromo(){
   const code=document.getElementById('promoCode')?.value.trim();
