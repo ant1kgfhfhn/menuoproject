@@ -171,8 +171,8 @@
   async function translateMenu(data,lang){
     if(!data)return data;
     const result=JSON.parse(JSON.stringify(data));
-    const from=String(result.restaurant?.default_locale||'ru').toLowerCase().split('-')[0];
-    const to=String(lang||'ru').toLowerCase().split('-')[0];
+    const from=String(result.restaurant?.default_locale||'en').toLowerCase().split('-')[0];
+    const to=String(lang||'en').toLowerCase().split('-')[0];
     if(from===to)return result;
     const jobs=[];
     const tr=(obj,key)=>{if(obj?.[key])jobs.push(translateText(obj[key],from,to).then(v=>obj[key]=v))};
@@ -201,10 +201,10 @@
       }
       if(!data)throw lastError||new Error('empty-public-menu');
 
-      const requestedLang=(typeof state!=='undefined'&&state?.language)||'ru';
+      const requestedLang=(typeof state!=='undefined'&&state?.language)||'en';
       const r0=data.restaurant||{};
       const multilingualEnabled=['pro','business'].includes(String(r0.plan_id||'free').toLowerCase());
-      const lang=multilingualEnabled?requestedLang:(String(r0.default_locale||'ru').toLowerCase().split('-')[0]||'ru');
+      const lang=multilingualEnabled?requestedLang:(String(r0.default_locale||'en').toLowerCase().split('-')[0]||'ru');
       if(multilingualEnabled)data=await translateMenu(data,lang);
       const r=data.restaurant||{},cats=data.categories||[],dishes=data.dishes||[],promotions=Array.isArray(data.promotions)?data.promotions:[];
       const byCat=new Map(cats.map(c=>[String(c.id),c.name]));
