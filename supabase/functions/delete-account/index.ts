@@ -119,30 +119,35 @@ async function cancelAllAccountSubscriptions(userId: string) {
 
 async function purgeStoragePrefix(bucket: string, prefix: string) {
   async function walk(path: string): Promise<void> {
-    let offset = 0;
-    while (true) {
+    // Read every page before deleting anything. Offset pagination while
+    // deleting from the same listing can skip objects as the result set shrinks.
+    const rows: Array<{ name: string; id: string | null }> = [];
+    for (let offset = 0; ; offset += 100) {
       const { data, error } = await admin.storage.from(bucket).list(path, {
         limit: 100,
         offset,
         sortBy: { column: "name", order: "asc" }
       });
       if (error) throw error;
+      const page = data || [];
+      rows.push(...page);
+      if (page.length < 100) break;
+    }
 
-      const rows = data || [];
-      const files: string[] = [];
-      for (const item of rows) {
-        const fullPath = path ? `${path}/${item.name}` : item.name;
-        if (item.id === null) await walk(fullPath);
-        else files.push(fullPath);
-      }
+    const files: string[] = [];
+    const directories: string[] = [];
+    for (const item of rows) {
+      const fullPath = path ? `${path}/${item.name}` : item.name;
+      if (item.id === null) directories.push(fullPath);
+      else files.push(fullPath);
+    }
 
-      if (files.length) {
-        const removed = await admin.storage.from(bucket).remove(files);
-        if (removed.error) throw removed.error;
-      }
+    for (const directory of directories) await walk(directory);
 
-      if (rows.length < 100) break;
-      offset += rows.length;
+    // Storage remove accepts batches; keep each request comfortably bounded.
+    for (let i = 0; i < files.length; i += 100) {
+      const removed = await admin.storage.from(bucket).remove(files.slice(i, i + 100));
+      if (removed.error) throw removed.error;
     }
   }
 
