@@ -11,14 +11,14 @@ try {
   process.exit(0);
 }
 
-if (!/<manifest\\b/.test(manifest)) {
+if (!/<manifest\b/.test(manifest)) {
   throw new Error('AndroidManifest.xml is missing its <manifest> root element.');
 }
 
-if (!/android\\.permission\\.CAMERA/.test(manifest)) {
+if (!/android\.permission\.CAMERA/.test(manifest)) {
   manifest = manifest.replace(
-    /(<manifest\\b[^>]*>)/,
-    '$1\\n    <uses-permission android:name="android.permission.CAMERA" />'
+    /(<manifest\b[^>]*>)/,
+    '$1\n    <uses-permission android:name="android.permission.CAMERA" />'
   );
   await writeFile(manifestPath, manifest, 'utf8');
   console.log('Added CAMERA permission to AndroidManifest.xml.');
