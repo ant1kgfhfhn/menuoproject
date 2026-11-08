@@ -59,7 +59,17 @@ const mobileBillingGuard = `
   const language = String(
     document.documentElement.lang || navigator.language || 'ru'
   ).slice(0, 2).toLowerCase();
-  const note = document.getElementById('menuo-mobile-billing-note');
+  let note = document.getElementById('menuo-mobile-billing-note');
+  if (!note) {
+    const anchor = document.getElementById('subscriptionNotice');
+    if (anchor) {
+      note = document.createElement('div');
+      note.id = 'menuo-mobile-billing-note';
+      note.className = 'notice';
+      note.setAttribute('role', 'status');
+      anchor.insertAdjacentElement('afterend', note);
+    }
+  }
   if (note) {
     note.textContent = copy[language] || copy.en;
     note.hidden = false;
