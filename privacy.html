@@ -12,7 +12,7 @@ table{border-collapse:collapse;width:100%;margin:12px 0}td,th{border:1px solid v
 @media(max-width:500px){.page{margin:12px auto;padding:20px;border-radius:17px}.top{align-items:flex-start;flex-direction:column}table{font-size:13px}}
 </style></head><body><main class="page">
 <div class="top"><a class="brand" href="/">menuo</a><a class="back" href="/">← Zurück zu MENUO</a></div>
-<div class="eyebrow">Datenschutz</div><h1>Datenschutzerklärung</h1><p class="meta">Stand: 23. Oktober 2026</p>
+<div class="eyebrow">Datenschutz</div><h1>Datenschutzerklärung</h1><p class="meta">Stand: 8. November 2026</p>
 <h2>1. Verantwortlicher</h2>
 <p>Verantwortlich für die Verarbeitung personenbezogener Daten im Zusammenhang mit MENUO ist:</p>
 <p><strong>Oleksandr Zavialov</strong><br>MENUO (Projekt- und Produktname)<br>Annastraße 3<br>86573 Obergriesbach<br>Deutschland<br>E-Mail: <a href="mailto:rvdetogs8@gmail.com">rvdetogs8@gmail.com</a><br>Telefon: <a href="tel:+491705976200">+49 170 5976200</a></p>
@@ -44,6 +44,7 @@ table{border-collapse:collapse;width:100%;margin:12px 0}td,th{border:1px solid v
 <tr><td><strong>Stripe</strong></td><td>Abwicklung und Verwaltung kostenpflichtiger Abonnements, wenn ein kostenpflichtiger Tarif ausgewählt und der Checkout verwendet wird.</td></tr>
 <tr><td><strong>MyMemory Translation API</strong></td><td>Bei der automatischen Übersetzung der Benutzeroberfläche können einzelne UI-Textausschnitte (bis zu 450 Zeichen) an den Übersetzungsdienst gesendet werden. Gib dort keine vertraulichen Inhalte ein.</td></tr>
 <tr><td><strong>QRServer (api.qrserver.com)</strong></td><td>Bei der Generierung eines QR-Bildes wird die dafür benötigte öffentliche Menü-URL an den externen QR-Dienst übertragen. Die URL kann den individuellen QR-Token enthalten; der Anbieter kann technische Verbindungsdaten protokollieren.</td></tr>
+<tr><td><strong>jsDelivr und unpkg</strong></td><td>Diese Content-Delivery-Dienste liefern JavaScript-Bibliotheken aus, die MENUO für die Verbindung zu Supabase, QR-Code-Funktionen und das Scannen von QR-Codes verwendet. Beim Abruf werden technisch erforderliche Verbindungsdaten, insbesondere IP-Adresse, Zeitpunkt und angeforderte Ressource, an den jeweiligen CDN-Anbieter übermittelt.</td></tr>
 </tbody></table>
 <p>Die öffentlichen Restaurant- und Menüangaben werden anderen Personen zugänglich, wenn du ein Menü veröffentlichst oder dessen QR-Code bzw. Link teilst. Veröffentliche dort keine geheimen Zugangsdaten oder Informationen, die nicht für Gäste bestimmt sind.</p>
 <p>Die Dienstanbieter können Daten im Rahmen ihrer Leistungen, Sicherheitsprotokolle und Unterauftragsverarbeiter verarbeiten. Die konkrete Hosting-Region, die jeweils aktivierten Zusatzdienste und die anwendbaren Auftragsverarbeitungsbedingungen hängen von den Einstellungen der genutzten Konten ab. Soweit personenbezogene Daten in Staaten außerhalb des Europäischen Wirtschaftsraums übermittelt werden, müssen die Voraussetzungen der Art. 44 ff. DSGVO erfüllt sein. Diese Konfigurationen sind vor dem produktiven Betrieb anhand der tatsächlichen Anbieterbedingungen zu prüfen.</p>
@@ -52,16 +53,18 @@ table{border-collapse:collapse;width:100%;margin:12px 0}td,th{border:1px solid v
 <p>MENUO bindet nach derzeitiger Anwendungskonfiguration keine eigene Werbeprofilierung ein. Technisch notwendige Protokollierung bei Hosting-, Sicherheits-, Authentifizierungs- und Zahlungsanbietern kann davon unberührt sein.</p>
 <h2>6. Öffentliche Menüs und Restaurantbilder</h2>
 <p>Wenn du ein Restaurant oder Menü veröffentlichst, werden die dafür bestimmten Angaben über einen öffentlichen Link oder QR-Code abrufbar. Du bist dafür verantwortlich, nur Bilder, Marken, Speisekarteninformationen und personenbezogene Daten hochzuladen, zu deren Nutzung bzw. Veröffentlichung du berechtigt bist. Wir verarbeiten hochgeladene Bilder, um sie zu speichern und in der Anwendung bzw. im öffentlichen Menü anzuzeigen.</p>
-<h2>7. Speicherdauer und Löschung</h2>
+<h2>7. Kamera und QR-Scanner</h2>
+<p>Wenn du in der MENUO-App oder auf der Website ausdrücklich den QR-Scanner startest, kann der Browser bzw. das Gerät nach deiner Berechtigung auf die Kamera zugreifen. Das Kamerabild wird im Browser auf deinem Gerät verarbeitet, um einen QR-Code zu erkennen; MENUO überträgt den Videostream nicht an unsere Server. Der erkannte QR-Code enthält eine öffentliche Menü-Adresse bzw. einen QR-Token. Beim Öffnen des Menüs wird diese Adresse zur Anzeige des Menüs an MENUO/Supabase übermittelt. Du kannst den Kamerazugriff jederzeit über die Geräte- oder Browsereinstellungen widerrufen.</p>
+<h2>8. Speicherdauer und Löschung</h2>
 <p>Kontodaten und zugehörige Restaurant- und Menüdaten werden grundsätzlich solange gespeichert, wie das Konto und die jeweiligen Funktionen genutzt werden. Wenn du dein Konto löschst, werden die zugehörigen Daten nach Maßgabe der technischen Möglichkeiten gelöscht. Daten, die aufgrund gesetzlicher Aufbewahrungspflichten benötigt werden oder die zur Geltendmachung, Ausübung oder Verteidigung von Rechtsansprüchen erforderlich sind, können im erforderlichen Umfang länger gespeichert werden. Technische Protokolle, Sicherungskopien und Daten bei Unterauftragnehmern können eigenen, angemessenen Löschzyklen unterliegen.</p>
-<h2>8. Deine Datenschutzrechte</h2>
+<h2>9. Deine Datenschutzrechte</h2>
 <p>Unter den gesetzlichen Voraussetzungen hast du das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung und Datenübertragbarkeit. Du kannst bestimmten Verarbeitungen aus Gründen, die sich aus deiner besonderen Situation ergeben, widersprechen und eine Einwilligung jederzeit für die Zukunft widerrufen. Du kannst dich außerdem bei einer Datenschutzaufsichtsbehörde beschweren.</p>
 <p>Für Bayern ist für viele nicht-öffentliche Stellen das <a href="https://www.lda.bayern.de/de/beschwerde.html" target="_blank" rel="noopener">Bayerische Landesamt für Datenschutzaufsicht (BayLDA)</a> zuständig: Promenade 18, 91522 Ansbach, Deutschland. Die Behörde stellt ein Online-Formular für Datenschutzbeschwerden bereit. Für eine konkrete Beschwerde können die Zuständigkeit und die richtige Behörde vom Einzelfall abhängen.</p>
-<h2>9. Bereitstellung von Daten</h2>
+<h2>10. Bereitstellung von Daten</h2>
 <p>Für die Registrierung und die Bereitstellung der von dir angeforderten Kontofunktionen sind bestimmte Daten (insbesondere eine funktionierende E-Mail-Adresse) notwendig. Ohne diese Angaben können Konto, Anmeldung oder angeforderte Funktionen möglicherweise nicht bereitgestellt werden. Weitere Profildaten wie Telefonnummer oder Foto sind freiwillig, soweit sie nicht bei einer konkreten Funktion ausdrücklich benötigt werden.</p>
-<h2>10. Automatisierte Entscheidungen</h2>
+<h2>11. Automatisierte Entscheidungen</h2>
 <p>MENUO verwendet nach derzeitiger Konfiguration keine automatisierte Entscheidungsfindung mit rechtlicher oder ähnlich erheblicher Wirkung im Sinne von Art. 22 DSGVO.</p>
-<h2>11. Änderungen dieser Datenschutzerklärung</h2>
+<h2>12. Änderungen dieser Datenschutzerklärung</h2>
 <p>Wir aktualisieren diese Datenschutzerklärung, wenn sich die Datenverarbeitung, die eingesetzten Anbieter oder rechtliche Anforderungen ändern. Es gilt die auf dieser Seite veröffentlichte Fassung.</p>
 <div class="footer">MENUO · <a href="/account-deletion.html">Konto löschen</a> · <a href="/impressum.html">Impressum</a> · <a href="/terms.html">Nutzungsbedingungen</a> · <a href="/widerruf.html">Widerrufsinformationen</a><br>Bitte beachte auch die Anbieterinformationen der jeweils eingebundenen Dienste.</div>
 </main></body></html>
