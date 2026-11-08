@@ -1,6 +1,6 @@
 # MENUO mobile app
 
-This branch prepares the existing MENUO HTML/CSS/JavaScript project for Capacitor. The existing website remains the source of truth; no second website is created.
+The main branch is the single source of truth for the MENUO web application. Capacitor packages that same web source into the Android/iOS app; no separate application UI is maintained.
 
 ## Requirements
 
@@ -30,7 +30,7 @@ Run `npm run cap:sync` after changes to the existing website files so the update
 
 ## Important notes
 
-- This initial setup deliberately does not change the production `main` branch.
+- Keep mobile-specific build outputs (`www/`, `android/`, `ios/`) out of Git. Apply web changes on `main`, then run `npm run cap:sync` to rebuild the native bundle.
 - The web bundle includes the existing MENUO UI, auth/backend scripts and legal pages.
 - Before store submission, test Supabase authentication, file uploads, QR menu routes, discounts, account deletion and subscription/payment compliance on real devices.
 - The iOS project must be built and signed with macOS/Xcode. Windows alone cannot produce the final signed App Store build.
