@@ -54,6 +54,7 @@ Deno.serve(async req=>{
 
     let previousSubscriptionForPurchase:any=null;
     let previousPlanForPurchase:string|null=null;
+    let previousCustomerForPurchase:string|null=null;
 
     if(customerId){
       stage="find_active_subscription";
@@ -129,14 +130,33 @@ Deno.serve(async req=>{
         // after the separately purchased subscription has actually been paid.
         previousSubscriptionForPurchase=current;
         previousPlanForPurchase=currentPlan;
+        const currentCurrency=String(current.items?.data?.find((entry:any)=>!entry.deleted)?.price?.currency||"usd").toLowerCase();
+        if(currentCurrency!=="eur"){
+          // Stripe cannot keep active USD and EUR subscriptions on the same Customer.
+          // Use a separate Customer for the new EUR contract; the old one remains intact
+          // until the EUR Checkout is confirmed paid by the webhook.
+          previousCustomerForPurchase=String(current.customer);
+          customerId=undefined;
+        }
       }
     }
 
     if(!customerId){
-      const customer=await stripe.customers.create({email:user.email||undefined,metadata:{supabase_user_id:user.id}});
+      const customer=await stripe.customers.create({
+        email:user.email||undefined,
+        metadata:{
+          supabase_user_id:user.id,
+          ...(previousCustomerForPurchase?{replaces_customer_id:previousCustomerForPurchase}:{}),
+          ...(previousSubscriptionForPurchase?{replaces_subscription_id:String(previousSubscriptionForPurchase.id)}:{})
+        }
+      });
       customerId=customer.id;
-      const {error:updateError}=await supabase.from("subscriptions").update({stripe_customer_id:customerId}).eq("user_id",user.id);
-      if(updateError)throw updateError;
+      // Do not overwrite the currently active subscription's Customer before the
+      // new EUR Checkout is paid. The webhook switches the primary row atomically.
+      if(!previousSubscriptionForPurchase){
+        const {error:updateError}=await supabase.from("subscriptions").update({stripe_customer_id:customerId}).eq("user_id",user.id);
+        if(updateError)throw updateError;
+      }
     }
 
     stage="promo";
