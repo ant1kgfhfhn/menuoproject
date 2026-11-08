@@ -111,8 +111,8 @@ if (!indexHtml.includes('</body>')) {
   throw new Error('MENUO index.html has no closing </body> element.');
 }
 const mobileIndexHtml = indexHtml
-  .replace('</head>', mobileNavigationStyles + '\\n</head>')
-  .replace('</body>', mobileBillingGuard + '\\n</body>');
+  .replace('</head>', mobileNavigationStyles + String.fromCharCode(10) + '</head>')
+  .replace('</body>', mobileBillingGuard + String.fromCharCode(10) + '</body>');
 await writeFile(indexPath, mobileIndexHtml, 'utf8');
 
 console.log(`MENUO mobile web assets prepared in ${out} (${files.length} files) with native navigation styles.`);
