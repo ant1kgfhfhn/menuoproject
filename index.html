@@ -232,36 +232,38 @@ async function menuoTranslateText(source,to){
   return source;
 }
 async function translateApplicationUI(lang){
-  const root=document.querySelector('.screen:not(.hidden)')||document.getElementById('home');
-  if(!root)return;
-  const nodes=[];
-  root.querySelectorAll('*').forEach(el=>{
-    if(el.closest('#public'))return;
-    if(el.matches('input,textarea,select,option,script,style,svg'))return;
-    if(el.matches('.avatar,.rest-logo,.editor-head b,.dish-info h3,.dish-info p,.price,.plan-badge,.brand,.profile-name,.profile-email,#inboxList,#pfDisplayName,#pfEmailSummary'))return;
-    [...el.childNodes].forEach(n=>{if(n.nodeType===3&&menuoUiEligible(n))nodes.push(n)});
-  });
-  document.querySelectorAll('.global-nav,.language-tray').forEach(root2=>{
-    root2.querySelectorAll('*').forEach(el=>{
-      if(el.matches('input,textarea,select,option,script,style,svg'))return;
-      [...el.childNodes].forEach(n=>{if(n.nodeType===3&&menuoUiEligible(n))nodes.push(n)});
+  const target=String(lang||'en').slice(0,2).toLowerCase();
+  const excluded=' #public,[data-no-translate],script,style,svg,input,textarea,select,option,.avatar,.rest-logo,.dish-info h3,.dish-info p,.price,.plan-badge,.brand,.profile-name,.profile-email,#inboxList,#pfDisplayName,#pfEmailSummary,[contenteditable="true"]';
+  const textNodes=[];
+  document.querySelectorAll('body *').forEach(el=>{
+    if(el.matches(excluded)||el.closest('#public,[data-no-translate]'))return;
+    if(el.closest('.language-tray'))return;
+    [...el.childNodes].forEach(n=>{
+      if(n.nodeType===3&&menuoUiEligible(n))textNodes.push(n);
     });
   });
-  const unique=[...new Set(nodes)];
+  const unique=[...new Set(textNodes)];
   const jobs=unique.map(async n=>{
     if(!n.isConnected)return;
     if(!n.__menuoSource)n.__menuoSource=n.nodeValue;
     const source=n.__menuoSource;
-    const leading=source.match(/^\s*/)?.[0]||'',trailing=source.match(/\s*$/)?.[0]||'';
-    n.nodeValue=leading+(await menuoTranslateText(source.trim(),lang))+trailing;
+    const leading=source.match(/^\\s*/)?.[0]||'';
+    const trailing=source.match(/\\s*$/)?.[0]||'';
+    const translated=await menuoTranslateText(source.trim(),target);
+    if(n.isConnected)n.nodeValue=leading+translated+trailing;
+  });
+  const attrs=['placeholder','title','aria-label'];
+  document.querySelectorAll('body *').forEach(el=>{
+    if(el.closest('#public,[data-no-translate],.language-tray')||el.matches('script,style,svg,input,textarea,select,option,[contenteditable="true"]'))return;
+    attrs.forEach(attr=>{
+      if(!el.hasAttribute(attr))return;
+      const key='menuoSource'+attr.replace(/(^|-)([a-z])/g,(_,a,b)=>b.toUpperCase());
+      if(!el.dataset[key])el.dataset[key]=el.getAttribute(attr)||'';
+      const source=el.dataset[key];
+      if(source)jobs.push(menuoTranslateText(source,target).then(value=>{if(el.isConnected)el.setAttribute(attr,value)}));
+    });
   });
   await Promise.all(jobs);
-  document.querySelectorAll('input[placeholder],textarea[placeholder]').forEach(el=>{
-    if(el.closest('#public'))return;
-    if(!el.dataset.menuoSourcePlaceholder)el.dataset.menuoSourcePlaceholder=el.getAttribute('placeholder')||'';
-    const source=el.dataset.menuoSourcePlaceholder;
-    if(source)menuoTranslateText(source,lang).then(v=>{if(el.isConnected)el.setAttribute('placeholder',v)});
-  });
 }
 
 function show(id,opts={}){menuoEnsureHomeLogos();const current=menuoCurrentScreen();if(!opts.skipHistory&&current&&current!==id&&id!=='home')MENUO_NAV_HISTORY.push(current);if(!opts.restoreOnly)menuoSaveLastScreen(id);stopScanner();document.querySelectorAll('.screen').forEach(x=>x.classList.add('hidden'));document.getElementById(id)?.classList.remove('hidden');if(id==='owner')renderOwner();if(id==='editor')renderEditor();if(id==='restaurantManagement')renderRestaurantManagement();if(id==='qrManagement')renderQrManagement();if(id==='restaurantProfile')renderRestaurantProfile();if(id==='userProfile')renderProfile();if(id==='editUserProfile')renderProfileEditor();if(id==='userSettings')renderUserSettings();if(id==='userInbox')renderInbox();if(id==='subscription')renderSubscription();if(id==='public')renderPublic(publicRestaurant||findPublic());if(id==='analyticsDashboard')renderAnalytics();if(id==='promotions')renderPromotions();updateNav(id);positionGlobalLanguage();window.scrollTo({top:0,behavior:'instant'});setTimeout(()=>translateApplicationUI(state.language),0)}
@@ -269,7 +271,7 @@ function updateNav(){const u=user();document.getElementById('navPlan').textConte
 function openOwner(){if(user()){show('owner');return}authAfter='owner';openAuth('register','owner')}
 function openProfile(){if(user()){show('userProfile');return}authAfter='home';openAuth('login','home')}
 function openSubscription(){if(user()){show('subscription');return}authAfter='home';openAuth('login','home')}
-function openAuth(mode='login',after='home'){authMode=mode;authAfter=after;document.getElementById('authTitle').textContent=mode==='login'?'Log in':'Регистрация';document.getElementById('authHeading').textContent=mode==='login'?'Log in to MENUO':'Создайте аккаунт MENUO';document.getElementById('authLead').textContent=mode==='login'?'Log in не означает создание ресторана. Вы можете просто пользоваться аккаунтом.':'После регистрации вы попадёте в MENUO, а не в создание ресторана. Restaurant создаётся только по вашему желанию.';document.getElementById('authSubmit').textContent=mode==='login'?'Log in':'Создать аккаунт';document.getElementById('authHint').textContent=mode==='login'?'Don't have an account?':'Уже есть аккаунт?';document.getElementById('authToggle').textContent=mode==='login'?'Sign up':'Log in';document.getElementById('nameFields').classList.toggle('hidden',mode==='login');document.getElementById('confirmField').classList.toggle('hidden',mode==='login');document.getElementById('authError').classList.add('hidden');show('auth')}
+function openAuth(mode='login',after='home'){authMode=mode;authAfter=after;document.getElementById('authTitle').textContent=mode==='login'?'Log in':'Sign up';document.getElementById('authHeading').textContent=mode==='login'?'Log in to MENUO':'Create your MENUO account';document.getElementById('authLead').textContent=mode==='login'?'Logging in does not mean creating a restaurant. You can use your account without adding one.':'After signing up, you will enter MENUO. Creating a restaurant is optional.';document.getElementById('authSubmit').textContent=mode==='login'?'Log in':'Создать аккаунт';document.getElementById('authHint').textContent=mode==='login'?'Don't have an account?':'Уже есть аккаунт?';document.getElementById('authToggle').textContent=mode==='login'?'Sign up':'Log in';document.getElementById('nameFields').classList.toggle('hidden',mode==='login');document.getElementById('confirmField').classList.toggle('hidden',mode==='login');document.getElementById('authError').classList.add('hidden');show('auth')}
 function toggleAuth(){openAuth(authMode==='login'?'register':'login',authAfter)}
 async function hash(p){const b=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(p));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')}
 function authErr(t){const e=document.getElementById('authError');e.textContent=t;e.classList.remove('hidden')}
