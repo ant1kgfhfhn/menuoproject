@@ -210,7 +210,7 @@ function menuoUiEligible(n){
   const e=n.parentElement;
   if(!e)return false;
   if(e.closest('#public,[data-no-translate],script,style,svg,input,textarea,select,option'))return false;
-  if(e.closest('.avatar,.rest-logo,.editor-head b,.dish-info h3,.dish-info p,.price,.plan-badge,.brand,.profile-name,.profile-email,#inboxList,#pfDisplayName,#pfEmailSummary'))return false;
+  if(e.closest('.avatar,.rest-logo,.editor-head b,.dish-info h3,.dish-info p,.price,.plan-badge,.profile-name,.profile-email,#inboxList,#pfDisplayName,#pfEmailSummary'))return false;
   const t=n.nodeValue.replace(/\s+/g,' ').trim();
   return /[А-Яа-яЁёЇїІіЄєҐґ]/.test(t)&&t.length>0;
 }
@@ -234,13 +234,13 @@ async function translateApplicationUI(lang){
   const nodes=[];
   root.querySelectorAll('*').forEach(el=>{
     if(el.closest('#public'))return;
-    if(el.matches('input,textarea,select,option,script,style,svg'))return;
-    if(el.matches('.avatar,.rest-logo,.editor-head b,.dish-info h3,.dish-info p,.price,.plan-badge,.brand,.profile-name,.profile-email,#inboxList,#pfDisplayName,#pfEmailSummary'))return;
+    if(el.matches('input,textarea,script,style,svg'))return;
+    if(el.matches('.avatar,.rest-logo,.editor-head b,.dish-info h3,.dish-info p,.price,.plan-badge,.profile-name,.profile-email,#inboxList,#pfDisplayName,#pfEmailSummary'))return;
     [...el.childNodes].forEach(n=>{if(n.nodeType===3&&menuoUiEligible(n))nodes.push(n)});
   });
   document.querySelectorAll('.global-nav,.language-tray').forEach(root2=>{
     root2.querySelectorAll('*').forEach(el=>{
-      if(el.matches('input,textarea,select,option,script,style,svg'))return;
+      if(el.matches('input,textarea,script,style,svg'))return;
       [...el.childNodes].forEach(n=>{if(n.nodeType===3&&menuoUiEligible(n))nodes.push(n)});
     });
   });
@@ -253,12 +253,36 @@ async function translateApplicationUI(lang){
     n.nodeValue=leading+(await menuoTranslateText(source.trim(),lang))+trailing;
   });
   await Promise.all(jobs);
+  const attributeJobs=[];
+  root.querySelectorAll('[title],[aria-label]').forEach(el=>{
+    for(const attr of ['title','aria-label']){
+      const source=el.getAttribute(attr)||'';
+      if(!source||!/[А-Яа-яЁёЇїІіЄєҐґ]/.test(source))continue;
+      const key='menuoSource'+attr.replace(/-([a-z])/g,(_,c)=>c.toUpperCase());
+      if(!el.dataset[key])el.dataset[key]=source;
+      attributeJobs.push(menuoTranslateText(el.dataset[key],lang).then(value=>{if(el.isConnected)el.setAttribute(attr,value)}));
+    }
+  });
+  await Promise.all(attributeJobs);
   document.querySelectorAll('input[placeholder],textarea[placeholder]').forEach(el=>{
     if(el.closest('#public'))return;
     if(!el.dataset.menuoSourcePlaceholder)el.dataset.menuoSourcePlaceholder=el.getAttribute('placeholder')||'';
     const source=el.dataset.menuoSourcePlaceholder;
     if(source)menuoTranslateText(source,lang).then(v=>{if(el.isConnected)el.setAttribute('placeholder',v)});
   });
+}
+
+let MENUO_I18N_OBSERVER=null,MENUO_I18N_REFRESH=null;
+function menuoObserveDynamicTranslations(){
+  if(MENUO_I18N_OBSERVER||!window.MutationObserver)return;
+  const target=document.getElementById('app');
+  if(!target)return;
+  MENUO_I18N_OBSERVER=new MutationObserver(records=>{
+    if(!records.some(record=>record.addedNodes&&record.addedNodes.length))return;
+    if(MENUO_I18N_REFRESH)clearTimeout(MENUO_I18N_REFRESH);
+    MENUO_I18N_REFRESH=setTimeout(()=>translateApplicationUI(state.language||'en'),120);
+  });
+  MENUO_I18N_OBSERVER.observe(target,{childList:true,subtree:true});
 }
 
 function show(id,opts={}){menuoEnsureHomeLogos();const current=menuoCurrentScreen();if(!opts.skipHistory&&current&&current!==id&&id!=='home')MENUO_NAV_HISTORY.push(current);if(!opts.restoreOnly)menuoSaveLastScreen(id);stopScanner();document.querySelectorAll('.screen').forEach(x=>x.classList.add('hidden'));document.getElementById(id)?.classList.remove('hidden');if(id==='owner')renderOwner();if(id==='editor')renderEditor();if(id==='restaurantManagement')renderRestaurantManagement();if(id==='qrManagement')renderQrManagement();if(id==='restaurantProfile')renderRestaurantProfile();if(id==='userProfile')renderProfile();if(id==='editUserProfile')renderProfileEditor();if(id==='userSettings')renderUserSettings();if(id==='userInbox')renderInbox();if(id==='subscription')renderSubscription();if(id==='public')renderPublic(publicRestaurant||findPublic());if(id==='analyticsDashboard')renderAnalytics();if(id==='promotions')renderPromotions();updateNav(id);positionGlobalLanguage();window.scrollTo({top:0,behavior:'instant'});setTimeout(()=>translateApplicationUI(state.language),0)}
@@ -1209,6 +1233,6 @@ async function handlePaymentReturn(payment,targetPlan=null){
     true
   );
 }
-(function init(){menuoSetupNavigation();applyUserTheme(state.userSettings?.theme||'light');updateGlobalLanguageButton();window.addEventListener('resize',positionGlobalLanguage);document.documentElement.lang=state.language;document.documentElement.dir=state.language==='ar'?'rtl':'ltr';renderLanguages();const r=findPublic();const restored=menuoRestoreScreen();const returnParams=new URLSearchParams(location.search);const payment=returnParams.get('payment');const planChange=returnParams.get('plan_change');if(payment==='success'||payment==='cancel'){show('subscription',{restoreOnly:true});setTimeout(()=>handlePaymentReturn(payment,planChange),300)}else if(r){publicRestaurant=r;show('public',{restoreOnly:true})}else if(restored){show(restored,{restoreOnly:true})}else show('home');setTimeout(()=>{translateApplicationUI(state.language);positionGlobalLanguage()},200)})();
+(function init(){menuoObserveDynamicTranslations();menuoSetupNavigation();applyUserTheme(state.userSettings?.theme||'light');updateGlobalLanguageButton();window.addEventListener('resize',positionGlobalLanguage);document.documentElement.lang=state.language;document.documentElement.dir=state.language==='ar'?'rtl':'ltr';renderLanguages();const r=findPublic();const restored=menuoRestoreScreen();const returnParams=new URLSearchParams(location.search);const payment=returnParams.get('payment');const planChange=returnParams.get('plan_change');if(payment==='success'||payment==='cancel'){show('subscription',{restoreOnly:true});setTimeout(()=>handlePaymentReturn(payment,planChange),300)}else if(r){publicRestaurant=r;show('public',{restoreOnly:true})}else if(restored){show(restored,{restoreOnly:true})}else show('home');setTimeout(()=>{translateApplicationUI(state.language);positionGlobalLanguage()},200)})();
 </script>
 </body></html>
