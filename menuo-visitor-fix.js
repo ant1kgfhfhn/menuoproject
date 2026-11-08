@@ -154,18 +154,26 @@
   async function translateText(text,from,to){
     const value=String(text??'').trim();
     if(!value||!to||from===to)return text;
-    const cacheKey='menuo:t:'+from+':'+to+':'+value;
+    const cacheKey='menuo:t:v2:'+from+':'+to+':'+value;
     try{const cached=localStorage.getItem(cacheKey);if(cached)return cached}catch(_){}
+    const query=value.slice(0,450);
     try{
-      const url='https://api.mymemory.translated.net/get?q='+encodeURIComponent(value.slice(0,450))+'&langpair='+encodeURIComponent(from+'|'+to);
+      const url='https://translate.googleapis.com/translate_a/single?client=gtx&sl='+encodeURIComponent(from)+'&tl='+encodeURIComponent(to)+'&dt=t&q='+encodeURIComponent(query);
       const res=await fetch(url,{headers:{Accept:'application/json'}});
-      if(!res.ok)throw new Error('translation-http-'+res.status);
+      if(!res.ok)throw new Error('google-translation-http-'+res.status);
+      const data=await res.json();
+      const translated=Array.isArray(data?.[0])?data[0].map(part=>part?.[0]||'').join('').trim():'';
+      if(translated){try{localStorage.setItem(cacheKey,translated)}catch(_){}return translated}
+    }catch(e){console.warn('MENUO primary menu translation failed',from,to,e)}
+    try{
+      const url='https://api.mymemory.translated.net/get?q='+encodeURIComponent(query)+'&langpair='+encodeURIComponent(from+'|'+to);
+      const res=await fetch(url,{headers:{Accept:'application/json'}});
+      if(!res.ok)throw new Error('fallback-translation-http-'+res.status);
       const data=await res.json();
       const translated=String(data?.responseData?.translatedText||'').trim();
-      if(!translated)return text;
-      try{localStorage.setItem(cacheKey,translated)}catch(_){}
-      return translated;
-    }catch(e){console.warn('MENUO translation failed',from,to,value,e);return text}
+      if(translated){try{localStorage.setItem(cacheKey,translated)}catch(_){}return translated}
+    }catch(e){console.warn('MENUO fallback menu translation failed',from,to,e)}
+    return text;
   }
 
   async function translateMenu(data,lang){
