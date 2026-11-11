@@ -1220,7 +1220,13 @@ function toggleLanguages(){document.getElementById('languageTray').classList.tog
  }
 }
 function updateGlobalLanguageButton(){
- const label=(state.language||'en').toUpperCase()+' ▾';
+ const supported=LANGS.map(([code])=>code);
+ if(!supported.includes(state.language)){
+   state.language='en';
+   try{localStorage.setItem('menuo-language-explicit-v1','1')}catch(_){}
+   save();
+ }
+ const label=state.language.toUpperCase()+' ▾';
  const b=document.getElementById('globalLanguageButton'),publicButton=document.getElementById('publicLanguageButton');
  if(b)b.textContent=label;
  if(publicButton)publicButton.textContent=label;
