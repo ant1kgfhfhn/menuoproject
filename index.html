@@ -183,7 +183,7 @@ function menuoSaveLastScreen(id){
 function menuoRestoreScreen(){
   try{
     const id=localStorage.getItem(MENUO_LAST_SCREEN_KEY);
-    if(!id||id==='auth'||id==='menuoRecovery')return null;
+    if(!id||id==='auth'||id==='menuoRecovery'||id==='visitor')return null;
     if(id==='public'&&new URLSearchParams(location.search).get('menu'))return 'public';
     return document.getElementById(id)?id:null;
   }catch(_){return null}
@@ -245,7 +245,7 @@ async function menuoTranslateText(source,to){
   }catch(e){console.warn('MENUO fallback translation failed',from,to,e)}
   return source;
 }
-async async function translateApplicationUI(lang){
+async function translateApplicationUI(lang){
  const target=String(lang||'en').slice(0,2).toLowerCase();
  if(window.__MENUO_TRANSLATION_BUSY)return;
  window.__MENUO_TRANSLATION_BUSY=true;
@@ -1138,7 +1138,7 @@ async function createAdditionalQrCode(){
   const restaurantQ=await sb.from('restaurants').select('id').eq('id',restaurantId).eq('owner_id',ownerId).single();if(restaurantQ.error)throw restaurantQ.error;
   const owned=await sb.from('restaurants').select('id').eq('owner_id',ownerId);if(owned.error)throw owned.error;
   const ids=(owned.data||[]).map(x=>x.id),countQ=await sb.from('qr_codes').select('id').in('restaurant_id',ids);if(countQ.error)throw countQ.error;
-  const limit=PLAN[tier].qrs,count=(countQ.data||[]).length;if(Number.isFinite(limit)&&count>=limit)throw new Error('Your plan's QR code limit has been reached '+tier+'.');
+  const limit=PLAN[tier].qrs,count=(countQ.data||[]).length;if(Number.isFinite(limit)&&count>=limit)throw new Error("Your plan's QR code limit has been reached "+tier+'.');
   const q=await sb.from('qr_codes').insert({restaurant_id:restaurantId,name:'QR-код '+(count+1),is_active:true}).select().single();if(q.error)throw q.error;
   await renderQrCodesList();const n=document.getElementById('qrCodeLimitNotice');if(n)n.textContent='QR-код создан и сохранён.';
  }catch(e){const n=document.getElementById('qrCodeLimitNotice');if(n)n.textContent=await subscriptionErrorMessage(e)}
@@ -1235,6 +1235,6 @@ async function handlePaymentReturn(payment,targetPlan=null){
  });
  observer.observe(document.body,{childList:true,subtree:true});
 })();
-(function init(){try{if(!localStorage.getItem('menuo-language-explicit-v1')&&(!state.language||state.language==='ru'))state.language='en'}catch(_){}menuoSetupNavigation();applyUserTheme(state.userSettings?.theme||'light');updateGlobalLanguageButton();window.addEventListener('resize',positionGlobalLanguage);document.documentElement.lang=state.language;document.documentElement.dir=state.language==='ar'?'rtl':'ltr';renderLanguages();const r=findPublic();const restored=menuoRestoreScreen();const returnParams=new URLSearchParams(location.search);const payment=returnParams.get('payment');const planChange=returnParams.get('plan_change');if(payment==='success'||payment==='cancel'){show('subscription',{restoreOnly:true});setTimeout(()=>handlePaymentReturn(payment,planChange),300)}else if(r){publicRestaurant=r;show('public',{restoreOnly:true})}else if(restored){show(restored,{restoreOnly:true})}else show('home');setTimeout(()=>{translateApplicationUI(state.language);positionGlobalLanguage()},200)})();
+(function init(){try{if(!localStorage.getItem('menuo-default-language-v2')){state.language='en';localStorage.setItem('menuo-default-language-v2','1')}else if(!LANGS.some(([code])=>code===state.language)){state.language='en'}}catch(_){state.language='en'}menuoSetupNavigation();applyUserTheme(state.userSettings?.theme||'light');updateGlobalLanguageButton();window.addEventListener('resize',positionGlobalLanguage);document.documentElement.lang=state.language;document.documentElement.dir=state.language==='ar'?'rtl':'ltr';renderLanguages();const r=findPublic();const restored=menuoRestoreScreen();const returnParams=new URLSearchParams(location.search);const payment=returnParams.get('payment');const planChange=returnParams.get('plan_change');if(payment==='success'||payment==='cancel'){show('subscription',{restoreOnly:true});setTimeout(()=>handlePaymentReturn(payment,planChange),300)}else if(r){publicRestaurant=r;show('public',{restoreOnly:true})}else if(restored){show(restored,{restoreOnly:true})}else show('home');setTimeout(()=>{translateApplicationUI(state.language);positionGlobalLanguage()},200)})();
 </script>
 </body></html>
