@@ -245,39 +245,34 @@ async function menuoTranslateText(source,to){
   }catch(e){console.warn('MENUO fallback translation failed',from,to,e)}
   return source;
 }
-async function translateApplicationUI(lang){
-  const target=String(lang||'en').slice(0,2).toLowerCase();
-  const excluded=' #public,[data-no-translate],script,style,svg,input,textarea,select,option,.avatar,.rest-logo,.dish-info h3,.dish-info p,.price,.plan-badge,.brand,.profile-name,.profile-email,#inboxList,#pfDisplayName,#pfEmailSummary,[contenteditable="true"]';
-  const textNodes=[];
-  document.querySelectorAll('body *').forEach(el=>{
-    if(el.matches(excluded)||el.closest('#public,[data-no-translate]'))return;
-    if(el.closest('.language-tray'))return;
-    [...el.childNodes].forEach(n=>{
-      if(n.nodeType===3&&menuoUiEligible(n))textNodes.push(n);
-    });
-  });
-  const unique=[...new Set(textNodes)];
-  const jobs=unique.map(async n=>{
-    if(!n.isConnected)return;
-    if(!n.__menuoSource)n.__menuoSource=n.nodeValue;
-    const source=n.__menuoSource;
-    const leading=source.match(/^\\s*/)?.[0]||'';
-    const trailing=source.match(/\\s*$/)?.[0]||'';
-    const translated=await menuoTranslateText(source.trim(),target);
-    if(n.isConnected)n.nodeValue=leading+translated+trailing;
-  });
-  const attrs=['placeholder','title','aria-label'];
-  document.querySelectorAll('body *').forEach(el=>{
-    if(el.closest('#public,[data-no-translate],.language-tray')||el.matches('script,style,svg,input,textarea,select,option,[contenteditable="true"]'))return;
-    attrs.forEach(attr=>{
-      if(!el.hasAttribute(attr))return;
-      const key='menuoSource'+attr.replace(/(^|-)([a-z])/g,(_,a,b)=>b.toUpperCase());
-      if(!el.dataset[key])el.dataset[key]=el.getAttribute(attr)||'';
-      const source=el.dataset[key];
-      if(source)jobs.push(menuoTranslateText(source,target).then(value=>{if(el.isConnected)el.setAttribute(attr,value)}));
-    });
-  });
-  await Promise.all(jobs);
+async async function translateApplicationUI(lang){
+ const target=String(lang||'en').slice(0,2).toLowerCase();
+ if(window.__MENUO_TRANSLATION_BUSY)return;
+ window.__MENUO_TRANSLATION_BUSY=true;
+ try{
+   const screen=document.querySelector('.screen:not(.hidden)');
+   if(!screen||screen.id==='public')return;
+   const excluded='[data-no-translate],script,style,svg,input,textarea,select,option,.avatar,.rest-logo,.dish-info h3,.dish-info p,.price,.plan-badge,.brand,.profile-name,.profile-email,#pfDisplayName,#pfEmailSummary,[contenteditable="true"],.language-tray';
+   const nodes=[];
+   screen.querySelectorAll('*').forEach(el=>{
+     if(el.matches(excluded)||el.closest(excluded))return;
+     [...el.childNodes].forEach(n=>{
+       if(n.nodeType===3&&menuoUiEligible(n)){const text=n.nodeValue.trim();if(text&&!(target==='en'&&!/[А-Яа-яЁёЇїІіЄєҐґ]/.test(text)))nodes.push(n)}
+     });
+   });
+   const unique=[...new Set(nodes)].slice(0,35);
+   let cursor=0;
+   const worker=async()=>{
+     while(cursor<unique.length){
+       const n=unique[cursor++];if(!n.isConnected)continue;
+       if(!n.__menuoSource)n.__menuoSource=n.nodeValue;
+       const source=n.__menuoSource;
+       const translated=await menuoTranslateText(source.trim(),target);
+       if(n.isConnected&&translated!==source.trim())n.nodeValue=source.replace(source.trim(),translated);
+     }
+   };
+   await Promise.all(Array.from({length:Math.min(3,unique.length)},worker));
+ }finally{window.__MENUO_TRANSLATION_BUSY=false}
 }
 
 function show(id,opts={}){menuoEnsureHomeLogos();const current=menuoCurrentScreen();if(!opts.skipHistory&&current&&current!==id&&id!=='home')MENUO_NAV_HISTORY.push(current);if(!opts.restoreOnly)menuoSaveLastScreen(id);stopScanner();document.querySelectorAll('.screen').forEach(x=>x.classList.add('hidden'));document.getElementById(id)?.classList.remove('hidden');if(id==='owner')renderOwner();if(id==='editor')renderEditor();if(id==='restaurantManagement')renderRestaurantManagement();if(id==='qrManagement')renderQrManagement();if(id==='restaurantProfile')renderRestaurantProfile();if(id==='userProfile')renderProfile();if(id==='editUserProfile')renderProfileEditor();if(id==='userSettings')renderUserSettings();if(id==='userInbox')renderInbox();if(id==='subscription')renderSubscription();if(id==='public')renderPublic(publicRestaurant||findPublic());if(id==='analyticsDashboard')renderAnalytics();if(id==='promotions')renderPromotions();updateNav(id);positionGlobalLanguage();window.scrollTo({top:0,behavior:'instant'});setTimeout(()=>translateApplicationUI(state.language),0)}
@@ -1158,27 +1153,26 @@ function closePublicDish(event){if(event&&event.target!==event.currentTarget)ret
 function filterPublic(b,c){document.querySelectorAll('#publicCategories .chip').forEach(x=>x.classList.remove('active'));b.classList.add('active');renderPublicDishes(c)}
 function openDemo(){const r={id:'demo',name:'İstanbul Grill',address:'Hauptstraße 24, Berlin',hours:'Пн–Вс 10:00–23:00',description:'Традиционная турецкая кухня.',categories:['Все','Döner','Burger','Напитки']};const old=publicRestaurant;publicRestaurant=r;const demo=[['Döner Kebab','Курица на гриле, салат, томаты и фирменный соус.','7,50 €','Döner'],['Falafel Bowl','Хрустящий фалафель, булгур и свежие овощи.','9,90 €','Döner'],['Ayran','Традиционный йогуртовый напиток.','2,50 €','Напитки']];document.getElementById('publicName').textContent=r.name;document.getElementById('publicMeta').textContent=r.address+' · '+r.hours;document.getElementById('publicTitle').textContent='Our menu';document.getElementById('publicIntro').textContent=r.description;document.getElementById('publicCategories').innerHTML=r.categories.map((c,i)=>`<button class="chip ${i===0?'active':''}" onclick="filterDemo(this,'${esc(c)}')">${esc(c)}</button>`).join('');window.demoDishes=demo.map((x,i)=>({id:'demo'+i,restaurantId:'demo',name:x[0],description:x[1],price:x[2],category:x[3],available:true,photo:''}));document.getElementById('publicDishes').innerHTML=window.demoDishes.map(d=>dishHtml(d,false)).join('');show('public');publicRestaurant=old||r}
 function filterDemo(b,c){document.querySelectorAll('#publicCategories .chip').forEach(x=>x.classList.remove('active'));b.classList.add('active');const ds=c==='Все'?window.demoDishes:window.demoDishes.filter(d=>d.category===c);document.getElementById('publicDishes').innerHTML=ds.map(d=>dishHtml(d,false)).join('')}
-function startScanner(){show('visitor');const s=document.getElementById('scanStatus');if(!navigator.mediaDevices?.getUserMedia){s.textContent='Камера не поддерживается. Используйте демо-меню.';return}navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false}).then(stream=>{camera=stream;document.getElementById('cameraVideo').srcObject=stream;s.textContent='Камера включена. Наведите на QR-код MENUO.';if('BarcodeDetector' in window){const d=new BarcodeDetector({formats:['qr_code']});scanTimer=setInterval(async()=>{try{const c=await d.detect(document.getElementById('cameraVideo'));if(c[0]?.rawValue)scanUrl(c[0].rawValue)}catch(e){}},500)}}).catch(()=>s.textContent='Нет доступа к камере. Разрешите камеру или откройте демо-меню.')}
+function startScanner(){show('visitor');const s=document.getElementById('scanStatus');if(!s)return;if(!navigator.mediaDevices?.getUserMedia){s.textContent='Camera is not supported. Use the demo menu.';return}navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:'environment'}},audio:false}).then(stream=>{camera=stream;const video=document.getElementById('cameraVideo');if(video)video.srcObject=stream;s.textContent='Camera is active. Point it at a MENUO QR code.';if('BarcodeDetector' in window){const d=new BarcodeDetector({formats:['qr_code']});scanTimer=setInterval(async()=>{try{const c=await d.detect(document.getElementById('cameraVideo'));if(c[0]?.rawValue)scanUrl(c[0].rawValue)}catch(e){}},500)}}).catch(()=>{s.textContent='Camera access denied. Allow camera access or open the demo menu.'})}
 function scanUrl(raw){try{const u=new URL(raw),slug=u.searchParams.get('menu'),r=slug&&state.restaurants.find(x=>x.slug===slug);if(r){stopScanner();publicRestaurant=r;show('public')}}catch(e){}}
 function stopScanner(){if(scanTimer){clearInterval(scanTimer);scanTimer=null}if(camera){camera.getTracks().forEach(t=>t.stop());camera=null}const v=document.getElementById('cameraVideo');if(v)v.srcObject=null}
 function toggleLanguages(){document.getElementById('languageTray').classList.toggle('hidden');renderLanguages()}function renderLanguages(){const q=document.getElementById('languageSearch').value.toLowerCase();document.getElementById('languageList').innerHTML=LANGS.filter(x=>x[1].toLowerCase().includes(q)).map(x=>`<button onclick="setLanguage('${x[0]}')" class="${state.language===x[0]?'active':''}">${x[1]}</button>`).join('')}function positionGlobalLanguage(){
  const wrap=document.querySelector('.global-language'),btn=document.getElementById('globalLanguageButton');
  if(!wrap||!btn)return;
- const activeScreen=typeof menuoCurrentScreen==='function'?menuoCurrentScreen():document.querySelector('.screen:not(.hidden)')?.id;
- if(activeScreen==='public'){wrap.style.display='none';const publicBtn=document.getElementById('publicLanguageButton'),tray=document.getElementById('languageTray');if(publicBtn&&tray){const pr=publicBtn.getBoundingClientRect(),tw=Math.min(300,window.innerWidth-32),left=Math.max(16,Math.min(pr.left,window.innerWidth-tw-16));tray.style.left=left+'px';tray.style.right='auto';tray.style.top=(pr.bottom+8)+'px'}return}
- wrap.style.display='';
- const screen=document.getElementById(activeScreen)||document.querySelector('.screen:not(.hidden)');
- const top=screen?.querySelector('.top');
+ const activeScreen=menuoCurrentScreen();
+ if(activeScreen==='public'){wrap.style.display='none';return}
+ wrap.style.display='block';
+ wrap.style.position='fixed';wrap.style.zIndex='10050';
+ wrap.style.top='max(12px, env(safe-area-inset-top))';
+ wrap.style.right='max(12px, env(safe-area-inset-right))';
+ wrap.style.left='auto';wrap.style.bottom='auto';wrap.style.transform='none';
  const tray=document.getElementById('languageTray');
- if(top){
-   const lastAction=[...top.children].filter(el=>el.matches('button,a')&&!el.classList.contains('back')&&!el.classList.contains('lang')&&!el.classList.contains('menuo-home-wordmark')&&!el.classList.contains('brand')).slice(-1)[0];
-   if(lastAction&&lastAction!==wrap)top.insertBefore(wrap,lastAction);
-   else if(!wrap.parentElement?.isSameNode(top))top.appendChild(wrap);
-   wrap.style.position='static';wrap.style.left='auto';wrap.style.right='auto';wrap.style.top='auto';wrap.style.transform='none';
- }else{
-   wrap.style.position='fixed';wrap.style.top='12px';wrap.style.left='auto';wrap.style.right='16px';
+ if(tray){
+   const r=btn.getBoundingClientRect(),tw=Math.min(300,window.innerWidth-32);
+   tray.style.position='fixed';tray.style.zIndex='10060';
+   tray.style.left=Math.max(16,Math.min(r.right-tw,window.innerWidth-tw-16))+'px';
+   tray.style.right='auto';tray.style.top=(r.bottom+8)+'px';
  }
- if(tray){const r=btn.getBoundingClientRect(),tw=Math.min(300,window.innerWidth-32),left=Math.max(16,Math.min(r.left,window.innerWidth-tw-16));tray.style.left=left+'px';tray.style.right='auto';tray.style.top=(r.bottom+8)+'px'}
 }
 function updateGlobalLanguageButton(){
  const label=(state.language||'en').toUpperCase()+' ▾';
@@ -1229,24 +1223,17 @@ async function handlePaymentReturn(payment,targetPlan=null){
   );
 }
 (function installUiTranslationObserver(){
-  if(window.__MENUO_UI_TRANSLATION_OBSERVER)return;
-  window.__MENUO_UI_TRANSLATION_OBSERVER=true;
-  const nativeAlert=window.alert.bind(window);
-  window.alert=function(message){
-    const text=String(message??'');
-    const language=String(state?.language||'en').slice(0,2).toLowerCase();
-    if(/[А-Яа-яЁёЇїІіЄєҐґ]/.test(text)&&typeof menuoTranslateText==='function'){
-      menuoTranslateText(text,language).then(nativeAlert).catch(()=>nativeAlert(text));
-      return;
-    }
-    nativeAlert(text);
-  };
-  const observer=new MutationObserver(records=>{
-    if(!records.some(record=>[...record.addedNodes].some(node=>node.nodeType===1||node.nodeType===3)))return;
-    clearTimeout(window.__MENUO_UI_TRANSLATION_TIMER);
-    window.__MENUO_UI_TRANSLATION_TIMER=setTimeout(()=>translateApplicationUI(state?.language||'en'),80);
-  });
-  observer.observe(document.body,{childList:true,subtree:true});
+ if(window.__MENUO_UI_TRANSLATION_OBSERVER)return;
+ window.__MENUO_UI_TRANSLATION_OBSERVER=true;
+ const nativeAlert=window.alert.bind(window);
+ window.alert=function(message){nativeAlert(String(message??''));};
+ let timer=null;
+ const observer=new MutationObserver(records=>{
+   if(!records.some(record=>[...record.addedNodes].some(node=>node.nodeType===1)))return;
+   clearTimeout(timer);
+   timer=setTimeout(()=>{if(!window.__MENUO_TRANSLATION_BUSY)translateApplicationUI(state?.language||'en')},350);
+ });
+ observer.observe(document.body,{childList:true,subtree:true});
 })();
 (function init(){try{if(!localStorage.getItem('menuo-language-explicit-v1')&&(!state.language||state.language==='ru'))state.language='en'}catch(_){}menuoSetupNavigation();applyUserTheme(state.userSettings?.theme||'light');updateGlobalLanguageButton();window.addEventListener('resize',positionGlobalLanguage);document.documentElement.lang=state.language;document.documentElement.dir=state.language==='ar'?'rtl':'ltr';renderLanguages();const r=findPublic();const restored=menuoRestoreScreen();const returnParams=new URLSearchParams(location.search);const payment=returnParams.get('payment');const planChange=returnParams.get('plan_change');if(payment==='success'||payment==='cancel'){show('subscription',{restoreOnly:true});setTimeout(()=>handlePaymentReturn(payment,planChange),300)}else if(r){publicRestaurant=r;show('public',{restoreOnly:true})}else if(restored){show(restored,{restoreOnly:true})}else show('home');setTimeout(()=>{translateApplicationUI(state.language);positionGlobalLanguage()},200)})();
 </script>
