@@ -151,6 +151,9 @@
 'use strict';
 const KEY='menuo-v3';
 const LANGS=[['en','🇬🇧 English'],['de','🇩🇪 Deutsch'],['ru','🇷🇺 Russian'],['uk','🇺🇦 Ukrainian'],['tr','🇹🇷 Türkçe'],['pl','🇵🇱 Polski'],['es','🇪🇸 Español'],['fr','🇫🇷 Français'],['it','🇮🇹 Italiano'],['pt','🇵🇹 Português'],['ro','🇷🇴 Română'],['ar','🇸🇦 العربية']];
+// UI labels are language abbreviations, not country codes: Ukrainian is UA, never UK.
+const MENUO_LANGUAGE_LABELS={en:'EN',de:'DE',ru:'RU',uk:'UA',tr:'TR',pl:'PL',es:'ES',fr:'FR',it:'IT',pt:'PT',ro:'RO',ar:'AR'};
+function menuoLanguageLabel(code){const key=String(code||'en').trim().toLowerCase().split('-')[0];return MENUO_LANGUAGE_LABELS[key]||'EN'}
 const PLAN={FREE:{restaurants:1,dishes:10,qrs:1,allergens:false,multilingual:false,analytics:false,promos:false,branches:false,label:'FREE'},PRO:{restaurants:2,dishes:Infinity,qrs:2,allergens:true,multilingual:true,analytics:true,promos:false,branches:false,label:'PRO'},BUSINESS:{restaurants:Infinity,dishes:Infinity,qrs:Infinity,allergens:true,multilingual:true,analytics:true,promos:true,branches:true,label:'BUSINESS'}};
 const ALLERGENS=[{id:'gluten',label:'Cereals containing gluten'},{id:'crustaceans',label:'Crustaceans'},{id:'eggs',label:'Eggs'},{id:'fish',label:'Fish'},{id:'peanuts',label:'Peanuts'},{id:'soybeans',label:'Soybeans'},{id:'milk',label:'Milk'},{id:'nuts',label:'Nuts'},{id:'celery',label:'Celery'},{id:'mustard',label:'Mustard'},{id:'sesame',label:'Sesame'},{id:'sulphites',label:'Sulphur dioxide and sulphites'},{id:'lupin',label:'Lupin'},{id:'molluscs',label:'Molluscs'}];
 const TEXT={ru:['Our menu','Current restaurant dishes.'],de:['Unsere Speisekarte','Aktuelle Gerichte des Restaurants.'],en:['Our menu','Current restaurant dishes.'],uk:['Our menu','Актуальні страви ресторану.'],tr:['Menümüz','Restoranın güncel yemekleri.'],pl:['Nasze menu','Aktualne dania restauracji.'],es:['Nuestro menú','Platos actuales del restaurante.'],fr:['Notre menu','Plats actuels du restaurant.'],it:['Il nostro menu','Piatti attuali del ristorante.'],pt:['Nosso menu','Pratos atuais do restaurante.'],ro:['Meniul nostru','Preparatele actuale ale restaurantului.'],ar:['قائمتنا','أطباق المطعم الحالية.']};
@@ -1229,7 +1232,7 @@ function updateGlobalLanguageButton(){
    try{localStorage.setItem('menuo-language-explicit-v1','1')}catch(_){}
    save();
  }else if(state.language!==normalized){state.language=normalized;save()}
- const label=state.language.toUpperCase()+' ▾';
+ const label=menuoLanguageLabel(state.language)+' ▾';
  const b=document.getElementById('globalLanguageButton'),publicButton=document.getElementById('publicLanguageButton');
  if(b)b.textContent=label;
  if(publicButton)publicButton.textContent=label;
