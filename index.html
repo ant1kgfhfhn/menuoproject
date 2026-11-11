@@ -174,7 +174,7 @@ function slugify(s){return (s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').to
 const MENUO_PUBLIC_MENU_ORIGIN='https://menuo-qr.com/';
 function publicUrl(r){const u=new URL(MENUO_PUBLIC_MENU_ORIGIN);u.searchParams.set('menu',r.qrToken||r.slug);return u.toString()}
 
-const MENUO_UI_CACHE='menuo-ui-translations-v3';
+const MENUO_UI_CACHE='menuo-ui-translations-v4';
 const MENUO_NAV_HISTORY=[];
 const MENUO_LAST_SCREEN_KEY='menuo-last-screen-v1';
 function menuoSaveLastScreen(id){
@@ -218,8 +218,9 @@ async function menuoTranslateText(source,to){
   const value=String(source||'').trim();
   if(!value||!to)return source;
   // MyMemory requires a concrete ISO language code; never send "auto" to it.
-  const hasCyrillic=/[А-Яа-яЁёЇїІіЄєҐґ]/.test(value);
-  const from=hasCyrillic?'ru':null;
+  const hasUkrainian=/[ЇїІіЄєҐґ]/.test(value);
+  const hasRussian=/[А-Яа-яЁё]/.test(value);
+  const from=hasUkrainian?'uk':hasRussian?'ru':null;
   if(from===to)return source;
   const cache=menuoUiCache();
   const key=(from||'google-auto')+':'+to+':'+value;
@@ -259,7 +260,7 @@ async function menuoTranslateText(source,to){
 }
 async function translateApplicationUI(lang){
  const target=String(lang||'en').slice(0,2).toLowerCase();
- if(window.__MENUO_TRANSLATION_BUSY)return;
+ if(window.__MENUO_TRANSLATION_BUSY){window.__MENUO_TRANSLATION_PENDING=lang;return}
  window.__MENUO_TRANSLATION_BUSY=true;
  try{
    const screen=document.querySelector('.screen:not(.hidden)');
@@ -280,7 +281,7 @@ async function translateApplicationUI(lang){
        jobs.push({type:'attr',node:el,attr,source:el[key]});
      });
    });
-   const unique=jobs.filter(j=>j.source&&j.source.trim()).slice(0,80);
+   const unique=jobs.filter(j=>j.source&&j.source.trim()).slice(0,250);
    let cursor=0;
    const worker=async()=>{
      while(cursor<unique.length){
@@ -295,7 +296,12 @@ async function translateApplicationUI(lang){
      }
    };
    await Promise.all(Array.from({length:Math.min(4,unique.length)},worker));
- }finally{window.__MENUO_TRANSLATION_BUSY=false}
+ }finally{
+   window.__MENUO_TRANSLATION_BUSY=false;
+   const pending=window.__MENUO_TRANSLATION_PENDING;
+   window.__MENUO_TRANSLATION_PENDING=null;
+   if(pending&&pending!==target)setTimeout(()=>translateApplicationUI(pending),0);
+ }
 }
 
 function show(id,opts={}){menuoEnsureHomeLogos();const current=menuoCurrentScreen();if(!opts.skipHistory&&current&&current!==id&&id!=='home')MENUO_NAV_HISTORY.push(current);if(!opts.restoreOnly)menuoSaveLastScreen(id);stopScanner();document.querySelectorAll('.screen').forEach(x=>x.classList.add('hidden'));document.getElementById(id)?.classList.remove('hidden');if(id==='owner')renderOwner();if(id==='editor')renderEditor();if(id==='restaurantManagement')renderRestaurantManagement();if(id==='qrManagement')renderQrManagement();if(id==='restaurantProfile')renderRestaurantProfile();if(id==='userProfile')renderProfile();if(id==='editUserProfile')renderProfileEditor();if(id==='userSettings')renderUserSettings();if(id==='userInbox')renderInbox();if(id==='subscription')renderSubscription();if(id==='public')renderPublic(publicRestaurant||findPublic());if(id==='analyticsDashboard')renderAnalytics();if(id==='promotions')renderPromotions();updateNav(id);positionGlobalLanguage();window.scrollTo({top:0,behavior:'instant'});setTimeout(()=>translateApplicationUI(state.language),0)}
@@ -1253,7 +1259,7 @@ async function handlePaymentReturn(payment,targetPlan=null){
  window.alert=function(message){nativeAlert(String(message??''));};
  let timer=null;
  const observer=new MutationObserver(records=>{
-   if(!records.some(record=>[...record.addedNodes].some(node=>node.nodeType===1)))return;
+   if(!records.some(record=>record.addedNodes.length>0))return;
    clearTimeout(timer);
    timer=setTimeout(()=>{if(!window.__MENUO_TRANSLATION_BUSY)translateApplicationUI(state?.language||'en')},350);
  });
