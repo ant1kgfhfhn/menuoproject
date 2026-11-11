@@ -217,32 +217,44 @@ function menuoUiEligible(n){
 async function menuoTranslateText(source,to){
   const value=String(source||'').trim();
   if(!value||!to)return source;
-  const from=/[А-Яа-яЁёЇїІіЄєҐґ]/.test(value)?'ru':'auto';
+  // MyMemory requires a concrete ISO language code; never send "auto" to it.
+  const hasCyrillic=/[А-Яа-яЁёЇїІіЄєҐґ]/.test(value);
+  const from=hasCyrillic?'ru':null;
   if(from===to)return source;
-  const cache=menuoUiCache(),key=from+':'+to+':'+value;
-  if(cache[key])return cache[key];
+  const cache=menuoUiCache();
+  const key=(from||'google-auto')+':'+to+':'+value;
+  const cached=cache[key];
+  if(cached&&!/invalid source language|langpair=|almost all languages supported/i.test(cached))return cached;
+  if(cached){delete cache[key];menuoUiSaveCache(cache)}
+  const cleanTranslation=(translated)=>{
+    const result=String(translated||'').trim();
+    if(!result||result.toLowerCase()===value.toLowerCase())return '';
+    if(/invalid source language|langpair=|almost all languages supported/i.test(result))return '';
+    return result;
+  };
+  // Google Translate supports source auto-detection for Latin-script languages.
   try{
-    const url='https://api.mymemory.translated.net/get?q='+encodeURIComponent(value.slice(0,450))+'&langpair='+encodeURIComponent(from+'|'+to);
+    const sourceCode=from||'auto';
+    const url='https://translate.googleapis.com/translate_a/single?client=gtx&sl='+encodeURIComponent(sourceCode)+'&tl='+encodeURIComponent(to)+'&dt=t&q='+encodeURIComponent(value.slice(0,450));
     const res=await fetch(url,{headers:{Accept:'application/json'}});
     if(res.ok){
       const data=await res.json();
-      const translated=String(data?.responseData?.translatedText||'').trim();
-      if(translated&&translated.toLowerCase()!==value.toLowerCase()){
-        cache[key]=translated;menuoUiSaveCache(cache);return translated;
-      }
+      const translated=cleanTranslation(Array.isArray(data?.[0])?data[0].map(part=>part?.[0]||'').join(''):'');
+      if(translated){cache[key]=translated;menuoUiSaveCache(cache);return translated}
     }
-  }catch(e){console.warn('MENUO MyMemory translation failed',from,to,e)}
-  try{
-    const url='https://translate.googleapis.com/translate_a/single?client=gtx&sl='+encodeURIComponent(from)+'&tl='+encodeURIComponent(to)+'&dt=t&q='+encodeURIComponent(value.slice(0,450));
-    const res=await fetch(url,{headers:{Accept:'application/json'}});
-    if(res.ok){
-      const data=await res.json();
-      const translated=Array.isArray(data?.[0])?data[0].map(part=>part?.[0]||'').join('').trim():'';
-      if(translated&&translated.toLowerCase()!==value.toLowerCase()){
-        cache[key]=translated;menuoUiSaveCache(cache);return translated;
+  }catch(e){console.warn('MENUO Google translation failed',from||'auto',to,e)}
+  // MyMemory is used only when the source language is known exactly.
+  if(from){
+    try{
+      const url='https://api.mymemory.translated.net/get?q='+encodeURIComponent(value.slice(0,450))+'&langpair='+encodeURIComponent(from+'|'+to);
+      const res=await fetch(url,{headers:{Accept:'application/json'}});
+      if(res.ok){
+        const data=await res.json();
+        const translated=cleanTranslation(data?.responseData?.translatedText);
+        if(translated){cache[key]=translated;menuoUiSaveCache(cache);return translated}
       }
-    }
-  }catch(e){console.warn('MENUO fallback translation failed',from,to,e)}
+    }catch(e){console.warn('MENUO MyMemory translation failed',from,to,e)}
+  }
   return source;
 }
 async function translateApplicationUI(lang){
