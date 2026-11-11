@@ -257,7 +257,7 @@ async async function translateApplicationUI(lang){
    screen.querySelectorAll('*').forEach(el=>{
      if(el.matches(excluded)||el.closest(excluded))return;
      [...el.childNodes].forEach(n=>{
-       if(n.nodeType===3&&menuoUiEligible(n)&&/[А-Яа-яЁёЇїІіЄєҐґ]/.test(n.nodeValue))nodes.push(n);
+       if(n.nodeType===3&&menuoUiEligible(n)){const text=n.nodeValue.trim();if(text&&!(target==='en'&&!/[А-Яа-яЁёЇїІіЄєҐґ]/.test(text)))nodes.push(n)}
      });
    });
    const unique=[...new Set(nodes)].slice(0,35);
