@@ -154,25 +154,33 @@
   async function translateText(text,from,to){
     const value=String(text??'').trim();
     if(!value||!to||from===to)return text;
-    const cacheKey='menuo:t:'+from+':'+to+':'+value;
+    const cacheKey='menuo:t:v2:'+from+':'+to+':'+value;
     try{const cached=localStorage.getItem(cacheKey);if(cached)return cached}catch(_){}
+    const query=value.slice(0,450);
     try{
-      const url='https://api.mymemory.translated.net/get?q='+encodeURIComponent(value.slice(0,450))+'&langpair='+encodeURIComponent(from+'|'+to);
+      const url='https://translate.googleapis.com/translate_a/single?client=gtx&sl='+encodeURIComponent(from)+'&tl='+encodeURIComponent(to)+'&dt=t&q='+encodeURIComponent(query);
       const res=await fetch(url,{headers:{Accept:'application/json'}});
-      if(!res.ok)throw new Error('translation-http-'+res.status);
+      if(!res.ok)throw new Error('google-translation-http-'+res.status);
+      const data=await res.json();
+      const translated=Array.isArray(data?.[0])?data[0].map(part=>part?.[0]||'').join('').trim():'';
+      if(translated){try{localStorage.setItem(cacheKey,translated)}catch(_){}return translated}
+    }catch(e){console.warn('MENUO primary menu translation failed',from,to,e)}
+    try{
+      const url='https://api.mymemory.translated.net/get?q='+encodeURIComponent(query)+'&langpair='+encodeURIComponent(from+'|'+to);
+      const res=await fetch(url,{headers:{Accept:'application/json'}});
+      if(!res.ok)throw new Error('fallback-translation-http-'+res.status);
       const data=await res.json();
       const translated=String(data?.responseData?.translatedText||'').trim();
-      if(!translated)return text;
-      try{localStorage.setItem(cacheKey,translated)}catch(_){}
-      return translated;
-    }catch(e){console.warn('MENUO translation failed',from,to,value,e);return text}
+      if(translated){try{localStorage.setItem(cacheKey,translated)}catch(_){}return translated}
+    }catch(e){console.warn('MENUO fallback menu translation failed',from,to,e)}
+    return text;
   }
 
   async function translateMenu(data,lang){
     if(!data)return data;
     const result=JSON.parse(JSON.stringify(data));
-    const from=String(result.restaurant?.default_locale||'ru').toLowerCase().split('-')[0];
-    const to=String(lang||'ru').toLowerCase().split('-')[0];
+    const from=String(result.restaurant?.default_locale||'en').toLowerCase().split('-')[0];
+    const to=String(lang||'en').toLowerCase().split('-')[0];
     if(from===to)return result;
     const jobs=[];
     const tr=(obj,key)=>{if(obj?.[key])jobs.push(translateText(obj[key],from,to).then(v=>obj[key]=v))};
@@ -201,10 +209,10 @@
       }
       if(!data)throw lastError||new Error('empty-public-menu');
 
-      const requestedLang=(typeof state!=='undefined'&&state?.language)||'ru';
+      const requestedLang=(typeof state!=='undefined'&&state?.language)||'en';
       const r0=data.restaurant||{};
       const multilingualEnabled=['pro','business'].includes(String(r0.plan_id||'free').toLowerCase());
-      const lang=multilingualEnabled?requestedLang:(String(r0.default_locale||'ru').toLowerCase().split('-')[0]||'ru');
+      const lang=multilingualEnabled?requestedLang:(String(r0.default_locale||'en').toLowerCase().split('-')[0]||'ru');
       if(multilingualEnabled)data=await translateMenu(data,lang);
       const r=data.restaurant||{},cats=data.categories||[],dishes=data.dishes||[],promotions=Array.isArray(data.promotions)?data.promotions:[];
       const byCat=new Map(cats.map(c=>[String(c.id),c.name]));
