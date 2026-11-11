@@ -24,7 +24,7 @@ if (html) {
   else ok('English is first in language selector');
   if (!html.includes('menuo-default-language-v2')) fail('English migration', 'Missing one-time English default migration');
   else ok('English default migration exists');
-  if (html.includes('logo.innerHTML=') && html.includes('<svg viewBox=\\\"0 0 112 32\\\"')) ok('MENUO wordmark is SVG');
+  if (html.includes('logo.innerHTML=') && html.includes('<svg viewBox="0 0 112 32"')) ok('MENUO wordmark is SVG');
   else fail('MENUO SVG wordmark', 'SVG wordmark source was not found');
   const inlineScripts = [...html.matchAll(/<script\b(?![^>]*\bsrc=)[^>]*>([\s\S]*?)<\/script>/gi)];
   if (!inlineScripts.length) fail('Inline app script', 'No inline application script found');
