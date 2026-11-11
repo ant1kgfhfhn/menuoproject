@@ -670,6 +670,9 @@
     localSave();
     document.documentElement.lang = st.language || 'en';
     document.documentElement.dir = st.language === 'ar' ? 'rtl' : 'ltr';
+    // The account profile is hydrated after the first render. Refresh the visible
+    // language controls as well as the document locale to avoid a stale button label.
+    if (typeof updateGlobalLanguageButton === 'function') updateGlobalLanguageButton();
     if (typeof updateNav === 'function') updateNav();
     if (typeof translateApplicationUI === 'function') translateApplicationUI(st.language || 'en');
     return true;
